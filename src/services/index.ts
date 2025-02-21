@@ -16,8 +16,9 @@ export class ServiceContainer {
   public readonly quest: QuestService;
   public readonly weather: WeatherService;
   public readonly exploration: ExplorationService;
-  public readonly logger = logger;
   public readonly npc: NpcService;
+
+  public readonly logger = logger;
 
 
   constructor(prisma: PrismaClient) {

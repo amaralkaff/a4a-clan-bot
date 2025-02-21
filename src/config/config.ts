@@ -30,9 +30,9 @@ export const CONFIG = {
   
   // Game Config
   STARTER_STATS: {
-    HEALTH: 100,
-    ATTACK: 10,
-    DEFENSE: 10,
+    HEALTH: 100 as number,
+    ATTACK: 10 as number,
+    DEFENSE: 10 as number,
   },
   
   // Map Config

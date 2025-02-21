@@ -27,6 +27,13 @@ model Character {
   attack        Int       @default(10)
   defense       Int       @default(10)
   currentIsland String    @default("Starter Island")
+  mentor        String?   // YB, Tierison, LYuka, atau GarryAng
+  luffyProgress Int      @default(0) // Progress dengan Luffy/YB
+  zoroProgress  Int      @default(0) // Progress dengan Zoro/Tierison
+  usoppProgress Int      @default(0) // Progress dengan Usopp/LYuka
+  sanjiProgress Int      @default(0) // Progress dengan Sanji/GarryAng
+  dailyHealCount Int     @default(0) // Untuk limit Sanji heal 3x/hari
+  lastHealTime  DateTime? // Untuk reset daily heal count
   inventory     Inventory[]
   quests        Quest[]
   userId        String    @unique

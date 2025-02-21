@@ -4,6 +4,7 @@
 export interface CreateCharacterDto {
     discordId: string;
     name: string;
+    mentor: 'YB' | 'Tierison' | 'LYuka' | 'GarryAng';
   }
   
   export interface CharacterStats {
@@ -14,6 +15,11 @@ export interface CreateCharacterDto {
     attack: number;
     defense: number;
     location: string;
+    mentor?: string;
+    luffyProgress: number;
+    zoroProgress: number;
+    usoppProgress: number;
+    sanjiProgress: number;
   }
 
   // NPC
@@ -26,6 +32,7 @@ export interface NpcCharacter {
     dialogues: Record<string, string>;
     quests: string[];
     specialItems: string[];
+    loyalty?: number;
   }
   
   export interface NpcInteraction {
@@ -33,4 +40,29 @@ export interface NpcCharacter {
     requirementsMet: boolean;
     availableActions: string[];
     dialogue: string;
+    loyalty?: number;
   }
+
+  // Weather
+export interface Weather {
+  type: 'SUNNY' | 'RAINY' | 'STORMY';
+  effects: {
+    sailingSpeed: number;
+    battleModifier: number;
+    explorationModifier: number;
+    dropRateModifier: number;
+  };
+  description: string;
+}
+
+// Battle
+export interface BattleState {
+  comboCount: number;
+  gearSecondActive: boolean;
+  gearSecondTurnsLeft: number;
+  buffs: {
+    attack?: number;
+    defense?: number;
+    expires: number;
+  }[];
+}

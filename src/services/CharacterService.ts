@@ -10,7 +10,7 @@ export class CharacterService extends BaseService {
 
   async createCharacter(dto: CreateCharacterDto): Promise<Character> {
     try {
-      const { discordId, name } = dto;
+      const { discordId, name, mentor } = dto;
 
       const existingUser = await this.prisma.user.findUnique({
         where: { discordId },
@@ -21,17 +21,41 @@ export class CharacterService extends BaseService {
         throw new Error('Character already exists');
       }
 
+      // Hitung base stats berdasarkan mentor
+      let attack = CONFIG.STARTER_STATS.ATTACK;
+      let defense = CONFIG.STARTER_STATS.DEFENSE;
+      
+      switch(mentor) {
+        case 'YB': // Luffy
+          attack = Math.floor(attack * 1.15); // +15% Attack
+          defense = Math.floor(defense * 0.9); // -10% Defense
+          break;
+        case 'Tierison': // Zoro
+          attack = Math.floor(attack * 1.1); // +10% Attack
+          defense = Math.floor(defense * 1.1); // +10% Defense
+          break;
+        case 'LYuka': // Usopp
+          attack = Math.floor(attack * 0.9); // -10% Attack
+          defense = Math.floor(defense * 1.2); // +20% Defense
+          break;
+        case 'GarryAng': // Sanji
+          attack = Math.floor(attack * 1.05); // +5% Attack
+          defense = Math.floor(defense * 1.15); // +15% Defense
+          break;
+      }
+
       const user = await this.prisma.user.create({
         data: {
           discordId,
           character: {
             create: {
               name,
+              mentor,
               level: 1,
               experience: 0,
               health: CONFIG.STARTER_STATS.HEALTH,
-              attack: CONFIG.STARTER_STATS.ATTACK,
-              defense: CONFIG.STARTER_STATS.DEFENSE,
+              attack,
+              defense,
             },
           },
         },
@@ -41,6 +65,19 @@ export class CharacterService extends BaseService {
       return user.character!;
     } catch (error) {
       return this.handleError(error, 'CreateCharacter');
+    }
+  }
+
+  async getCharacterByDiscordId(discordId: string) {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { discordId },
+        include: { character: true }
+      });
+
+      return user?.character || null;
+    } catch (error) {
+      return this.handleError(error, 'GetCharacterByDiscordId');
     }
   }
 
@@ -61,7 +98,12 @@ export class CharacterService extends BaseService {
         maxHealth: this.calculateMaxHealth(character.level),
         attack: character.attack,
         defense: character.defense,
-        location: character.currentIsland
+        location: character.currentIsland,
+        mentor: character.mentor || undefined,
+        luffyProgress: character.luffyProgress,
+        zoroProgress: character.zoroProgress,
+        usoppProgress: character.usoppProgress,
+        sanjiProgress: character.sanjiProgress
       };
     } catch (error) {
       return this.handleError(error, 'GetCharacterStats');
@@ -149,5 +191,54 @@ export class CharacterService extends BaseService {
 
   private calculateExpNeeded(level: number): number {
     return level * 1000;
+  }
+
+  async healWithSanji(characterId: string): Promise<{
+    success: boolean;
+    message: string;
+    newHealth?: number;
+  }> {
+    try {
+      const character = await this.prisma.character.findUnique({
+        where: { id: characterId }
+      });
+
+      if (!character) throw new Error('Character not found');
+
+      // Reset daily heal count if it's a new day
+      if (character.lastHealTime && 
+          new Date().getDate() !== character.lastHealTime.getDate()) {
+        await this.prisma.character.update({
+          where: { id: characterId },
+          data: { dailyHealCount: 0 }
+        });
+      }
+
+      if (character.dailyHealCount >= 3) {
+        return {
+          success: false,
+          message: 'Kamu sudah mencapai batas penggunaan heal Sanji hari ini (3x/hari)'
+        };
+      }
+
+      const healAmount = Math.floor(character.health * 0.25); // 25% HP heal
+      const newHealth = await this.heal(characterId, healAmount);
+
+      await this.prisma.character.update({
+        where: { id: characterId },
+        data: {
+          dailyHealCount: { increment: 1 },
+          lastHealTime: new Date()
+        }
+      });
+
+      return {
+        success: true,
+        message: `Sanji menyembuhkan ${healAmount} HP!`,
+        newHealth
+      };
+    } catch (error) {
+      return this.handleError(error, 'HealWithSanji');
+    }
   }
 }

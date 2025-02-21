@@ -1,16 +1,7 @@
 // src/services/WeatherService.ts
 import { CONFIG } from '../config/config';
 import { logger } from '../utils/logger';
-
-export interface Weather {
-  type: typeof CONFIG.WEATHER_TYPES[number];
-  effects: {
-    sailingSpeed?: number;
-    battleModifier?: number;
-    explorationModifier?: number;
-  };
-  description: string;
-}
+import { Weather } from '../types/game';
 
 export class WeatherService {
   private currentWeather: Weather;
@@ -23,7 +14,8 @@ export class WeatherService {
       effects: {
         sailingSpeed: 1,
         battleModifier: 1,
-        explorationModifier: 1
+        explorationModifier: 1,
+        dropRateModifier: 1
       },
       description: '☀️ Cuaca cerah, sempurna untuk berlayar!'
     },
@@ -32,18 +24,20 @@ export class WeatherService {
       effects: {
         sailingSpeed: 0.8,
         battleModifier: 0.9,
-        explorationModifier: 0.7
+        explorationModifier: 0.7,
+        dropRateModifier: 1.3
       },
-      description: '🌧️ Hujan lebat membuat perjalanan lebih lambat.'
+      description: '🌧️ Hujan lebat membuat perjalanan lebih lambat, tapi kesempatan mendapat item lebih tinggi!'
     },
     'STORMY': {
       type: 'STORMY',
       effects: {
         sailingSpeed: 0.5,
         battleModifier: 0.7,
-        explorationModifier: 0.4
+        explorationModifier: 0.4,
+        dropRateModifier: 1.5
       },
-      description: '⛈️ Badai berbahaya! Berhati-hatilah dalam berlayar.'
+      description: '⛈️ Badai berbahaya! Tapi harta karun sering muncul dalam badai!'
     }
   };
 
@@ -84,7 +78,7 @@ export class WeatherService {
     return this.currentWeather;
   }
 
-  getWeatherEffect(type: 'sailingSpeed' | 'battleModifier' | 'explorationModifier'): number {
+  getWeatherEffect(type: keyof Weather['effects']): number {
     return this.currentWeather.effects[type] || 1;
   }
 
@@ -95,5 +89,21 @@ export class WeatherService {
       this.weatherInterval = null;
       logger.info('Weather cycle stopped');
     }
+  }
+
+  async triggerRain(): Promise<Weather> {
+    if (this.currentWeather.type !== 'SUNNY') {
+      throw new Error('Hanya bisa memicu hujan saat cuaca cerah');
+    }
+
+    this.currentWeather = this.weatherEffects['RAINY'];
+    
+    setTimeout(() => {
+      if (this.currentWeather.type === 'RAINY') {
+        this.currentWeather = this.weatherEffects['SUNNY'];
+      }
+    }, 30 * 60 * 1000);
+
+    return this.currentWeather;
   }
 }
