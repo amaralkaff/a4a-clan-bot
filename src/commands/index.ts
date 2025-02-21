@@ -6,6 +6,7 @@ import { statusCommand } from './character/statusCommand';
 import { explorationCommands } from './exploration/explorationCommands';
 import { inventoryCommands } from './inventory/inventoryCommands';
 import { questCommands } from './quest/questCommands';
+import { battleCommands } from './battle/battleCommands';
 
 export default {
   help,
@@ -15,4 +16,5 @@ export default {
   explore: explorationCommands,
   inventory: inventoryCommands,
   quest: questCommands,
+  battle: battleCommands
 }; 

@@ -2,6 +2,7 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { CommandHandler } from '@/types/commands';
 import { createEphemeralReply } from '@/utils/helpers';
+import { StatusEffects, ActiveBuffs } from '@/types/game';
 
 export const createCommand: CommandHandler = {
   data: new SlashCommandBuilder()
@@ -35,29 +36,60 @@ export const createCommand: CommandHandler = {
   async execute(interaction, services) {
     try {
       const name = interaction.options.getString('name', true);
-      const mentor = interaction.options.getString('mentor', true) as 'YB' | 'Tierison' | 'LYuka' | 'GarryAng';
+      const mentor = interaction.options.getString('mentor', true);
       const discordId = interaction.user.id;
+
+      // Initialize empty status effects and buffs
+      const initialStatusEffects: StatusEffects = { effects: [] };
+      const initialActiveBuffs: ActiveBuffs = { buffs: [] };
 
       const character = await services.character.createCharacter({
         discordId,
         name: `${name} the ${mentor} Apprentice`,
-        mentor
+        mentor: mentor as 'YB' | 'Tierison' | 'LYuka' | 'GarryAng'
       });
 
+      // Format mentor bonus text
+      let mentorBonusText = '';
+      switch (mentor) {
+        case 'YB':
+          mentorBonusText = '+15% Attack, -10% Defense, +10% Health';
+          break;
+        case 'Tierison':
+          mentorBonusText = '+10% Attack, +10% Defense';
+          break;
+        case 'LYuka':
+          mentorBonusText = '-10% Attack, +20% Defense, +5% Health';
+          break;
+        case 'GarryAng':
+          mentorBonusText = '+5% Attack, +15% Defense, +10% Health';
+          break;
+      }
+
       await interaction.reply(createEphemeralReply({
-        content: `Karakter "${character.name}" berhasil dibuat dengan mentor ${mentor}!\nStats awal:\nHealth: ${character.health}\nAttack: ${character.attack}\nDefense: ${character.defense}`
+        content: [
+          `✨ Karakter "${character.name}" berhasil dibuat!`,
+          `\n👥 Mentor: ${mentor}`,
+          `💫 Bonus Mentor: ${mentorBonusText}`,
+          `\n📊 Stats Awal:`,
+          `❤️ Health: ${character.health}/${character.maxHealth}`,
+          `💪 Attack: ${character.attack}`,
+          `🛡️ Defense: ${character.defense}`,
+          `\n🗺️ Lokasi: ${character.currentIsland}`,
+          `\nGunakan /status untuk melihat status karaktermu!`
+        ].join('\n')
       }));
     } catch (error) {
       if (error instanceof Error && error.message === 'Character already exists') {
         await interaction.reply(createEphemeralReply({
-          content: 'Kamu sudah memiliki karakter!'
+          content: '❌ Kamu sudah memiliki karakter!'
         }));
         return;
       }
 
       services.logger.error('Error creating character:', error);
       await interaction.reply(createEphemeralReply({
-        content: 'Terjadi kesalahan saat membuat karakter. Silakan coba lagi.'
+        content: `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`
       }));
     }
   }

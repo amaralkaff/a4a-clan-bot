@@ -7,6 +7,7 @@ import { QuestService } from '@/services/QuestService';
 import { WeatherService } from '@/services/WeatherService';
 import { ExplorationService } from '@/services/ExplorationService';
 import { NpcService } from '@/services/NpcService';
+import { CraftingService } from '@/services/CraftingService';
 import { logger } from '@/utils/logger';
 
 export class ServiceContainer {
@@ -17,16 +18,18 @@ export class ServiceContainer {
   public readonly weather: WeatherService;
   public readonly exploration: ExplorationService;
   public readonly npc: NpcService;
+  public readonly crafting: CraftingService;
   public readonly logger = logger;
 
   constructor(prisma: PrismaClient) {
     this.character = new CharacterService(prisma);
-    this.battle = new BattleService(prisma);
+    this.battle = new BattleService(prisma, this.character);
     this.inventory = new InventoryService(prisma);
-    this.quest = new QuestService(prisma);
+    this.quest = new QuestService(prisma, this.character);
     this.weather = new WeatherService();
-    this.exploration = new ExplorationService(prisma);
+    this.exploration = new ExplorationService(prisma, this.character);
     this.npc = new NpcService(prisma);
+    this.crafting = new CraftingService(prisma, this.character);
   }
 }
 

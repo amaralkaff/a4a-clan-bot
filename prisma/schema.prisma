@@ -24,20 +24,29 @@ model Character {
   level         Int       @default(1)
   experience    Int       @default(0)
   health        Int       @default(100)
+  maxHealth     Int       @default(100)
   attack        Int       @default(10)
   defense       Int       @default(10)
-  currentIsland String    @default("Starter Island")
+  currentIsland String    @default("starter_island")
   mentor        String?   // YB, Tierison, LYuka, atau GarryAng
-  luffyProgress Int      @default(0) // Progress dengan Luffy/YB
-  zoroProgress  Int      @default(0) // Progress dengan Zoro/Tierison
-  usoppProgress Int      @default(0) // Progress dengan Usopp/LYuka
-  sanjiProgress Int      @default(0) // Progress dengan Sanji/GarryAng
-  dailyHealCount Int     @default(0) // Untuk limit Sanji heal 3x/hari
-  lastHealTime  DateTime? // Untuk reset daily heal count
+  luffyProgress Int       @default(0)
+  zoroProgress  Int       @default(0)
+  usoppProgress Int       @default(0)
+  sanjiProgress Int       @default(0)
+  dailyHealCount Int      @default(0)
+  lastHealTime  DateTime?
+  combo         Int       @default(0)
+  questPoints   Int       @default(0)
+  explorationPoints Int   @default(0)
+  lastDailyReset DateTime?
+  statusEffects String    @default("{}")
+  activeBuffs   String    @default("{}")
   inventory     Inventory[]
   quests        Quest[]
+  battleLogs    BattleLog[]
   userId        String    @unique
   user          User      @relation(fields: [userId], references: [id])
+  location      Location  @relation(fields: [currentIsland], references: [id])
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -48,6 +57,7 @@ model Inventory {
   quantity    Int
   characterId String
   character   Character @relation(fields: [characterId], references: [id])
+  item        Item      @relation(fields: [itemId], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -55,13 +65,58 @@ model Inventory {
 }
 
 model Quest {
-  id          String    @id @default(uuid())
+  id          String    @id @default(cuid())
   name        String
   description String
-  reward      Int
-  status      String    @default("ACTIVE") // ACTIVE, COMPLETED, FAILED
-  characterId String
+  objectives  String    @default("{\"tasks\":[]}")
+  rewards     String    @default("{}")
+  reward      Int       @default(0)
+  status      String    @default("ACTIVE")
   character   Character @relation(fields: [characterId], references: [id])
+  characterId String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  type        String    @default("MISC")
+  isDaily     Boolean   @default(false)
+  expiresAt   DateTime?
+
+  @@index([characterId])
+}
+
+model Location {
+  id                String      @id
+  name              String
+  description       String
+  level             Int         @default(1)
+  weather           String      @default("sunny")
+  lastWeatherUpdate DateTime    @default(now())
+  activeEvent       String?
+  characters        Character[]
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+model BattleLog {
+  id          String    @id @default(uuid())
+  characterId String
+  character   Character @relation(fields: [characterId], references: [id])
+  enemyType   String
+  enemyLevel  Int
+  damage      Int
+  experience  Int
+  rewards     String    @default("{}")  // Untuk item drops
+  won         Boolean
+  createdAt   DateTime  @default(now())
+}
+
+model Item {
+  id          String      @id
+  name        String
+  description String
+  type        String      // INGREDIENT, FOOD, EQUIPMENT, etc.
+  value       Int         @default(0)
+  effect      String      @default("{}")  // JSON string untuk efek item
+  inventory   Inventory[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 }

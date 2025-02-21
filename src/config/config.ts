@@ -1,6 +1,7 @@
 // src/config/config.ts
 import { config } from 'dotenv';
 import { logger } from '../utils/logger';
+import { WeatherType } from '@/types/game';
 
 config();
 
@@ -63,7 +64,7 @@ export const CONFIG = {
   },
   
   // Weather System
-  WEATHER_TYPES: ['SUNNY', 'RAINY', 'STORMY'] as const,
+  WEATHER_TYPES: ['sunny', 'rainy', 'stormy', 'foggy', 'windy'] as WeatherType[],
   WEATHER_CHANGE_INTERVAL: 1000 * 60 * 30, // 30 menit
 } as const;
 

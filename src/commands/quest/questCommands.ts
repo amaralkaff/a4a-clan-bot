@@ -1,9 +1,12 @@
 import { 
     SlashCommandBuilder, 
     ChatInputCommandInteraction,
-    EmbedBuilder 
+    EmbedBuilder,
+    MessageFlags
   } from 'discord.js';
 import { CommandHandler } from '@/types/commands';
+import { ServiceContainer } from '@/services';
+import { QUESTS } from '@/config/gameData';
 
 export const questCommands: CommandHandler = {
   data: new SlashCommandBuilder()
@@ -24,10 +27,10 @@ export const questCommands: CommandHandler = {
             .setDescription('Quest yang ingin diambil')
             .setRequired(true)
             .addChoices(
-              { name: "Luffy's First Mission - Mencari daging (Level 1)", value: "Luffy's First Mission" },
-              { name: "Usopp's Target Practice - Latihan menembak (Level 1)", value: "Usopp's Target Practice" },
-              { name: "Zoro's Training - Berlatih pedang (Level 2)", value: "Zoro's Training" },
-              { name: "Sanji's Cooking Challenge - Mencari bahan (Level 3)", value: "Sanji's Cooking Challenge" }
+              { name: "🥊 Latihan Dasar Luffy - Mencari daging (Level 1)", value: "luffy_training_1" },
+              { name: "🎯 Latihan Menembak Usopp - Latihan menembak (Level 1)", value: "usopp_training_1" },
+              { name: "⚔️ Latihan Pedang Dasar - Berlatih pedang (Level 2)", value: "zoro_training_1" },
+              { name: "👨‍🍳 Latihan Memasak - Mencari bahan (Level 3)", value: "sanji_training_1" }
             )
         )
     )
@@ -44,7 +47,7 @@ export const questCommands: CommandHandler = {
         )
     ),
 
-  async execute(interaction, services) {
+  async execute(interaction: ChatInputCommandInteraction, services: ServiceContainer) {
     try {
       const subcommand = interaction.options.getSubcommand();
 
@@ -52,54 +55,67 @@ export const questCommands: CommandHandler = {
 
       if (!character) {
         return interaction.reply({
-          content: 'Kamu harus membuat karakter terlebih dahulu dengan command `/create`',
-          ephemeral: true
+          content: '❌ Kamu harus membuat karakter terlebih dahulu dengan command `/create`',
+          flags: MessageFlags.Ephemeral
         });
       }
 
       switch (subcommand) {
         case 'list': {
-          const quests = await services.quest.getAvailableQuests(character.id);
+          const questResult = await services.quest.getAvailableQuests(character.id);
           
-          const embed = new EmbedBuilder()
-            .setTitle('Quest yang Tersedia')
-            .setColor('#0099ff')
-            .setDescription(
-              quests.length > 0
-                ? quests.map(quest => 
-                    `**${quest.name}**\n${quest.description}\nReward: ${quest.reward} EXP\nRequired Level: ${quest.requiredLevel}`
-                  ).join('\n\n')
-                : 'Tidak ada quest yang tersedia saat ini.'
-            );
-
-          return interaction.reply({ embeds: [embed], ephemeral: true });
+          return interaction.reply({ 
+            embeds: [questResult.embed], 
+            flags: MessageFlags.Ephemeral 
+          });
         }
 
         case 'accept': {
-          const questName = interaction.options.getString('quest', true);
-          const quest = await services.quest.acceptQuest(character.id, questName);
+          const questId = interaction.options.getString('quest', true);
+
+          // Validate quest ID
+          if (!QUESTS[questId as keyof typeof QUESTS]) {
+            return interaction.reply({
+              content: `❌ Quest "${questId}" tidak valid`,
+              flags: MessageFlags.Ephemeral
+            });
+          }
+
+          const acceptResult = await services.quest.acceptQuest(character.id, questId);
           
           return interaction.reply({
-            content: `Berhasil menerima quest "${quest.name}"!\n${quest.description}`,
-            ephemeral: true
+            embeds: [acceptResult.embed],
+            flags: MessageFlags.Ephemeral
           });
         }
 
         case 'complete': {
           const questId = interaction.options.getString('quest', true);
+
+          // Validate quest ID
+          const activeQuests = await services.quest.getActiveQuests(character.id);
+          const isQuestActive = activeQuests.quests.some(q => q.id === questId);
+
+          if (!isQuestActive) {
+            return interaction.reply({
+              content: '❌ Quest ini tidak aktif atau sudah selesai',
+              flags: MessageFlags.Ephemeral
+            });
+          }
+
           const result = await services.quest.completeQuest(character.id, questId);
           
           return interaction.reply({
-            content: `Quest berhasil diselesaikan! Kamu mendapatkan ${result.reward} EXP!`,
-            ephemeral: true
+            embeds: [result.embed],
+            flags: MessageFlags.Ephemeral
           });
         }
       }
     } catch (error) {
       services.logger.error('Error in quest command:', error);
       return interaction.reply({
-        content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        ephemeral: true
+        content: `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        flags: MessageFlags.Ephemeral
       });
     }
   }

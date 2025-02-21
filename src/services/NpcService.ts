@@ -1,11 +1,11 @@
 // src/services/NpcService.ts
 import { BaseService } from './BaseService';
 import { PrismaClient } from '@prisma/client';
-import { NpcCharacter, NpcInteraction } from '../types/game';
+import { NpcCharacter, NpcInteraction, LocationId, MentorType } from '../types/game';
 import { CONFIG } from '../config/config';
 
 export class NpcService extends BaseService {
-  private readonly clanMemberToNpcId: Record<string, string> = {
+  private readonly clanMemberToNpcId: Record<MentorType, string> = {
     'YB': 'luffy',
     'Tierison': 'zoro',
     'LYuka': 'usopp',
@@ -18,7 +18,7 @@ export class NpcService extends BaseService {
       name: 'Monkey D. Luffy',
       title: 'Raja Bajak Laut',
       clanMember: 'YB',
-      location: 'Starter Island',
+      location: 'starter_island',
       dialogues: {
         greeting: 'Shishishi! Aku akan menjadi Raja Bajak Laut! Mau bergabung dengan petualanganku?',
         quest: 'Ada misi khusus yang hanya bisa kamu selesaikan. Tertarik?',
@@ -33,7 +33,7 @@ export class NpcService extends BaseService {
       name: 'Roronoa Zoro',
       title: 'Pendekar Pedang',
       clanMember: 'Tierison',
-      location: 'Shell Town',
+      location: 'shell_town',
       dialogues: {
         greeting: 'Hmph. Kau terlihat cukup kuat. Tunjukkan kemampuanmu padaku.',
         quest: 'Ada dojo yang perlu dibersihkan dari bandit. Bantu aku?',
@@ -48,7 +48,7 @@ export class NpcService extends BaseService {
       name: 'Usopp',
       title: 'Penembak Jitu',
       clanMember: 'LYuka',
-      location: 'Syrup Village',
+      location: 'syrup_village',
       dialogues: {
         greeting: 'Akulah kapten Usopp! Pemimpin dari 8000 pengikut!',
         quest: 'Ada harta karun tersembunyi di pulau ini. Tertarik mencarinya?',
@@ -63,7 +63,7 @@ export class NpcService extends BaseService {
       name: 'Sanji',
       title: 'Koki Cinta',
       clanMember: 'GarryAng',
-      location: 'Baratie',
+      location: 'baratie',
       dialogues: {
         greeting: 'Selamat datang di Baratie! Mau mencoba masakan spesialku?',
         quest: 'Aku butuh bahan langka untuk resep baruku. Bisa membantuku?',
@@ -85,7 +85,7 @@ export class NpcService extends BaseService {
 
   async interactWithNpc(
     characterId: string,
-    clanMemberId: string
+    clanMemberId: MentorType
   ): Promise<NpcInteraction> {
     try {
       const npcId = this.clanMemberToNpcId[clanMemberId];
@@ -122,8 +122,8 @@ export class NpcService extends BaseService {
       // Tentukan aksi yang tersedia
       const availableActions = ['DIALOGUE'];
       if (availableQuests.length > 0) availableActions.push('QUEST');
-      if (this.canTrain(character, npc)) availableActions.push('TRAINING');
-      if (this.canTrade(character, npc)) availableActions.push('TRADE');
+      if (this.canTrain(character)) availableActions.push('TRAINING');
+      if (this.canTrade(character)) availableActions.push('TRADE');
 
       return {
         type: availableActions.includes('QUEST') ? 'QUEST' : 'DIALOGUE',
@@ -131,20 +131,23 @@ export class NpcService extends BaseService {
         availableActions,
         dialogue: availableQuests.length > 0 ? npc.dialogues.quest : npc.dialogues.greeting
       };
-    } catch (error) {
-      return this.handleError(error, 'InteractWithNpc');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return this.handleError(error, 'InteractWithNpc');
+      }
+      return this.handleError(new Error('Unknown error in InteractWithNpc'), 'InteractWithNpc');
     }
   }
 
-  private canTrain(character: any, npc: NpcCharacter): boolean {
+  private canTrain(character: any): boolean {
     // Implementasi logika untuk cek apakah karakter bisa training
     // Contoh: Level minimum, quest sebelumnya selesai, dll
     return character.level >= 5;
   }
 
-  private canTrade(character: any, npc: NpcCharacter): boolean {
+  private canTrade(character: any): boolean {
     // Implementasi logika untuk cek apakah karakter bisa berdagang
     // Contoh: Memiliki item yang bisa ditukar, gold cukup, dll
-    return character.inventory.items.length > 0;
+    return character.inventory && character.inventory.length > 0;
   }
 }

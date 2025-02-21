@@ -1,7 +1,23 @@
-import { Client, Events, Interaction, ChatInputCommandInteraction, AutocompleteInteraction } from 'discord.js';
+import { Client, Events, Interaction, ChatInputCommandInteraction, AutocompleteInteraction, MessageFlags } from 'discord.js';
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
 import { ServiceContainer } from '../services';
+import { craftingCommands } from '../commands/crafting/craftingCommands';
+import { battleCommands } from '../commands/battle/battleCommands';
+
+interface Quest {
+  id: string;
+  name: string;
+  description: string;
+  reward: number;
+  status: string;
+  characterId: string;
+}
+
+export const commands = [
+  craftingCommands,
+  battleCommands
+];
 
 export function setupEventHandlers(client: Client, services: ServiceContainer) {
   client.once(Events.ClientReady, c => {
@@ -16,15 +32,16 @@ export function setupEventHandlers(client: Client, services: ServiceContainer) {
           const character = await services.character.getCharacterByDiscordId(interaction.user.id);
           if (!character) return;
 
-          const activeQuests = await services.quest.getActiveQuests(character.id);
-          const choices = activeQuests.map(quest => ({
+          const questResult = await services.quest.getActiveQuests(character.id);
+          const choices = questResult.quests.map((quest: Quest) => ({
             name: quest.name,
             value: quest.id
-          }));
-
-          await interaction.respond(
-            choices.filter(choice => choice.name.toLowerCase().includes(focusedValue.toLowerCase()))
+          })).filter(choice => 
+            choice.name.toLowerCase().includes(focusedValue.toLowerCase())
           );
+
+          await interaction.respond(choices.slice(0, 25)); // Discord limits to 25 choices
+          return;
         }
         return;
       }
@@ -38,7 +55,7 @@ export function setupEventHandlers(client: Client, services: ServiceContainer) {
         logger.error(`No command matching ${commandInteraction.commandName} was found.`);
         await commandInteraction.reply({
           content: 'Maaf, command tersebut tidak ditemukan.',
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
         return;
       }
@@ -58,13 +75,13 @@ export function setupEventHandlers(client: Client, services: ServiceContainer) {
           const commandInteraction = interaction as ChatInputCommandInteraction;
           if (commandInteraction.replied || commandInteraction.deferred) {
             await commandInteraction.followUp({
-              content: `Terjadi kesalahan saat menjalankan command!\nError: ${errorMessage}`,
-              ephemeral: true
+              content: `❌ Error: ${errorMessage}`,
+              flags: MessageFlags.Ephemeral
             });
           } else {
             await commandInteraction.reply({
-              content: `Terjadi kesalahan saat menjalankan command!\nError: ${errorMessage}`,
-              ephemeral: true
+              content: `❌ Error: ${errorMessage}`,
+              flags: MessageFlags.Ephemeral
             });
           }
         }

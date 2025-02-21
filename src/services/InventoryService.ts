@@ -1,58 +1,51 @@
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
+import { BaseService } from './BaseService';
+
+interface ItemEffect {
+  type: 'HEAL' | 'BUFF';
+  value: number;
+  stats?: {
+    attack?: number;
+    defense?: number;
+    speed?: number;
+  };
+  duration?: number;
+}
 
 interface Item {
   id: string;
   name: string;
   description: string;
-  effect?: {
-    type: 'HEAL' | 'BUFF';
-    value: number;
-  };
+  type: string;
+  value: number;
+  effect: string;
 }
 
-export class InventoryService {
-  private prisma: PrismaClient;
-  private items: Map<string, Item>;
-
+export class InventoryService extends BaseService {
   constructor(prisma: PrismaClient) {
-    this.prisma = prisma;
-    this.items = new Map([
-      ['potion', {
-        id: 'potion',
-        name: 'Health Potion',
-        description: 'Memulihkan 50 HP',
-        effect: {
-          type: 'HEAL',
-          value: 50
-        }
-      }],
-      ['attack_buff', {
-        id: 'attack_buff',
-        name: 'Attack Boost',
-        description: 'Meningkatkan attack sebesar 5 selama pertarungan',
-        effect: {
-          type: 'BUFF',
-          value: 5
-        }
-      }]
-    ]);
+    super(prisma);
   }
 
   async addItem(characterId: string, itemId: string, quantity: number = 1) {
     try {
-      const item = this.items.get(itemId);
+      // Cek apakah item ada
+      const item = await this.prisma.item.findUnique({
+        where: { id: itemId }
+      });
+      
       if (!item) throw new Error('Item tidak ditemukan');
 
-      // Menggunakan where clause yang benar
+      // Update atau create inventory
       await this.prisma.inventory.upsert({
         where: {
-          id: await this.getInventoryId(characterId, itemId)
+          characterId_itemId: {
+            characterId,
+            itemId
+          }
         },
         update: {
-          quantity: {
-            increment: quantity
-          }
+          quantity: { increment: quantity }
         },
         create: {
           characterId,
@@ -68,21 +61,16 @@ export class InventoryService {
     }
   }
 
-  private async getInventoryId(characterId: string, itemId: string): Promise<string> {
-    const inventory = await this.prisma.inventory.findFirst({
-      where: {
-        characterId,
-        itemId
-      }
-    });
-    return inventory?.id || 'new';
-  }
-
   async useItem(characterId: string, itemId: string) {
     try {
-      const item = this.items.get(itemId);
+      // Get item from database
+      const item = await this.prisma.item.findUnique({
+        where: { id: itemId }
+      });
+
       if (!item) throw new Error('Item tidak ditemukan');
 
+      // Get inventory
       const inventory = await this.prisma.inventory.findFirst({
         where: {
           characterId,
@@ -92,6 +80,14 @@ export class InventoryService {
 
       if (!inventory || inventory.quantity <= 0) {
         throw new Error('Item tidak tersedia di inventory');
+      }
+
+      // Parse item effect
+      let effect: ItemEffect | null = null;
+      try {
+        effect = JSON.parse(item.effect) as ItemEffect;
+      } catch (e) {
+        logger.warn(`Invalid effect JSON for item ${itemId}:`, e);
       }
 
       // Begin transaction
@@ -109,18 +105,36 @@ export class InventoryService {
         });
 
         // Apply item effect
-        if (item.effect) {
-          if (item.effect.type === 'HEAL') {
+        if (effect) {
+          if (effect.type === 'HEAL') {
             await tx.character.update({
               where: { id: characterId },
               data: {
                 health: {
-                  increment: item.effect.value
+                  increment: effect.value
                 }
               }
             });
+          } else if (effect.type === 'BUFF') {
+            const character = await tx.character.findUnique({
+              where: { id: characterId }
+            });
+
+            if (character) {
+              const activeBuffs = JSON.parse(character.activeBuffs || '{"buffs":[]}');
+              activeBuffs.buffs.push({
+                ...effect.stats,
+                expiresAt: Date.now() + (effect.duration || 3600) * 1000
+              });
+
+              await tx.character.update({
+                where: { id: characterId },
+                data: {
+                  activeBuffs: JSON.stringify(activeBuffs)
+                }
+              });
+            }
           }
-          // Add more effect types here
         }
 
         return item;
@@ -140,12 +154,16 @@ export class InventoryService {
   async getInventory(characterId: string) {
     try {
       const inventory = await this.prisma.inventory.findMany({
-        where: { characterId }
+        where: { characterId },
+        include: {
+          item: true
+        }
       });
 
       return inventory.map(inv => ({
-        ...this.items.get(inv.itemId),
-        quantity: inv.quantity
+        ...inv.item,
+        quantity: inv.quantity,
+        effect: JSON.parse(inv.item.effect)
       }));
     } catch (error) {
       logger.error('Error getting inventory:', error);

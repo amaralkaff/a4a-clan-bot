@@ -1,24 +1,28 @@
 {
   "name": "a4a-clan-bot",
   "version": "1.0.0",
-  "description": "Discord bot for A4A Clan with One Piece theme",
-  "main": "src/index.ts",
+  "description": "Discord RPG Bot untuk A4A Clan",
+  "main": "dist/index.js",
+  "prisma": {
+    "seed": "bun prisma/seed.ts"
+  },
   "scripts": {
-    "dev": "bun run --watch src/index.ts",
-    "start": "bun run src/index.ts",
-    "db:push": "bunx prisma db push",
-    "db:studio": "bunx prisma studio",
-    "deploy": "bun run src/deploy-commands.ts"
+    "start": "bun dist/index.js",
+    "build": "bun build ./src/index.ts --outdir ./dist --target node",
+    "dev": "bun run src/index.ts",
+    "deploy": "bun run src/deploy-commands.ts",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev", 
+    "prisma:seed": "prisma db seed"
   },
   "dependencies": {
-    "@prisma/client": "latest",
+    "@prisma/client": "^5.9.1",
     "discord.js": "^14.14.1",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.4.1"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
-    "prisma": "latest",
-    "typescript": "^5.3.3",
-    "bun-types": "latest"
+    "@types/node": "^20.11.17",
+    "prisma": "^5.9.1",
+    "typescript": "^5.3.3"
   }
 }
