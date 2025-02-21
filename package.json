@@ -1,11 +1,23 @@
 {
   "name": "a4a-clan-bot",
-  "module": "index.ts",
-  "type": "module",
-  "devDependencies": {
-    "@types/bun": "latest"
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "build": "tsc",
+    "start": "bun run dist/index.js",
+    "db:push": "bunx prisma db push",
+    "db:studio": "bunx prisma studio"
   },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
+  "dependencies": {
+    "@prisma/client": "latest",
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "prisma": "latest",
+    "typescript": "^5.3.3",
+    "bun-types": "latest"
   }
 }

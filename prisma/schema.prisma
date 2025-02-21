@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String    @id @default(uuid())
+  discordId     String    @unique
+  character     Character?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Character {
+  id            String    @id @default(uuid())
+  name          String
+  level         Int       @default(1)
+  experience    Int       @default(0)
+  health        Int       @default(100)
+  attack        Int       @default(10)
+  defense       Int       @default(10)
+  currentIsland String    @default("Starter Island")
+  inventory     Inventory[]
+  quests        Quest[]
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Inventory {
+  id          String    @id @default(uuid())
+  itemId      String
+  quantity    Int
+  characterId String
+  character   Character @relation(fields: [characterId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([characterId, itemId])
+}
+
+model Quest {
+  id          String    @id @default(uuid())
+  name        String
+  description String
+  reward      Int
+  status      String    @default("ACTIVE") // ACTIVE, COMPLETED, FAILED
+  characterId String
+  character   Character @relation(fields: [characterId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}

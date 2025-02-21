@@ -1,3 +1,272 @@
+# A4A CLAN BOT
+
+Bot Discord RPG berbasis One Piece yang dikembangkan khusus untuk komunitas A4A CLAN.
+
+## 🌟 Fitur yang Sudah Tersedia
+
+### 1. Sistem Karakter
+- Pembuatan karakter dengan statistik dasar (HP, Attack, Defense)
+- Sistem level up dan experience
+- Interaksi dengan karakter utama:
+  - Luffy (YB) - Spesialis pertarungan dan petualangan
+  - Zoro (Tierison) - Ahli pedang dan pelatihan
+  - Usopp (LYuka) - Spesialis jarak jauh dan strategi
+  - Sanji (GarryAng) - Ahli support dan buff
+
+### 2. Sistem Eksplorasi
+- Penjelajahan antar pulau dengan sistem sailing
+- Event acak saat berlayar
+- Sistem cuaca yang mempengaruhi perjalanan
+- Penemuan item dan harta karun
+
+### 3. Sistem Quest
+- Quest dari setiap NPC utama
+- Sistem reward (EXP dan item)
+- Tracking progress quest
+- Quest berantai
+
+### 4. Sistem Inventory
+- Manajemen item
+- Item dengan efek khusus (Heal/Buff)
+- Sistem penggunaan item
+
+### 5. Sistem Pertarungan
+- Pertarungan berbasis statistik
+- Sistem critical hit
+- Damage calculation
+
+## 🚧 Fitur yang Sedang Dikembangkan
+
+1. **Sistem Siang-Malam**
+   - Pergantian waktu yang mempengaruhi gameplay
+   - Event khusus berdasarkan waktu
+
+2. **Sistem Party**
+   - Pertarungan tim
+   - Bonus statistik dalam party
+   - Pembagian experience
+
+3. **Sistem Leaderboard**
+   - Ranking pemain
+   - Statistik server
+   - Pencapaian khusus
+
+4. **Sistem Aliansi**
+   - Pembentukan kelompok
+   - Quest khusus aliansi
+   - Bonus untuk anggota aliansi
+
+5. **Peta Interaktif**
+   - Visualisasi peta yang lebih detail
+   - Informasi lokasi real-time
+   - Marker untuk quest dan event
+
+## 📜 Perintah yang Tersedia
+
+| Kategori | Perintah | Deskripsi |
+|----------|----------|-----------|
+| Karakter | `/create-character [nama]` | Buat karakter baru |
+| | `/status` | Lihat status karakter |
+| | `/interact [npc]` | Bicara dengan NPC |
+| Eksplorasi | `/sail [pulau]` | Berlayar ke pulau lain |
+| | `/explore` | Jelajahi area saat ini |
+| | `/weather` | Cek kondisi cuaca |
+| Quest | `/quest list` | Lihat quest tersedia |
+| | `/quest accept [id]` | Terima quest |
+| | `/quest complete [id]` | Selesaikan quest |
+| Inventory | `/inventory` | Lihat inventaris |
+| | `/use [item]` | Gunakan item |
+
+## 💻 Informasi Teknis
+
+### Database (Prisma Schema)
+```prisma
+model User {
+  id            String    @id
+  discordId     String    @unique
+  character     Character?
+}
+
+model Character {
+  id            String    @id
+  name          String
+  level         Int
+  experience    Int
+  health        Int
+  attack        Int
+  defense       Int
+  currentIsland String
+}
+
+model Inventory {
+  id          String    @id
+  itemId      String
+  quantity    Int
+  characterId String
+}
+
+model Quest {
+  id          String    @id
+  name        String
+  description String
+  reward      Int
+  status      String
+}
+```
+
+### Services
+- BaseService: Penanganan error dan logging
+- CharacterService: Manajemen karakter
+- BattleService: Sistem pertarungan
+- ExplorationService: Sistem eksplorasi
+- InventoryService: Manajemen item
+- NpcService: Interaksi NPC
+- QuestService: Manajemen quest
+- WeatherService: Sistem cuaca
+
+## 🛠️ Instalasi
+
+1. Clone repository:
+   ```bash
+   git clone https://github.com/amaralkaff/a4a-clan-bot
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Setup environment variables:
+   ```env
+   DISCORD_TOKEN=token_bot_anda
+   CLIENT_ID=id_aplikasi_discord
+   GUILD_ID=id_server_discord
+   ```
+
+4. Setup database:
+   ```bash
+   npx prisma migrate dev
+   ```
+
+5. Jalankan bot:
+   ```bash
+   npm start
+   ```
+
+## 🤝 Kontribusi
+
+1. Fork repository
+2. Buat branch: `git checkout -b fitur-baru`
+3. Commit perubahan: `git commit -m 'Menambah fitur baru'`
+4. Push ke branch: `git push origin fitur-baru`
+5. Buat Pull Request
+
+## 📋 Todo List
+
+- [ ] Implementasi sistem siang-malam
+- [ ] Pengembangan sistem party
+- [ ] Pembuatan leaderboard
+- [ ] Sistem aliansi
+- [ ] Peta interaktif
+- [ ] Sistem achievement
+- [ ] Event server mingguan
+- [ ] Sistem trading antar pemain
+
+### A4A CLAN BOT - Discord RPG Bot
+
+Bot Discord berbasis One Piece dengan sistem RPG yang mendalam, dibuat khusus untuk komunitas A4A CLAN.
+
+### Fitur Utama
+
+#### 1. Sistem Karakter
+- Buat karakter dengan statistik unik
+- Level up dan perkembangan karakter
+- Status tracking (HP, Attack, Defense)
+- Interaksi dengan NPC utama:
+  - Luffy (YB) - Spesialis pertarungan
+  - Zoro (Tierison) - Pelatih pedang
+  - Usopp (LYuka) - Ahli jarak jauh
+  - Sanji (GarryAng) - Spesialis buff/support
+
+#### 2. Sistem Eksplorasi
+- Peta dunia dinamis dengan berbagai pulau
+- Sistem pelayaran dengan event acak
+- Cuaca dinamis yang mempengaruhi gameplay
+- Penemuan harta karun dan item
+
+#### 3. Sistem Pertarungan
+- Pertarungan berbasis giliran
+- Statistik karakter mempengaruhi damage
+- Critical hit system
+- Party system untuk pertarungan tim
+
+#### 4. Ekonomi & Inventory
+- Sistem inventaris untuk item
+- Item dengan efek khusus (Heal/Buff)
+- Trading system antar pemain
+- Quest rewards
+
+#### 5. Quest System
+- Quest dari setiap NPC utama
+- Rewards berupa EXP dan item
+- Quest progression tracking
+- Quest chain dan cerita
+
+### Perintah Dasar
+
+| Kategori | Perintah | Deskripsi |
+|----------|----------|-----------|
+| Karakter | `/create-character [nama]` | Buat karakter baru |
+| | `/status` | Lihat status karakter |
+| | `/interact [npc]` | Interaksi dengan NPC |
+| Eksplorasi | `/sail [pulau]` | Berlayar ke pulau lain |
+| | `/explore` | Jelajahi lokasi saat ini |
+| | `/weather` | Cek cuaca saat ini |
+| Quest | `/quest list` | Lihat quest tersedia |
+| | `/quest accept [id]` | Terima quest |
+| | `/quest complete [id]` | Selesaikan quest |
+| Inventory | `/inventory` | Lihat inventaris |
+| | `/use [item]` | Gunakan item |
+| | `/trade [player]` | Mulai perdagangan |
+
+### Sistem Teknis
+
+#### Database Schema
+- Users (Discord ID, Character data)
+- Characters (Stats, Level, Experience)
+- Inventory (Items, Quantities)
+- Quests (Progress, Status)
+
+#### Services
+- BaseService - Error handling & logging
+- CharacterService - Manajemen karakter
+- BattleService - Sistem pertarungan
+- ExplorationService - Sistem eksplorasi
+- InventoryService - Manajemen item
+- NpcService - Interaksi NPC
+- QuestService - Manajemen quest
+- WeatherService - Sistem cuaca
+
+#### Event System
+- Random encounters saat eksplorasi
+- Cuaca dinamis
+- Quest events
+- Battle events
+
+### Pengembangan
+
+Bot ini dikembangkan menggunakan:
+- TypeScript
+- Discord.js
+- Prisma (Database ORM)
+- Node.js
+
+Untuk kontribusi:
+1. Fork repository
+2. Buat branch fitur
+3. Commit perubahan
+4. Buat pull request
+
 ### Key Points
 - Create a unique One Piece-themed Discord bot called "A4A CLAN BOT" with RPG elements, focusing on exploration and interaction with Luffy, Zoro, Usopp, and Sanji.
 - Features include map-based sailing, quests, battles, and social interactions, with advanced elements like weather and day-night cycles.
