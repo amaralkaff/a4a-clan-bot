@@ -5,56 +5,49 @@ import { createEphemeralReply } from '@/utils/helpers';
 export const interactNpc: CommandHandler = {
   data: new SlashCommandBuilder()
     .setName('interact')
-    .setDescription('Berinteraksi dengan karakter utama')
+    .setDescription('Berinteraksi dengan NPC')
     .addStringOption(option =>
       option
-        .setName('character')
-        .setDescription('Pilih karakter untuk berinteraksi')
+        .setName('npc')
+        .setDescription('NPC yang ingin diajak berinteraksi')
         .setRequired(true)
         .addChoices(
-          { name: 'Luffy (YB)', value: 'luffy' },
-          { name: 'Zoro (Tierison)', value: 'zoro' },
-          { name: 'Usopp (LYuka)', value: 'usopp' },
-          { name: 'Sanji (GarryAng)', value: 'sanji' }
+          { name: 'Luffy (YB)', value: 'YB' },
+          { name: 'Zoro (Tierison)', value: 'Tierison' },
+          { name: 'Usopp (LYuka)', value: 'LYuka' },
+          { name: 'Sanji (GarryAng)', value: 'GarryAng' }
         )
     ) as SlashCommandBuilder,
 
   async execute(interaction, services) {
     try {
-      const npcId = interaction.options.getString('character', true);
-      const discordId = interaction.user.id;
+      const npcId = interaction.options.getString('npc', true);
+      const character = await services.character.getCharacterByDiscordId(interaction.user.id);
 
-      // Dapatkan karakter user
-      const character = await services.character.getCharacterByDiscordId(discordId);
       if (!character) {
-        await interaction.reply(createEphemeralReply({
+        return interaction.reply(createEphemeralReply({
           content: 'Kamu belum memiliki karakter! Gunakan `/create-character` untuk membuat karakter.'
         }));
-        return;
       }
 
-      // Interaksi dengan NPC
-      const npcInteraction = await services.npc.interactWithNpc(
-        character.id,
-        npcId
-      );
+      const result = await services.npc.interactWithNpc(character.id, npcId);
 
       // Format pesan berdasarkan hasil interaksi
-      let responseContent = npcInteraction.dialogue + '\n\n';
-      if (npcInteraction.availableActions.length > 0) {
+      let responseContent = result.dialogue + '\n\n';
+      if (result.availableActions.length > 0) {
         responseContent += 'Aksi yang tersedia:\n';
-        responseContent += npcInteraction.availableActions
-          .map(action => `• ${action.toLowerCase()}`)
+        responseContent += result.availableActions
+          .map(action => `• ${action}`)
           .join('\n');
       }
 
-      await interaction.reply(createEphemeralReply({
+      return interaction.reply(createEphemeralReply({
         content: responseContent
       }));
     } catch (error) {
-      services.logger.error('Error interacting with NPC:', error);
-      await interaction.reply(createEphemeralReply({
-        content: 'Terjadi kesalahan saat berinteraksi dengan karakter. Silakan coba lagi.'
+      services.logger.error('Error in interact command:', error);
+      return interaction.reply(createEphemeralReply({
+        content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
       }));
     }
   }

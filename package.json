@@ -1,13 +1,14 @@
 {
   "name": "a4a-clan-bot",
   "version": "1.0.0",
-  "main": "dist/index.js",
+  "description": "Discord bot for A4A Clan with One Piece theme",
+  "main": "src/index.ts",
   "scripts": {
     "dev": "bun run --watch src/index.ts",
-    "build": "tsc",
-    "start": "bun run dist/index.js",
+    "start": "bun run src/index.ts",
     "db:push": "bunx prisma db push",
-    "db:studio": "bunx prisma studio"
+    "db:studio": "bunx prisma studio",
+    "deploy": "bun run src/deploy-commands.ts"
   },
   "dependencies": {
     "@prisma/client": "latest",

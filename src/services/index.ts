@@ -17,9 +17,7 @@ export class ServiceContainer {
   public readonly weather: WeatherService;
   public readonly exploration: ExplorationService;
   public readonly npc: NpcService;
-
   public readonly logger = logger;
-
 
   constructor(prisma: PrismaClient) {
     this.character = new CharacterService(prisma);
@@ -30,4 +28,8 @@ export class ServiceContainer {
     this.exploration = new ExplorationService(prisma);
     this.npc = new NpcService(prisma);
   }
+}
+
+export function createServiceContainer(prisma: PrismaClient): ServiceContainer {
+  return new ServiceContainer(prisma);
 }

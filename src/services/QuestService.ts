@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Quest } from '@prisma/client';
 import { logger } from '../utils/logger';
 
 interface QuestTemplate {
@@ -67,8 +67,18 @@ export class QuestService {
 
   async acceptQuest(characterId: string, questName: string) {
     try {
-      const questTemplate = this.questTemplates.find(q => q.name === questName);
-      if (!questTemplate) throw new Error('Quest not found');
+      // Normalize quest name to match template
+      const normalizedQuestName = questName.trim();
+      
+      const questTemplate = this.questTemplates.find(q => 
+        q.name.toLowerCase() === normalizedQuestName.toLowerCase()
+      );
+      
+      if (!questTemplate) {
+        logger.warn(`Quest not found: ${questName}`);
+        logger.warn('Available quests:', this.questTemplates.map(q => q.name));
+        throw new Error('Quest not found');
+      }
 
       const character = await this.prisma.character.findUnique({
         where: { id: characterId },
@@ -77,8 +87,16 @@ export class QuestService {
 
       if (!character) throw new Error('Character not found');
 
+      // Check if character meets level requirement
+      if (character.level < questTemplate.requiredLevel) {
+        throw new Error(`Level ${questTemplate.requiredLevel} required for this quest`);
+      }
+
       // Check if character already has this quest
-      const existingQuest = character.quests.find(q => q.name === questName);
+      const existingQuest = character.quests.find(q => 
+        q.name.toLowerCase() === questTemplate.name.toLowerCase()
+      );
+      
       if (existingQuest) throw new Error('Quest already accepted');
 
       // Create new quest
@@ -91,6 +109,7 @@ export class QuestService {
         }
       });
 
+      logger.info(`Quest accepted: ${quest.name} by character ${character.name}`);
       return quest;
     } catch (error) {
       logger.error('Error accepting quest:', error);
@@ -150,6 +169,22 @@ export class QuestService {
       return { success: true, reward: quest.reward };
     } catch (error) {
       logger.error('Error completing quest:', error);
+      throw error;
+    }
+  }
+
+  async getActiveQuests(characterId: string): Promise<Quest[]> {
+    try {
+      const quests = await this.prisma.quest.findMany({
+        where: {
+          characterId,
+          status: 'ACTIVE'
+        }
+      });
+
+      return quests;
+    } catch (error) {
+      logger.error('Error getting active quests:', error);
       throw error;
     }
   }

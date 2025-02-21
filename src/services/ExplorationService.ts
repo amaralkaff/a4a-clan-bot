@@ -15,6 +15,14 @@ export class ExplorationService {
     this.prisma = prisma;
   }
 
+  getIslandConfig(islandName: string) {
+    const config = CONFIG.ISLANDS[islandName as keyof typeof CONFIG.ISLANDS];
+    if (!config) {
+      throw new Error(`Island ${islandName} not found in config`);
+    }
+    return config;
+  }
+
   private getRandomEvent(): ExplorationEvent {
     const rand = Math.random();
     

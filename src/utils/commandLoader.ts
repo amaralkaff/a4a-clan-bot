@@ -3,38 +3,30 @@ import { CONFIG } from '../config/config';
 import { logger } from './logger';
 import * as fs from 'fs';
 import * as path from 'path';
+import commands from '../commands';
+import { CommandHandler } from '@/types/commands';
 
 export async function loadCommands(client: Client) {
-  const commands = new Collection();
+  const commandCollection = new Collection();
   const commandsArray: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [];
 
-  const commandsPath = path.join(__dirname, '..', 'commands');
-  
-  async function readCommands(dir: string) {
-    const files = fs.readdirSync(dir);
-
-    for (const file of files) {
-      const filePath = path.join(dir, file);
-      const stat = fs.statSync(filePath);
-
-      if (stat.isDirectory()) {
-        await readCommands(filePath);
-      } else if (file.endsWith('.ts') || file.endsWith('.js')) {
-        const command = require(filePath);
-        if ('data' in command && 'execute' in command) {
-          commands.set(command.data.name, command);
-          commandsArray.push(command.data.toJSON());
-        }
-      }
+  // Load commands from the commands object
+  for (const [name, command] of Object.entries(commands)) {
+    const cmd = command as CommandHandler;
+    if ('data' in cmd && 'execute' in cmd) {
+      logger.info(`Registering command: ${name}`);
+      commandCollection.set(name, cmd);
+      commandsArray.push(cmd.data.toJSON());
+    } else {
+      logger.warn(`Invalid command structure for ${name}`);
     }
   }
 
   try {
-    await readCommands(commandsPath);
-
     const rest = new REST({ version: '10' }).setToken(CONFIG.BOT_TOKEN);
 
     logger.info('Started refreshing application (/) commands.');
+    logger.info('Commands to register:', commandsArray.map(cmd => cmd.name).join(', '));
 
     // Coba register commands secara global jika guild-specific gagal
     try {
@@ -56,7 +48,7 @@ export async function loadCommands(client: Client) {
       }
     }
 
-    return commands;
+    return commandCollection;
   } catch (error) {
     logger.error('Error loading commands:', error);
     throw new Error('Failed to register Discord commands. Please check bot permissions and try again.');

@@ -1,14 +1,18 @@
 // src/types/commands.ts
 import { 
     SlashCommandBuilder, 
-    ChatInputCommandInteraction 
+    ChatInputCommandInteraction,
+    SlashCommandSubcommandsOnlyBuilder,
+    SlashCommandOptionsOnlyBuilder,
+    InteractionResponse,
+    Message
   } from 'discord.js';
   import { ServiceContainer } from '../services';
   
   export interface CommandHandler {
-    data: SlashCommandBuilder;
+    data: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder | SlashCommandOptionsOnlyBuilder;
     execute: (
       interaction: ChatInputCommandInteraction, 
       services: ServiceContainer
-    ) => Promise<void>;
+    ) => Promise<void | InteractionResponse | Message>;
   }

@@ -3,15 +3,21 @@ import { SlashCommandBuilder } from 'discord.js';
 import { CommandHandler } from '@/types/commands';
 import { createEphemeralReply } from '@/utils/helpers';
 
-export const createCharacter: CommandHandler = {
+export const createCommand: CommandHandler = {
   data: new SlashCommandBuilder()
-    .setName('create-character')
+    .setName('create')
     .setDescription('Buat karakter baru')
     .addStringOption(option =>
       option
         .setName('name')
         .setDescription('Nama karakter kamu')
         .setRequired(true)
+        .addChoices(
+          { name: 'Rookie Pirate', value: 'Rookie' },
+          { name: 'Aspiring Marine', value: 'Marine' },
+          { name: 'Bounty Hunter', value: 'Hunter' },
+          { name: 'Merchant', value: 'Merchant' }
+        )
     )
     .addStringOption(option =>
       option
@@ -19,12 +25,12 @@ export const createCharacter: CommandHandler = {
         .setDescription('Pilih mentormu')
         .setRequired(true)
         .addChoices(
-          { name: 'Luffy (YB)', value: 'YB' },
-          { name: 'Zoro (Tierison)', value: 'Tierison' },
-          { name: 'Usopp (LYuka)', value: 'LYuka' },
-          { name: 'Sanji (GarryAng)', value: 'GarryAng' }
+          { name: 'Luffy (YB) - Combat Focus (+15% ATK, -10% DEF)', value: 'YB' },
+          { name: 'Zoro (Tierison) - Explorer (+10% ATK & DEF)', value: 'Tierison' },
+          { name: 'Usopp (LYuka) - Sniper (-10% ATK, +20% DEF)', value: 'LYuka' },
+          { name: 'Sanji (GarryAng) - Support (+5% ATK, +15% DEF)', value: 'GarryAng' }
         )
-    ) as SlashCommandBuilder,
+    ),
 
   async execute(interaction, services) {
     try {
@@ -34,7 +40,7 @@ export const createCharacter: CommandHandler = {
 
       const character = await services.character.createCharacter({
         discordId,
-        name,
+        name: `${name} the ${mentor} Apprentice`,
         mentor
       });
 

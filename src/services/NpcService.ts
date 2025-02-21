@@ -5,6 +5,13 @@ import { NpcCharacter, NpcInteraction } from '../types/game';
 import { CONFIG } from '../config/config';
 
 export class NpcService extends BaseService {
+  private readonly clanMemberToNpcId: Record<string, string> = {
+    'YB': 'luffy',
+    'Tierison': 'zoro',
+    'LYuka': 'usopp',
+    'GarryAng': 'sanji'
+  };
+
   private readonly npcs: Record<string, NpcCharacter> = {
     luffy: {
       id: 'luffy',
@@ -78,9 +85,12 @@ export class NpcService extends BaseService {
 
   async interactWithNpc(
     characterId: string,
-    npcId: string
+    clanMemberId: string
   ): Promise<NpcInteraction> {
     try {
+      const npcId = this.clanMemberToNpcId[clanMemberId];
+      if (!npcId) throw new Error('NPC not found');
+
       const npc = this.npcs[npcId];
       if (!npc) throw new Error('NPC not found');
 

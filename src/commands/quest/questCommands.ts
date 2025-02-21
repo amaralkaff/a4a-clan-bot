@@ -3,68 +3,63 @@ import {
     ChatInputCommandInteraction,
     EmbedBuilder 
   } from 'discord.js';
-  import { PrismaClient } from '@prisma/client';
-  import { QuestService } from '../../services/QuestService';
-  import { logger } from '../../utils/logger';
-  
-  export const data = new SlashCommandBuilder()
+import { CommandHandler } from '@/types/commands';
+
+export const questCommands: CommandHandler = {
+  data: new SlashCommandBuilder()
     .setName('quest')
-    .setDescription('Quest system commands')
+    .setDescription('Sistem quest')
     .addSubcommand(subcommand =>
       subcommand
         .setName('list')
-        .setDescription('List available quests')
+        .setDescription('Lihat quest yang tersedia')
     )
     .addSubcommand(subcommand =>
       subcommand
         .setName('accept')
-        .setDescription('Accept a quest')
+        .setDescription('Terima sebuah quest')
         .addStringOption(option =>
           option
-            .setName('quest_name')
-            .setDescription('Name of the quest to accept')
+            .setName('quest')
+            .setDescription('Quest yang ingin diambil')
             .setRequired(true)
+            .addChoices(
+              { name: "Luffy's First Mission - Mencari daging (Level 1)", value: "Luffy's First Mission" },
+              { name: "Usopp's Target Practice - Latihan menembak (Level 1)", value: "Usopp's Target Practice" },
+              { name: "Zoro's Training - Berlatih pedang (Level 2)", value: "Zoro's Training" },
+              { name: "Sanji's Cooking Challenge - Mencari bahan (Level 3)", value: "Sanji's Cooking Challenge" }
+            )
         )
     )
     .addSubcommand(subcommand =>
       subcommand
         .setName('complete')
-        .setDescription('Complete a quest')
+        .setDescription('Selesaikan quest yang aktif')
         .addStringOption(option =>
           option
-            .setName('quest_id')
-            .setDescription('ID of the quest to complete')
+            .setName('quest')
+            .setDescription('Quest yang ingin diselesaikan')
             .setRequired(true)
+            .setAutocomplete(true)
         )
-    );
-  
-  export async function execute(
-    interaction: ChatInputCommandInteraction,
-    prisma: PrismaClient
-  ) {
+    ),
+
+  async execute(interaction, services) {
     try {
-      const questService = new QuestService(prisma);
       const subcommand = interaction.options.getSubcommand();
-  
-      // Get character
-      const character = await prisma.character.findFirst({
-        where: {
-          user: {
-            discordId: interaction.user.id
-          }
-        }
-      });
-  
+
+      const character = await services.character.getCharacterByDiscordId(interaction.user.id);
+
       if (!character) {
         return interaction.reply({
-          content: 'Kamu harus membuat karakter terlebih dahulu dengan command `/create-character`',
+          content: 'Kamu harus membuat karakter terlebih dahulu dengan command `/create`',
           ephemeral: true
         });
       }
-  
+
       switch (subcommand) {
         case 'list': {
-          const quests = await questService.getAvailableQuests(character.id);
+          const quests = await services.quest.getAvailableQuests(character.id);
           
           const embed = new EmbedBuilder()
             .setTitle('Quest yang Tersedia')
@@ -76,23 +71,23 @@ import {
                   ).join('\n\n')
                 : 'Tidak ada quest yang tersedia saat ini.'
             );
-  
+
           return interaction.reply({ embeds: [embed], ephemeral: true });
         }
-  
+
         case 'accept': {
-          const questName = interaction.options.getString('quest_name', true);
-          const quest = await questService.acceptQuest(character.id, questName);
+          const questName = interaction.options.getString('quest', true);
+          const quest = await services.quest.acceptQuest(character.id, questName);
           
           return interaction.reply({
             content: `Berhasil menerima quest "${quest.name}"!\n${quest.description}`,
             ephemeral: true
           });
         }
-  
+
         case 'complete': {
-          const questId = interaction.options.getString('quest_id', true);
-          const result = await questService.completeQuest(character.id, questId);
+          const questId = interaction.options.getString('quest', true);
+          const result = await services.quest.completeQuest(character.id, questId);
           
           return interaction.reply({
             content: `Quest berhasil diselesaikan! Kamu mendapatkan ${result.reward} EXP!`,
@@ -101,10 +96,11 @@ import {
         }
       }
     } catch (error) {
-      logger.error('Error in quest command:', error);
+      services.logger.error('Error in quest command:', error);
       return interaction.reply({
         content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         ephemeral: true
       });
     }
   }
+};

@@ -18,7 +18,15 @@ const OAUTH2_SCOPES = [
   'applications.commands'
 ];
 
-const inviteUrl = `https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&permissions=277025507328&scope=${OAUTH2_SCOPES.join('%20')}`;
+// Permissions yang diperlukan:
+// - View Channels (1 << 10)
+// - Send Messages (1 << 11)
+// - Embed Links (1 << 14)
+// - Read Message History (1 << 16)
+// - Use Application Commands (1 << 31)
+const PERMISSION_INTEGER = '2147485760';
+
+const inviteUrl = `https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&permissions=${PERMISSION_INTEGER}&scope=${OAUTH2_SCOPES.join('%20')}`;
 
 logger.info(`Bot invite URL: ${inviteUrl}`);
 

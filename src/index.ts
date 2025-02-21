@@ -7,11 +7,12 @@ import { PrismaClient } from '@prisma/client';
 import { WeatherService } from './services/WeatherService';
 import { logger } from './utils/logger';
 import { BotCommand } from './types/discord';
+import { ServiceContainer, createServiceContainer } from './services';
 
 class A4AClanBot {
   private client: Client;
   private prisma: PrismaClient;
-  private weatherService: WeatherService;
+  private services: ServiceContainer;
 
   constructor() {
     this.client = new Client({
@@ -20,12 +21,15 @@ class A4AClanBot {
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.MessageContent,
+        GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.GuildPresences,
+        GatewayIntentBits.GuildMessageReactions,
       ],
     });
     
     this.client.commands = new Collection<string, BotCommand>();
     this.prisma = new PrismaClient();
-    this.weatherService = new WeatherService();
+    this.services = createServiceContainer(this.prisma);
   }
 
   async start() {
@@ -48,7 +52,7 @@ class A4AClanBot {
       (this.client as any).commands = commands;
 
       // Setup event handlers
-      setupEventHandlers(this.client, this.prisma);
+      setupEventHandlers(this.client, this.services);
 
       // Login
       await this.client.login(CONFIG.BOT_TOKEN);
@@ -63,7 +67,6 @@ class A4AClanBot {
   }
 
   async stop() {
-    this.weatherService.stopWeatherCycle();
     await this.prisma.$disconnect();
     this.client.destroy();
   }
