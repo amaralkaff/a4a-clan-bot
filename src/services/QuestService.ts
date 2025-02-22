@@ -43,7 +43,8 @@ interface Quest extends DatabaseQuest {
 }
 
 interface QuestProgress {
-  questId: string;
+  questId: string;      // Original quest ID from config
+  dbQuestId?: string;   // Database-generated quest ID
   objectives: string;
   startedAt: number;
   lastUpdated: number;
@@ -369,10 +370,13 @@ export class QuestService extends BaseService {
         throw new Error('Invalid quest ID');
       }
 
+      this.logger.info(`Attempting to accept quest: ${questId}`);
+
       // Get quest data from QUESTS config
       const quest = QUESTS[questId as keyof typeof QUESTS];
       if (!quest) {
-        this.logger.error(`Quest not found: ${questId}`);
+        this.logger.error(`Quest not found in config: ${questId}`);
+        this.logger.info('Available quests:', Object.keys(QUESTS));
         throw new Error(`Quest "${questId}" tidak ditemukan`);
       }
 
@@ -403,62 +407,94 @@ export class QuestService extends BaseService {
 
       // Initialize quest progress
       const questProgress: QuestProgress = {
-        questId,
+        questId: questId, // Use original quest ID from config
         objectives: this.initializeQuestObjectives(quest),
         startedAt: Date.now(),
         lastUpdated: Date.now()
       };
 
-      state.activeQuests.set(questId, questProgress);
-      this.questStates.set(characterId, state);
+      try {
+        // Check if quest already exists with simpler conditions
+        const existingQuest = await this.prisma.quest.findFirst({
+          where: {
+            AND: [
+              { characterId },
+              { status: 'ACTIVE' },
+              { type: quest.type },
+              { name: quest.name }
+            ]
+          }
+        });
 
-      // Create quest in database
-      await this.prisma.quest.create({
-        data: {
-          id: questId,
-          name: quest.name,
-          description: quest.description,
-          objectives: questProgress.objectives,
-          reward: quest.reward,
-          type: quest.type,
-          isDaily: quest.type === 'DAILY',
-          expiresAt,
-          characterId
+        if (existingQuest) {
+          throw new Error('Quest ini sudah aktif untuk karakter ini');
         }
-      });
 
-      // Create quest acceptance embed
-      const acceptEmbed = new EmbedBuilder()
-        .setTitle(`📜 Quest Diterima: ${quest.name}`)
-        .setColor('#00ff00')
-        .setDescription(quest.description)
-        .addFields(
-          { name: '📊 Objectives', value: this.formatQuestObjectives(questProgress.objectives) },
-          { name: '💰 Reward', value: `${quest.reward} EXP`, inline: true },
-          { name: '📈 Required Level', value: `${quest.requiredLevel}+`, inline: true }
-        );
-
-      if (quest.mentor) {
-        acceptEmbed.addFields({
-          name: '👥 Mentor',
-          value: quest.mentor,
-          inline: true
+        // Create quest in database with status and store original questId
+        const createdQuest = await this.prisma.quest.create({
+          data: {
+            name: quest.name,
+            description: quest.description,
+            objectives: questProgress.objectives,
+            rewards: JSON.stringify({ 
+              originalQuestId: questId,  // Store original quest ID explicitly
+              exp: quest.reward,
+              questId: questId  // Keep for backwards compatibility
+            }),
+            reward: quest.reward,
+            type: quest.type,
+            isDaily: quest.type === 'DAILY',
+            expiresAt,
+            characterId,
+            status: 'ACTIVE'
+          }
         });
-      }
 
-      if (expiresAt) {
-        acceptEmbed.addFields({
-          name: '⏰ Expires',
-          value: `${expiresAt.toLocaleString()}`,
-          inline: true
+        this.logger.info(`Created quest in database with ID: ${createdQuest.id}, original questId: ${questId}`);
+
+        // Update quest progress with database ID but keep original questId
+        state.activeQuests.set(createdQuest.id, {
+          ...questProgress,
+          dbQuestId: createdQuest.id  // Store database ID separately
         });
-      }
+        this.questStates.set(characterId, state);
 
-      return {
-        quest,
-        progress: questProgress,
-        embed: acceptEmbed
-      };
+        // Create quest acceptance embed
+        const acceptEmbed = new EmbedBuilder()
+          .setTitle(`📜 Quest Diterima: ${quest.name}`)
+          .setColor('#00ff00')
+          .setDescription(quest.description)
+          .addFields(
+            { name: '📊 Objectives', value: this.formatQuestObjectives(questProgress.objectives) },
+            { name: '💰 Reward', value: `${quest.reward} EXP`, inline: true },
+            { name: '📈 Required Level', value: `${quest.requiredLevel}+`, inline: true }
+          );
+
+        if (quest.mentor) {
+          acceptEmbed.addFields({
+            name: '👥 Mentor',
+            value: quest.mentor,
+            inline: true
+          });
+        }
+
+        if (expiresAt) {
+          acceptEmbed.addFields({
+            name: '⏰ Expires',
+            value: `${expiresAt.toLocaleString()}`,
+            inline: true
+          });
+        }
+
+        return {
+          quest,
+          progress: questProgress,
+          embed: acceptEmbed
+        };
+      } catch (error) {
+        this.logger.error('Error checking existing quest:', error);
+        throw error;
+      }
     } catch (error: unknown) {
       if (error instanceof Error) {
         return this.handleError(error, 'AcceptQuest');
@@ -612,12 +648,20 @@ export class QuestService extends BaseService {
 
       // Load active quests into state
       for (const quest of character.quests) {
-        state.activeQuests.set(quest.id, {
-          questId: quest.id,
-          objectives: quest.objectives,
-          startedAt: quest.createdAt.getTime(),
-          lastUpdated: quest.updatedAt.getTime()
-        });
+        try {
+          const rewards = JSON.parse(quest.rewards);
+          const originalQuestId = rewards.questId;
+          
+          state.activeQuests.set(quest.id, {
+            questId: originalQuestId, // Use original quest ID from config
+            objectives: quest.objectives,
+            startedAt: quest.createdAt.getTime(),
+            lastUpdated: quest.updatedAt.getTime()
+          });
+        } catch (error) {
+          this.logger.error(`Error parsing quest rewards for quest ${quest.id}:`, error);
+          continue;
+        }
       }
 
       return state;
@@ -627,32 +671,61 @@ export class QuestService extends BaseService {
     }
   }
 
+  private getQuestConfigFromDbQuest(dbQuest: any): any {
+    try {
+      const rewards = JSON.parse(dbQuest.rewards || '{}');
+      const originalQuestId = rewards.questId;
+      
+      if (!originalQuestId) {
+        this.logger.error(`No original questId found in rewards for quest ${dbQuest.id}`);
+        return null;
+      }
+
+      const questConfig = QUESTS[originalQuestId as keyof typeof QUESTS];
+      if (!questConfig) {
+        this.logger.error(`Quest config not found for original ID ${originalQuestId}`);
+        return null;
+      }
+
+      return questConfig;
+    } catch (error) {
+      this.logger.error(`Error parsing quest rewards for quest ${dbQuest.id}:`, error);
+      return null;
+    }
+  }
+
   async completeQuest(characterId: string, questId: string) {
     try {
       // Get character with active quests
       const character = await this.prisma.character.findUnique({
         where: { id: characterId },
         include: {
-          quests: true // Get all quests first to check status
+          quests: {
+            where: {
+              id: questId,
+              status: 'ACTIVE'
+            }
+          }
         }
       });
 
       if (!character) throw new Error('Character not found');
 
       // Check if quest exists and is active
-      const dbQuest = character.quests.find(q => q.id === questId);
+      const dbQuest = character.quests[0];
       if (!dbQuest) {
         this.logger.error(`Quest with ID ${questId} not found for character ${characterId}`);
-        throw new Error('Quest tidak ditemukan');
+        throw new Error('Quest tidak ditemukan atau tidak aktif');
       }
 
-      if (dbQuest.status !== 'ACTIVE') {
-        this.logger.error(`Quest ${questId} status is ${dbQuest.status}, not ACTIVE`);
-        throw new Error('Quest tidak aktif');
+      // Get quest config from database quest
+      const questConfig = this.getQuestConfigFromDbQuest(dbQuest);
+      if (!questConfig) {
+        throw new Error('Quest tidak dapat diselesaikan karena konfigurasi tidak ditemukan');
       }
 
       // Initialize or get quest state
-      const state = this.questStates.get(characterId) || this.initQuestState();
+      const state = this.questStates.get(characterId) || await this.loadQuestState(characterId);
       
       // Get quest progress from state
       let progress = state.activeQuests.get(questId);
@@ -666,13 +739,6 @@ export class QuestService extends BaseService {
         };
         state.activeQuests.set(questId, questProgress);
         this.logger.info(`Initialized quest progress for quest ${questId}`);
-      }
-
-      // Get quest data from config
-      const quest = QUESTS[questId as keyof typeof QUESTS] as Quest;
-      if (!quest) {
-        this.logger.error(`Quest config not found for ID ${questId}`);
-        throw new Error('Quest tidak ditemukan dalam konfigurasi');
       }
 
       // Check if all objectives are completed
@@ -720,13 +786,13 @@ export class QuestService extends BaseService {
       const { bonusReward, messages } = await this.applyMentorEffects(character, state);
 
       // Calculate final reward
-      const finalReward = Math.floor(quest.reward * (1 + bonusReward));
+      const finalReward = Math.floor(questConfig.reward * (1 + bonusReward));
 
       // Create rewards object
       const rewards: QuestReward = {
         experience: finalReward,
-        questPoints: quest.reward,
-        items: quest.items || []
+        questPoints: questConfig.reward,
+        items: questConfig.items || []
       };
 
       // Update character stats and quest status in transaction
@@ -736,7 +802,7 @@ export class QuestService extends BaseService {
           where: { id: characterId },
           data: {
             experience: { increment: finalReward },
-            questPoints: { increment: quest.reward }
+            questPoints: { increment: questConfig.reward }
           }
         }),
         // Update quest status
@@ -756,20 +822,20 @@ export class QuestService extends BaseService {
       // Update quest state
       state.activeQuests.delete(questId);
       state.completedQuests.add(questId);
-      state.questPoints += quest.reward;
-      if (quest.type === 'DAILY') {
+      state.questPoints += questConfig.reward;
+      if (questConfig.type === 'DAILY') {
         state.dailyQuestsCompleted++;
       }
       this.questStates.set(characterId, state);
 
       // Create completion embed
       const completeEmbed = new EmbedBuilder()
-        .setTitle(`🎉 Quest Selesai: ${quest.name}`)
+        .setTitle(`🎉 Quest Selesai: ${questConfig.name}`)
         .setColor('#00ff00')
         .setDescription('Selamat! Kamu telah menyelesaikan quest ini!')
         .addFields(
           { name: '💰 Reward', value: `${finalReward} EXP${bonusReward > 0 ? ` (Bonus: +${Math.floor(bonusReward * 100)}%)` : ''}`, inline: true },
-          { name: '🎯 Quest Points', value: `+${quest.reward} (Total: ${state.questPoints})`, inline: true }
+          { name: '🎯 Quest Points', value: `+${questConfig.reward} (Total: ${state.questPoints})`, inline: true }
         );
 
       if (rewards.items.length > 0) {
@@ -787,8 +853,8 @@ export class QuestService extends BaseService {
       }
 
       // Update mentor progress if quest has mentor
-      if (quest.mentor && typeof quest.mentor === 'string') {
-        await this.characterService.updateMentorProgress(characterId, quest.mentor as MentorType, 10);
+      if (questConfig.mentor && typeof questConfig.mentor === 'string') {
+        await this.characterService.updateMentorProgress(characterId, questConfig.mentor as MentorType, 10);
       }
 
       return {

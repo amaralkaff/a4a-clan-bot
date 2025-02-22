@@ -128,15 +128,6 @@ Every feature connects to the **4 main characters**, creating an ecosystem where
 
 ---
 
-### ⚙️ **Technical Implementation**  
-- **Database Structure**: ✅ Complete
-- **Command System**: ✅ Complete
-- **Event Handlers**: ✅ Complete
-- **Service Layer**: ✅ Complete
-- **Type Safety**: ✅ Complete
-
----
-
 ### 📜 **Setup Guide**  
 
 1. **Installation**  
@@ -163,5 +154,3 @@ Every feature connects to the **4 main characters**, creating an ecosystem where
    ```
 
 ---
-
-**⚓ Ready to set sail – your journey with YB, Tierison, LYuka, and GarryAng awaits!**

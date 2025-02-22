@@ -29,14 +29,12 @@ export class InventoryService extends BaseService {
 
   async addItem(characterId: string, itemId: string, quantity: number = 1) {
     try {
-      // Cek apakah item ada
       const item = await this.prisma.item.findUnique({
         where: { id: itemId }
       });
       
       if (!item) throw new Error('Item tidak ditemukan');
 
-      // Update atau create inventory
       await this.prisma.inventory.upsert({
         where: {
           characterId_itemId: {
@@ -63,14 +61,12 @@ export class InventoryService extends BaseService {
 
   async useItem(characterId: string, itemId: string) {
     try {
-      // Get item from database
       const item = await this.prisma.item.findUnique({
         where: { id: itemId }
       });
 
       if (!item) throw new Error('Item tidak ditemukan');
 
-      // Get inventory
       const inventory = await this.prisma.inventory.findFirst({
         where: {
           characterId,
@@ -82,7 +78,6 @@ export class InventoryService extends BaseService {
         throw new Error('Item tidak tersedia di inventory');
       }
 
-      // Parse item effect
       let effect: ItemEffect | null = null;
       try {
         effect = JSON.parse(item.effect) as ItemEffect;
@@ -90,9 +85,7 @@ export class InventoryService extends BaseService {
         logger.warn(`Invalid effect JSON for item ${itemId}:`, e);
       }
 
-      // Begin transaction
       const result = await this.prisma.$transaction(async (tx) => {
-        // Reduce item quantity
         await tx.inventory.update({
           where: {
             id: inventory.id
@@ -104,7 +97,6 @@ export class InventoryService extends BaseService {
           }
         });
 
-        // Apply item effect
         if (effect) {
           if (effect.type === 'HEAL') {
             await tx.character.update({

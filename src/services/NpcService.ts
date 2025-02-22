@@ -104,7 +104,6 @@ export class NpcService extends BaseService {
 
       if (!character) throw new Error('Character not found');
 
-      // Cek apakah karakter berada di lokasi yang sama dengan NPC
       if (character.currentIsland !== npc.location) {
         return {
           type: 'DIALOGUE',
@@ -114,12 +113,10 @@ export class NpcService extends BaseService {
         };
       }
 
-      // Cek quest yang tersedia
       const availableQuests = npc.quests.filter(
         questId => !character.quests.some(q => q.id === questId)
       );
 
-      // Tentukan aksi yang tersedia
       const availableActions = ['DIALOGUE'];
       if (availableQuests.length > 0) availableActions.push('QUEST');
       if (this.canTrain(character)) availableActions.push('TRAINING');
@@ -140,14 +137,10 @@ export class NpcService extends BaseService {
   }
 
   private canTrain(character: any): boolean {
-    // Implementasi logika untuk cek apakah karakter bisa training
-    // Contoh: Level minimum, quest sebelumnya selesai, dll
     return character.level >= 5;
   }
 
   private canTrade(character: any): boolean {
-    // Implementasi logika untuk cek apakah karakter bisa berdagang
-    // Contoh: Memiliki item yang bisa ditukar, gold cukup, dll
     return character.inventory && character.inventory.length > 0;
   }
 }

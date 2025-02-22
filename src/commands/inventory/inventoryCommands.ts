@@ -87,14 +87,12 @@ import {
               .setColor('#0099ff');
 
             if (inventory.length > 0) {
-              // Group items by type
               const groupedItems = inventory.reduce((acc, item) => {
                 if (!acc[item.type]) acc[item.type] = [];
                 acc[item.type].push(item);
                 return acc;
               }, {} as Record<string, InventoryItem[]>);
 
-              // Add fields for each type
               for (const [type, items] of Object.entries(groupedItems)) {
                 let typeEmoji = '';
                 switch (type) {

@@ -64,37 +64,63 @@ export class CharacterService extends BaseService {
           break;
       }
 
-      const user = await this.prisma.user.create({
-        data: {
-          discordId,
-          character: {
-            create: {
-              name,
-              mentor,
-              level: 1,
-              experience: 0,
-              health,
-              maxHealth: health,
-              attack,
-              defense,
-              currentIsland: 'starter_island' as LocationId,
-              statusEffects: JSON.stringify(initialStatusEffects),
-              activeBuffs: JSON.stringify(initialActiveBuffs),
-              combo: 0,
-              questPoints: 0,
-              explorationPoints: 0,
-              luffyProgress: 0,
-              zoroProgress: 0,
-              usoppProgress: 0,
-              sanjiProgress: 0,
-              dailyHealCount: 0
+      // Create character in transaction with starter items
+      const result = await this.prisma.$transaction(async (tx) => {
+        // Create user and character
+        const user = await tx.user.create({
+          data: {
+            discordId,
+            character: {
+              create: {
+                name,
+                mentor,
+                level: 1,
+                experience: 0,
+                health,
+                maxHealth: health,
+                attack,
+                defense,
+                currentIsland: 'starter_island' as LocationId,
+                statusEffects: JSON.stringify(initialStatusEffects),
+                activeBuffs: JSON.stringify(initialActiveBuffs),
+                combo: 0,
+                questPoints: 0,
+                explorationPoints: 0,
+                luffyProgress: 0,
+                zoroProgress: 0,
+                usoppProgress: 0,
+                sanjiProgress: 0,
+                dailyHealCount: 0
+              },
             },
           },
-        },
-        include: { character: true },
+          include: { character: true },
+        });
+
+        // Add starter items to inventory
+        const starterItems = [
+          { itemId: 'potion', quantity: 5 },
+          { itemId: 'attack_buff', quantity: 3 },
+          { itemId: 'defense_buff', quantity: 3 },
+          { itemId: 'combat_ration', quantity: 3 },
+          { itemId: 'starter_sword', quantity: 1 },
+          { itemId: 'starter_armor', quantity: 1 }
+        ];
+
+        for (const item of starterItems) {
+          await tx.inventory.create({
+            data: {
+              itemId: item.itemId,
+              quantity: item.quantity,
+              characterId: user.character!.id
+            }
+          });
+        }
+
+        return user.character!;
       });
 
-      return user.character!;
+      return result;
     } catch (error) {
       return this.handleError(error, 'CreateCharacter');
     }

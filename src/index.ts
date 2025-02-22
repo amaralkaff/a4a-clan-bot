@@ -34,7 +34,6 @@ class A4AClanBot {
 
   async start() {
     try {
-      // Setup error handlers first
       this.client.on('error', (error) => {
         logger.error('Discord client error:', error);
       });
@@ -47,14 +46,11 @@ class A4AClanBot {
         logger.debug('Discord client debug:', info);
       });
 
-      // Load commands
       const commands = await loadCommands(this.client);
       (this.client as any).commands = commands;
 
-      // Setup event handlers
       setupEventHandlers(this.client, this.services);
 
-      // Login
       await this.client.login(CONFIG.BOT_TOKEN);
       
       logger.info(`Logged in as ${this.client.user?.tag}`);
@@ -72,7 +68,6 @@ class A4AClanBot {
   }
 }
 
-// Error handling untuk uncaught exceptions
 process.on('uncaughtException', (error) => {
   logger.error('Uncaught Exception:', error);
 });
@@ -84,7 +79,6 @@ process.on('unhandledRejection', (error) => {
 const bot = new A4AClanBot();
 bot.start();
 
-// Handle graceful shutdown
 process.on('SIGINT', async () => {
   logger.info('Shutting down bot...');
   await bot.stop();

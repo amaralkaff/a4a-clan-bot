@@ -5,38 +5,40 @@ import { LocationId } from '../src/types/game';
 const prisma = new PrismaClient();
 
 const items = [
+  // Healing Items - More powerful and affordable
   {
     id: 'potion',
     name: '🧪 Health Potion',
-    description: 'Memulihkan 50 HP',
-    type: 'CONSUMABLE',
-    value: 50,
-    effect: JSON.stringify({
-      type: 'HEAL',
-      value: 50
-    })
-  },
-  {
-    id: 'super_potion',
-    name: '🔮 Super Potion',
     description: 'Memulihkan 100 HP',
     type: 'CONSUMABLE',
-    value: 100,
+    value: 30,
     effect: JSON.stringify({
       type: 'HEAL',
       value: 100
     })
   },
   {
+    id: 'super_potion',
+    name: '🔮 Super Potion',
+    description: 'Memulihkan 200 HP',
+    type: 'CONSUMABLE',
+    value: 60,
+    effect: JSON.stringify({
+      type: 'HEAL',
+      value: 200
+    })
+  },
+  // Combat Buffs - Stronger effects
+  {
     id: 'attack_buff',
     name: '⚔️ Attack Boost',
-    description: 'Meningkatkan attack sebesar 5 selama pertarungan',
+    description: 'Meningkatkan attack sebesar 15 selama pertarungan',
     type: 'CONSUMABLE',
-    value: 75,
+    value: 50,
     effect: JSON.stringify({
       type: 'BUFF',
       stats: {
-        attack: 5
+        attack: 15
       },
       duration: 3600 // 1 hour
     })
@@ -44,23 +46,24 @@ const items = [
   {
     id: 'defense_buff',
     name: '🛡️ Defense Boost',
-    description: 'Meningkatkan defense sebesar 5 selama pertarungan',
+    description: 'Meningkatkan defense sebesar 15 selama pertarungan',
     type: 'CONSUMABLE',
-    value: 75,
+    value: 50,
     effect: JSON.stringify({
       type: 'BUFF',
       stats: {
-        defense: 5
+        defense: 15
       },
       duration: 3600 // 1 hour
     })
   },
+  // Crafting Materials - More value
   {
     id: 'meat_raw',
     name: '🥩 Daging Mentah',
     description: 'Daging segar yang belum dimasak',
     type: 'INGREDIENT',
-    value: 10,
+    value: 20,
     effect: '{}'
   },
   {
@@ -68,7 +71,7 @@ const items = [
     name: '🐟 Ikan Segar',
     description: 'Ikan yang baru ditangkap',
     type: 'INGREDIENT',
-    value: 15,
+    value: 25,
     effect: '{}'
   },
   {
@@ -76,18 +79,24 @@ const items = [
     name: '🌿 Rempah-rempah',
     description: 'Bumbu untuk memasak',
     type: 'INGREDIENT',
-    value: 5,
+    value: 15,
     effect: '{}'
   },
+  // Food Items - Better healing and effects
   {
     id: 'meat_cooked',
     name: '🍖 Daging Panggang',
     description: 'Daging yang sudah dimasak dengan sempurna',
     type: 'FOOD',
-    value: 30,
+    value: 40,
     effect: JSON.stringify({
       type: 'HEAL',
-      value: 20
+      value: 150,
+      stats: {
+        attack: 5,
+        defense: 5
+      },
+      duration: 1800 // 30 minutes
     })
   },
   {
@@ -99,28 +108,66 @@ const items = [
     effect: JSON.stringify({
       type: 'BUFF',
       stats: {
-        attack: 10,
-        defense: 10
+        attack: 20,
+        defense: 20
       },
       duration: 3600 // 1 hour
     })
   },
+  // Combat Ration - All-in-one buff
   {
     id: 'combat_ration',
     name: '🎒 Combat Ration',
     description: 'Makanan praktis untuk pertarungan',
     type: 'FOOD',
-    value: 50,
+    value: 75,
     effect: JSON.stringify({
       type: 'HEAL',
-      value: 30,
+      value: 100,
       stats: {
-        attack: 3,
-        defense: 3
+        attack: 10,
+        defense: 10
       },
       duration: 1800 // 30 minutes
     })
+  },
+  // Starter Equipment
+  {
+    id: 'starter_sword',
+    name: '⚔️ Pedang Pemula+',
+    description: 'Pedang dasar yang telah ditingkatkan',
+    type: 'WEAPON',
+    value: 100,
+    effect: JSON.stringify({
+      type: 'EQUIP',
+      stats: {
+        attack: 15
+      }
+    })
+  },
+  {
+    id: 'starter_armor',
+    name: '🛡️ Armor Pemula+',
+    description: 'Armor dasar yang telah ditingkatkan',
+    type: 'ARMOR',
+    value: 100,
+    effect: JSON.stringify({
+      type: 'EQUIP',
+      stats: {
+        defense: 15
+      }
+    })
   }
+];
+
+// Starter items untuk karakter baru
+const starterItems = [
+  { itemId: 'potion', quantity: 5 },
+  { itemId: 'attack_buff', quantity: 3 },
+  { itemId: 'defense_buff', quantity: 3 },
+  { itemId: 'combat_ration', quantity: 3 },
+  { itemId: 'starter_sword', quantity: 1 },
+  { itemId: 'starter_armor', quantity: 1 }
 ];
 
 async function main() {

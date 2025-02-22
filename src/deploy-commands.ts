@@ -31,7 +31,6 @@ async function deployCommands() {
     logger.info('Commands to deploy:', commands.map(cmd => cmd.name).join(', '));
 
     try {
-      // Coba deploy ke guild terlebih dahulu
       logger.info(`Deploying commands to guild: ${CONFIG.GUILD_ID}`);
       const guildData = await rest.put(
         Routes.applicationGuildCommands(CONFIG.CLIENT_ID, CONFIG.GUILD_ID),
@@ -39,7 +38,6 @@ async function deployCommands() {
       );
       logger.info(`Successfully reloaded ${(guildData as any[]).length} guild (/) commands.`);
     } catch (error) {
-      // Jika gagal deploy ke guild, coba deploy global
       logger.warn('Failed to register guild commands, trying global commands...');
       const globalData = await rest.put(
         Routes.applicationCommands(CONFIG.CLIENT_ID),

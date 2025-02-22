@@ -1,8 +1,6 @@
 import { Client, Collection, REST, Routes, RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord.js';
 import { CONFIG } from '../config/config';
 import { logger } from './logger';
-import * as fs from 'fs';
-import * as path from 'path';
 import commands from '../commands';
 import { CommandHandler } from '@/types/commands';
 
@@ -10,7 +8,6 @@ export async function loadCommands(client: Client) {
   const commandCollection = new Collection();
   const commandsArray: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [];
 
-  // Load commands from the commands object
   for (const [name, command] of Object.entries(commands)) {
     const cmd = command as CommandHandler;
     if ('data' in cmd && 'execute' in cmd) {
@@ -28,7 +25,6 @@ export async function loadCommands(client: Client) {
     logger.info('Started refreshing application (/) commands.');
     logger.info('Commands to register:', commandsArray.map(cmd => cmd.name).join(', '));
 
-    // Coba register commands secara global jika guild-specific gagal
     try {
       await rest.put(
         Routes.applicationGuildCommands(CONFIG.CLIENT_ID, CONFIG.GUILD_ID),

@@ -46,7 +46,6 @@ export const craftingCommands: CommandHandler = {
       if (subcommand === 'recipes') {
         const result = await services.crafting.getAvailableRecipes(interaction.user.id);
         
-        // Add effects info to recipe descriptions
         const recipesEmbed = new EmbedBuilder()
           .setTitle('📖 Resep yang Tersedia')
           .setColor('#0099ff');
@@ -81,7 +80,6 @@ export const craftingCommands: CommandHandler = {
         const recipeId = interaction.options.getString('recipe', true);
         const result = await services.crafting.craft(interaction.user.id, recipeId);
 
-        // Add status effect or buff based on crafted item
         if (result.success) {
           switch (recipeId) {
             case 'sanji_basic_meal':
@@ -95,7 +93,7 @@ export const craftingCommands: CommandHandler = {
               await services.character.addBuff(character.id, {
                 type: 'ALL',
                 value: 10,
-                expiresAt: Date.now() + (3600 * 1000) // 1 hour
+                expiresAt: Date.now() + (3600 * 1000)
               });
               break;
             case 'super_meat':
@@ -109,7 +107,7 @@ export const craftingCommands: CommandHandler = {
               await services.character.addBuff(character.id, {
                 type: 'ATTACK',
                 value: 15,
-                expiresAt: Date.now() + (1800 * 1000) // 30 minutes
+                expiresAt: Date.now() + (1800 * 1000)
               });
               break;
           }

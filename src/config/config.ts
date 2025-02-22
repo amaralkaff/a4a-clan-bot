@@ -5,7 +5,6 @@ import { WeatherType } from '@/types/game';
 
 config();
 
-// Validasi environment variables
 const requiredEnvVars = ['DISCORD_TOKEN', 'CLIENT_ID', 'GUILD_ID'] as const;
 for (const envVar of requiredEnvVars) {
   if (!process.env[envVar]) {
@@ -13,7 +12,6 @@ for (const envVar of requiredEnvVars) {
   }
 }
 
-// Generate Bot Invite URL
 const OAUTH2_SCOPES = [
   'bot',
   'applications.commands'

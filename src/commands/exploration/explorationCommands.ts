@@ -55,7 +55,6 @@ import {
           }));
         }
   
-        // Defer reply for all subcommands since they might take time
         await interaction.deferReply({ 
           ephemeral: true 
         });
@@ -91,7 +90,6 @@ import {
             case 'sail': {
               const targetIsland = interaction.options.getString('island', true) as LocationId;
               
-              // Check if character meets level requirement
               if (character.level < LOCATIONS[targetIsland].level) {
                 return interaction.editReply({
                   content: `❌ Level kamu (${character.level}) tidak cukup untuk ke ${LOCATIONS[targetIsland].name} (Required: Level ${LOCATIONS[targetIsland].level})`
@@ -100,23 +98,20 @@ import {
               
               const sailResult = await services.exploration.sail(character.id, targetIsland);
 
-              // Add sailing buffs based on weather
               if (sailResult.event.type === 'WEATHER') {
                 switch (sailResult.event.description) {
                   case 'windy':
-                    // Bonus speed in windy weather
                     await services.character.addBuff(character.id, {
                       type: 'SPEED',
                       value: 5,
-                      expiresAt: Date.now() + (900 * 1000) // 15 minutes
+                      expiresAt: Date.now() + (900 * 1000)
                     });
                     break;
                   case 'stormy':
-                    // Defense buff in stormy weather
                     await services.character.addBuff(character.id, {
                       type: 'DEFENSE',
                       value: 10,
-                      expiresAt: Date.now() + (1800 * 1000) // 30 minutes
+                      expiresAt: Date.now() + (1800 * 1000)
                     });
                     break;
                 }
@@ -128,20 +123,16 @@ import {
             case 'search': {
               const exploreResult = await services.exploration.exploreLocation(character.id);
 
-              // Add exploration effects based on location and findings
               if (exploreResult.items.length > 0) {
-                // Found rare items, add temporary buff
                 await services.character.addBuff(character.id, {
                   type: 'ALL',
                   value: 3,
-                  expiresAt: Date.now() + (1800 * 1000) // 30 minutes
+                  expiresAt: Date.now() + (1800 * 1000)
                 });
               }
 
-              // Add location-specific effects
               switch (character.currentIsland) {
                 case 'baratie':
-                  // Healing effect in Baratie
                   await services.character.addStatusEffect(character.id, {
                     type: 'HEAL_OVER_TIME',
                     value: 5,
@@ -149,19 +140,17 @@ import {
                   });
                   break;
                 case 'syrup_village':
-                  // Usopp's village gives defense buff
                   await services.character.addBuff(character.id, {
                     type: 'DEFENSE',
                     value: 5,
-                    expiresAt: Date.now() + (3600 * 1000) // 1 hour
+                    expiresAt: Date.now() + (3600 * 1000)
                   });
                   break;
                 case 'shell_town':
-                  // Marine training ground gives attack buff
                   await services.character.addBuff(character.id, {
                     type: 'ATTACK',
                     value: 5,
-                    expiresAt: Date.now() + (3600 * 1000) // 1 hour
+                    expiresAt: Date.now() + (3600 * 1000)
                   });
                   break;
               }
@@ -176,7 +165,6 @@ import {
             }
           }
         } catch (error) {
-          // Handle specific errors
           if (error instanceof Error) {
             if (error.message.includes('Lokasi tidak valid')) {
               return interaction.editReply({
@@ -189,19 +177,17 @@ import {
               });
             }
           }
-          throw error; // Re-throw untuk error handling global
+          throw error;
         }
       } catch (error) {
         services.logger.error('Error in exploration command:', error);
         
-        // If reply was deferred, use editReply
         if (interaction.deferred) {
           return interaction.editReply({
             content: `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`
           });
         }
         
-        // Otherwise use normal reply
         return interaction.reply(createEphemeralReply({
           content: `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`
         }));

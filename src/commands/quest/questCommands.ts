@@ -73,7 +73,6 @@ export const questCommands: CommandHandler = {
         case 'accept': {
           const questId = interaction.options.getString('quest', true);
 
-          // Validate quest ID
           if (!QUESTS[questId as keyof typeof QUESTS]) {
             return interaction.reply({
               content: `❌ Quest "${questId}" tidak valid`,
@@ -92,7 +91,6 @@ export const questCommands: CommandHandler = {
         case 'complete': {
           const questId = interaction.options.getString('quest', true);
 
-          // Validate quest ID
           const activeQuests = await services.quest.getActiveQuests(character.id);
           const isQuestActive = activeQuests.quests.some(q => q.id === questId);
 
