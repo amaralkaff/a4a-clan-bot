@@ -1,4 +1,4 @@
-import { BaseService } from './BaseService';
+import { BaseService, InteractionSource } from './BaseService';
 import { Character, PrismaClient } from '@prisma/client';
 import { CONFIG } from '../config/config';
 import { 
@@ -12,10 +12,22 @@ import {
   ActiveBuffs,
   TransactionType
 } from '@/types/game';
-import { Message, EmbedBuilder } from 'discord.js';
+import { Message, EmbedBuilder, ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import { checkCooldown, setCooldown, getRemainingCooldown } from '@/utils/cooldown';
+import { createEphemeralReply } from '@/utils/helpers';
 
-export class CharacterService extends BaseService {
+export type InteractionHandler = (source: Message | ChatInputCommandInteraction) => Promise<unknown>;
+
+export interface ICharacterService {
+  handleProfile: InteractionHandler;
+  handleBalance: InteractionHandler;
+  handleHunt: InteractionHandler;
+  handleDaily: InteractionHandler;
+  handleHelp: InteractionHandler;
+  // ... other methods ...
+}
+
+export class CharacterService extends BaseService implements ICharacterService {
   private battleService: any; // Will be injected
 
   constructor(prisma: PrismaClient) {
@@ -772,11 +784,11 @@ export class CharacterService extends BaseService {
     }
   }
 
-  // Add message-based command handlers
-  async handleProfile(message: Message) {
-    const character = await this.getCharacterByDiscordId(message.author.id);
+  private async createProfileEmbed(userId: string) {
+    const character = await this.getCharacterByDiscordId(userId);
+    
     if (!character) {
-      return message.reply('❌ Kamu belum memiliki karakter! Gunakan `start` untuk membuat karakter.');
+      throw new Error('❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.');
     }
 
     const stats = await this.getCharacterStats(character.id);
@@ -808,7 +820,6 @@ export class CharacterService extends BaseService {
         }
       );
 
-    // Add mentor info if exists
     if (stats.mentor) {
       embed.addFields({
         name: '👨‍🏫 Mentor',
@@ -817,169 +828,287 @@ export class CharacterService extends BaseService {
       });
     }
 
-    return message.reply({ embeds: [embed] });
+    return embed;
   }
 
-  async handleHelp(message: Message) {
+  private async createBalanceEmbed(userId: string) {
+    const character = await this.getCharacterByDiscordId(userId);
+    
+    if (!character) {
+      throw new Error('❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.');
+    }
+
+    const balance = await this.getBalance(character.id);
+    const history = await this.getTransactionHistory(character.id, 5);
+
     const embed = new EmbedBuilder()
-      .setTitle('❓ A4A CLAN BOT - Panduan')
-      .setColor('#00ff00')
-      .setDescription('One Piece RPG Game')
-      .addFields([
-        { 
-          name: '📜 Basic Commands', 
-          value: 
-`\`a p\` - 📊 Lihat profil
-\`a h\` - 🗡️ Berburu (15s cd)
-\`a d\` - 🎁 Daily reward
-\`a i\` - 🎒 Inventory
-\`a u\` - 📦 Gunakan item
-\`a b\` - 💰 Balance
-\`a t\` - ⚔️ Training
-\`a m\` - 🗺️ Map
-\`a s\` - 🛍️ Shop`
-        },
-        {
-          name: '🎮 Tips',
-          value: 'Mulai dengan berburu di Foosha Village untuk mendapatkan EXP dan item!'
+      .setTitle('💰 Balance')
+      .setColor('#ffd700')
+      .addFields(
+        { name: 'Coins', value: `${balance.coins}`, inline: true },
+        { name: 'Bank', value: `${balance.bank}`, inline: true },
+        { name: 'Total', value: `${balance.coins + balance.bank}`, inline: true }
+      );
+
+    if (history.length > 0) {
+      const historyText = history
+        .map(t => `${t.type}: ${t.amount > 0 ? '+' : ''}${t.amount} (${t.description})`)
+        .join('\n');
+      embed.addFields({ name: 'Recent Transactions', value: historyText });
+    }
+
+    return embed;
+  }
+
+  async handleProfile(source: Message | ChatInputCommandInteraction): Promise<unknown> {
+    try {
+      const userId = source instanceof Message ? source.author.id : source.user.id;
+      const embed = await this.createProfileEmbed(userId);
+      return source.reply({ 
+        embeds: [embed], 
+        ephemeral: source instanceof ChatInputCommandInteraction 
+      });
+    } catch (error) {
+      this.logger.error('Error in handleProfile:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return source instanceof Message 
+        ? source.reply(`❌ Error: ${errorMessage}`)
+        : source.reply(createEphemeralReply({ content: `❌ Error: ${errorMessage}` }));
+    }
+  }
+
+  async handleBalance(source: Message | ChatInputCommandInteraction): Promise<unknown> {
+    try {
+      const userId = source instanceof Message ? source.author.id : source.user.id;
+      const embed = await this.createBalanceEmbed(userId);
+      return source.reply({ 
+        embeds: [embed], 
+        ephemeral: source instanceof ChatInputCommandInteraction 
+      });
+    } catch (error) {
+      this.logger.error('Error in handleBalance:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return source instanceof Message 
+        ? source.reply(`❌ Error: ${errorMessage}`)
+        : source.reply(createEphemeralReply({ content: `❌ Error: ${errorMessage}` }));
+    }
+  }
+
+  async handleHunt(source: Message | ChatInputCommandInteraction): Promise<unknown> {
+    try {
+      const userId = source instanceof Message ? source.author.id : source.user.id;
+      
+      // Check cooldown
+      if (!checkCooldown(userId, 'hunt')) {
+        const remainingTime = getRemainingCooldown(userId, 'hunt');
+        const message = `⏰ Hunt sedang cooldown! Tunggu ${remainingTime} detik lagi.`;
+        return source instanceof Message 
+          ? source.reply(message)
+          : source.reply(createEphemeralReply({ content: message }));
+      }
+
+      const character = await this.getCharacterByDiscordId(userId);
+      if (!character) {
+        const message = '❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.';
+        return source instanceof Message 
+          ? source.reply(message)
+          : source.reply(createEphemeralReply({ content: message }));
+      }
+
+      // Get random monster based on character level
+      const monster = this.getRandomMonster(character.level);
+      
+      // Defer reply for longer operation
+      if (source instanceof ChatInputCommandInteraction) {
+        await source.deferReply({ ephemeral: true });
+      }
+
+      // Process battle with animation
+      const battleResult = await this.battleService.processBattle(character.id, monster.level[0]);
+
+      // Calculate rewards
+      const exp = monster.exp;
+      const coins = Math.floor(Math.random() * (monster.coins[1] - monster.coins[0] + 1)) + monster.coins[0];
+
+      // Update rewards if won
+      if (battleResult.won) {
+        await this.addExperience(character.id, exp);
+        await this.addCoins(character.id, coins, 'HUNT', `Hunt reward from ${monster.name}`);
+      }
+
+      // Send battle log messages one by one with animation
+      if (source instanceof ChatInputCommandInteraction) {
+        for (let i = 0; i < battleResult.battleLog.length; i++) {
+          const log = battleResult.battleLog[i];
+          
+          if (i === 0) {
+            await source.editReply(log);
+          } else {
+            await source.followUp({
+              ...log,
+              ephemeral: true
+            });
+          }
+          
+          // Add delay between messages for animation effect
+          // Skip delay for the last message
+          if (i < battleResult.battleLog.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 800));
+          }
         }
-      ]);
 
-    return message.reply({ embeds: [embed] });
+        // Send final rewards message after a short delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const rewardsEmbed = new EmbedBuilder()
+          .setTitle(`🎁 Rewards dari ${monster.name}`)
+          .setColor(battleResult.won ? '#00ff00' : '#ff0000')
+          .addFields(
+            { name: '✨ Experience', value: battleResult.won ? `+${exp} EXP` : '0 EXP', inline: true },
+            { name: '💰 Coins', value: battleResult.won ? `+${coins} coins` : '0 coins', inline: true }
+          );
+
+        await source.followUp({
+          embeds: [rewardsEmbed],
+          ephemeral: true
+        });
+      } else {
+        // For message commands, send everything in one message
+        const embed = new EmbedBuilder()
+          .setTitle(`🗡️ Hunt Result: ${monster.name}`)
+          .setColor(battleResult.won ? '#00ff00' : '#ff0000')
+          .setDescription(battleResult.won ? 'You won!' : 'You lost!')
+          .addFields(
+            { name: '✨ Experience', value: battleResult.won ? `+${exp} EXP` : '0 EXP', inline: true },
+            { name: '💰 Coins', value: battleResult.won ? `+${coins} coins` : '0 coins', inline: true }
+          );
+
+        return source.reply({ embeds: [embed] });
+      }
+
+      // Set cooldown
+      setCooldown(userId, 'hunt');
+
+      return;
+    } catch (error) {
+      this.logger.error('Error in handleHunt:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return source instanceof Message 
+        ? source.reply(`❌ Error: ${errorMessage}`)
+        : source.reply(createEphemeralReply({ content: `❌ Error: ${errorMessage}` }));
+    }
   }
 
-  async handleHunt(message: Message) {
-    // Check cooldown
-    if (!checkCooldown(message.author.id, 'hunt')) {
-      const remainingTime = getRemainingCooldown(message.author.id, 'hunt');
-      return message.reply(`⏰ Hunt sedang cooldown! Tunggu ${remainingTime} detik lagi.`);
-    }
+  async handleDaily(source: Message | ChatInputCommandInteraction): Promise<unknown> {
+    try {
+      const userId = source instanceof Message ? source.author.id : source.user.id;
+      
+      // Check cooldown
+      if (!checkCooldown(userId, 'daily')) {
+        const remainingTime = getRemainingCooldown(userId, 'daily');
+        const hours = Math.floor(remainingTime / 3600);
+        const minutes = Math.floor((remainingTime % 3600) / 60);
+        const message = `⏰ Daily reward sedang cooldown!\nTunggu ${hours}h ${minutes}m lagi.`;
+        return source instanceof Message 
+          ? source.reply(message)
+          : source.reply(createEphemeralReply({ content: message }));
+      }
 
-    const character = await this.getCharacterByDiscordId(message.author.id);
-    if (!character) {
-      return message.reply('❌ Kamu belum memiliki karakter! Gunakan `start` untuk membuat karakter.');
-    }
+      const character = await this.getCharacterByDiscordId(userId);
+      if (!character) {
+        const message = '❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.';
+        return source instanceof Message 
+          ? source.reply(message)
+          : source.reply(createEphemeralReply({ content: message }));
+      }
 
-    // Get random monster based on character level
-    const monster = this.getRandomMonster(character.level);
-    
-    // Calculate rewards
-    const exp = monster.exp;
-    const coins = Math.floor(Math.random() * (monster.coins[1] - monster.coins[0] + 1)) + monster.coins[0];
-
-    // Process battle
-    const result = await this.battleService.processBattle(character.id, monster.level[0]);
-    
-    // Update rewards if won
-    if (result.won) {
+      // Calculate rewards
+      const exp = 100 + Math.floor(Math.random() * 50);
+      const coins = 100 + Math.floor(Math.random() * 100);
+      
+      // Update character
       await this.addExperience(character.id, exp);
-      await this.addCoins(character.id, coins, 'HUNT', `Hunt reward from ${monster.name}`);
-    }
-
-    // Create result embed
-    const embed = new EmbedBuilder()
-      .setTitle(`🗡️ Hunt Result: ${monster.name}`)
-      .setColor(result.won ? '#00ff00' : '#ff0000')
-      .setDescription(result.won ? 'You won!' : 'You lost!')
-      .addFields(
-        { name: '✨ Experience', value: result.won ? `+${exp} EXP` : '0 EXP', inline: true },
-        { name: '💰 Coins', value: result.won ? `+${coins} coins` : '0 coins', inline: true }
-      );
-
-    // Set cooldown
-    setCooldown(message.author.id, 'hunt');
-
-    return message.reply({ embeds: [embed] });
-  }
-
-  async handleDaily(message: Message) {
-    // Check cooldown
-    if (!checkCooldown(message.author.id, 'daily')) {
-      const remainingTime = getRemainingCooldown(message.author.id, 'daily');
-      const hours = Math.floor(remainingTime / 3600);
-      const minutes = Math.floor((remainingTime % 3600) / 60);
-      return message.reply(`⏰ Daily reward sedang cooldown!\nTunggu ${hours}h ${minutes}m lagi.`);
-    }
-
-    const character = await this.getCharacterByDiscordId(message.author.id);
-    if (!character) {
-      return message.reply('❌ Kamu belum memiliki karakter! Gunakan `start` untuk membuat karakter.');
-    }
-
-    // Calculate rewards
-    const exp = 100 + Math.floor(Math.random() * 50);
-    const coins = 100 + Math.floor(Math.random() * 100);
-    
-    // Update character
-    await this.addExperience(character.id, exp);
-    await this.addCoins(character.id, coins, 'DAILY', 'Daily reward');
-    
-    const embed = new EmbedBuilder()
-      .setTitle('🎁 Daily Rewards')
-      .setColor('#00ff00')
-      .setDescription('Kamu telah mengklaim hadiah harian!')
-      .addFields(
-        { name: '✨ Experience', value: `+${exp} EXP`, inline: true },
-        { name: '💰 Coins', value: `+${coins} coins`, inline: true }
-      );
-
-    // Set cooldown
-    setCooldown(message.author.id, 'daily');
-
-    return message.reply({ embeds: [embed] });
-  }
-
-  private getRandomMonster(characterLevel: number) {
-    const ENCOUNTERS = {
-      COMMON: {
-        chance: 0.7,
-        monsters: [
-          { name: '🐗 Wild Boar', level: [1, 3], exp: 20, coins: [10, 30] },
-          { name: '🐺 Wolf', level: [2, 4], exp: 25, coins: [15, 35] },
-          { name: '🦊 Fox', level: [3, 5], exp: 30, coins: [20, 40] }
-        ]
-      },
-      RARE: {
-        chance: 0.2,
-        monsters: [
-          { name: '🐉 Baby Dragon', level: [4, 6], exp: 50, coins: [40, 60] },
-          { name: '🦁 Lion', level: [5, 7], exp: 55, coins: [45, 65] },
-          { name: '🐯 Tiger', level: [6, 8], exp: 60, coins: [50, 70] }
-        ]
-      },
-      EPIC: {
-        chance: 0.08,
-        monsters: [
-          { name: '🐲 Adult Dragon', level: [7, 9], exp: 100, coins: [80, 120] },
-          { name: '🦅 Giant Eagle', level: [8, 10], exp: 110, coins: [90, 130] },
-          { name: '🐘 War Elephant', level: [9, 11], exp: 120, coins: [100, 140] }
-        ]
-      },
-      LEGENDARY: {
-        chance: 0.02,
-        monsters: [
-          { name: '🔥 Phoenix', level: [10, 12], exp: 200, coins: [150, 250] },
-          { name: '⚡ Thunder Bird', level: [11, 13], exp: 220, coins: [170, 270] },
-          { name: '🌊 Leviathan', level: [12, 14], exp: 240, coins: [190, 290] }
-        ]
-      }
-    };
-
-    const rand = Math.random();
-    let cumChance = 0;
-    
-    for (const [rarity, data] of Object.entries(ENCOUNTERS)) {
-      cumChance += data.chance;
-      if (rand <= cumChance) {
-        const possibleMonsters = data.monsters.filter(m => 
-          m.level[0] <= characterLevel + 3 && m.level[1] >= characterLevel - 1
+      await this.addCoins(character.id, coins, 'DAILY', 'Daily reward');
+      
+      const embed = new EmbedBuilder()
+        .setTitle('🎁 Daily Rewards')
+        .setColor('#00ff00')
+        .setDescription('Kamu telah mengklaim hadiah harian!')
+        .addFields(
+          { name: '✨ Experience', value: `+${exp} EXP`, inline: true },
+          { name: '💰 Coins', value: `+${coins} coins`, inline: true }
         );
-        if (possibleMonsters.length === 0) continue;
-        return possibleMonsters[Math.floor(Math.random() * possibleMonsters.length)];
+
+      // Set cooldown
+      setCooldown(userId, 'daily');
+
+      return source.reply({ 
+        embeds: [embed], 
+        ephemeral: source instanceof ChatInputCommandInteraction 
+      });
+    } catch (error) {
+      this.logger.error('Error in handleDaily:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return source instanceof Message 
+        ? source.reply(`❌ Error: ${errorMessage}`)
+        : source.reply(createEphemeralReply({ content: `❌ Error: ${errorMessage}` }));
+    }
+  }
+
+  async handleHelp(source: Message | ChatInputCommandInteraction): Promise<unknown> {
+    try {
+      const commandList = [
+        { cmd: '/a h', desc: '🗡️ Berburu dengan battle log animasi (15s cd)' },
+        { cmd: 'a h', desc: '🗡️ Berburu tanpa animasi (15s cd)' },
+        { cmd: 'a p', desc: '📊 Lihat profil' },
+        { cmd: 'a d', desc: '🎁 Daily reward' },
+        { cmd: 'a i', desc: '🎒 Inventory' },
+        { cmd: 'a u', desc: '📦 Gunakan item' },
+        { cmd: 'a b', desc: '💰 Balance' },
+        { cmd: 'a t', desc: '⚔️ Training' },
+        { cmd: 'a m', desc: '🗺️ Map' },
+        { cmd: 'a s', desc: '🛍️ Shop' }
+      ];
+
+      const embed = new EmbedBuilder()
+        .setTitle('❓ A4A CLAN BOT - Panduan')
+        .setColor('#00ff00')
+        .setDescription('A4A CLAN BOT adalah game RPG One Piece yang dikembangkan oleh <@714556781912653855>')
+        .addFields([
+          { 
+            name: '📜 Basic Commands', 
+            value: commandList.map(c => `\`${c.cmd}\` - ${c.desc}`).join('\n')
+          },
+          {
+            name: '💡 Perbedaan Hunt Command',
+            value: '• `/a h` - Dengan battle log animasi\n• `a h` - Langsung hasil akhir'
+          },
+          {
+            name: '🎮 Tips',
+            value: 'Gunakan `/a h` untuk melihat battle log animasi saat berburu!\nMulai dengan berburu di Foosha Village untuk mendapatkan EXP dan item!'
+          }
+        ]);
+
+      if (source instanceof ChatInputCommandInteraction) {
+        return source.reply({ 
+          embeds: [embed],
+          flags: MessageFlags.Ephemeral
+        });
+      } else {
+        return source.reply({ embeds: [embed] });
+      }
+    } catch (error) {
+      this.logger.error('Error in handleHelp:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      if (source instanceof ChatInputCommandInteraction) {
+        return source.reply({ 
+          content: `❌ Error: ${errorMessage}`,
+          flags: MessageFlags.Ephemeral
+        });
+      } else {
+        return source.reply(`❌ Error: ${errorMessage}`);
       }
     }
-    
-    return ENCOUNTERS.COMMON.monsters[0]; // Fallback to first common monster
   }
 
   private getMentorEmoji(mentor: string): string {
@@ -1052,36 +1181,164 @@ export class CharacterService extends BaseService {
     return emojiMap[type] || '📦';
   }
 
-  async handleBalance(message: Message) {
-    const character = await this.getCharacterByDiscordId(message.author.id);
-    if (!character) {
-      return message.reply('❌ Kamu belum memiliki karakter! Gunakan `start` untuk membuat karakter.');
+  private getRandomMonster(characterLevel: number): {
+    name: string;
+    level: [number, number];
+    exp: number;
+    coins: [number, number];
+  } {
+    const ENCOUNTERS = {
+      COMMON: {
+        chance: 0.7,
+        monsters: [
+          { name: '🐗 Wild Boar', level: [1, 3] as [number, number], exp: 20, coins: [10, 30] as [number, number] },
+          { name: '🐺 Wolf', level: [2, 4] as [number, number], exp: 25, coins: [15, 35] as [number, number] },
+          { name: '🦊 Fox', level: [3, 5] as [number, number], exp: 30, coins: [20, 40] as [number, number] }
+        ]
+      },
+      RARE: {
+        chance: 0.2,
+        monsters: [
+          { name: '🐉 Baby Dragon', level: [4, 6] as [number, number], exp: 50, coins: [40, 60] as [number, number] },
+          { name: '🦁 Lion', level: [5, 7] as [number, number], exp: 55, coins: [45, 65] as [number, number] },
+          { name: '🐯 Tiger', level: [6, 8] as [number, number], exp: 60, coins: [50, 70] as [number, number] }
+        ]
+      },
+      EPIC: {
+        chance: 0.08,
+        monsters: [
+          { name: '🐲 Adult Dragon', level: [7, 9] as [number, number], exp: 100, coins: [80, 120] as [number, number] },
+          { name: '🦅 Giant Eagle', level: [8, 10] as [number, number], exp: 110, coins: [90, 130] as [number, number] },
+          { name: '🐘 War Elephant', level: [9, 11] as [number, number], exp: 120, coins: [100, 140] as [number, number] }
+        ]
+      },
+      LEGENDARY: {
+        chance: 0.02,
+        monsters: [
+          { name: '🔥 Phoenix', level: [10, 12] as [number, number], exp: 200, coins: [150, 250] as [number, number] },
+          { name: '⚡ Thunder Bird', level: [11, 13] as [number, number], exp: 220, coins: [170, 270] as [number, number] },
+          { name: '🌊 Leviathan', level: [12, 14] as [number, number], exp: 240, coins: [190, 290] as [number, number] }
+        ]
+      }
+    };
+
+    const rand = Math.random();
+    let cumChance = 0;
+    
+    for (const [rarity, data] of Object.entries(ENCOUNTERS)) {
+      cumChance += data.chance;
+      if (rand <= cumChance) {
+        const possibleMonsters = data.monsters.filter(m => 
+          m.level[0] <= characterLevel + 3 && m.level[1] >= characterLevel - 1
+        );
+        if (possibleMonsters.length === 0) continue;
+        return possibleMonsters[Math.floor(Math.random() * possibleMonsters.length)];
+      }
     }
+    
+    return ENCOUNTERS.COMMON.monsters[0];
+  }
 
-    const balance = await this.getBalance(character.id);
-    const transactions = await this.getTransactionHistory(character.id, 5);
+  async getLeaderboard(type: 'level' | 'wins' | 'coins' | 'winStreak' | 'highestStreak' = 'level', limit: number = 10) {
+    try {
+      let orderBy: any[] = [];
+      switch (type) {
+        case 'level':
+          orderBy = [
+            { level: 'desc' },
+            { experience: 'desc' }
+          ];
+          break;
+        case 'wins':
+          orderBy = [{ wins: 'desc' }];
+          break;
+        case 'coins':
+          orderBy = [
+            { coins: 'desc' },
+            { bank: 'desc' }
+          ];
+          break;
+        case 'winStreak':
+          orderBy = [{ winStreak: 'desc' }];
+          break;
+        case 'highestStreak':
+          orderBy = [{ highestStreak: 'desc' }];
+          break;
+      }
 
-    const embed = new EmbedBuilder()
-      .setTitle('💰 Dompetmu')
-      .setColor('#ffd700')
-      .addFields([
-        { name: '💵 Uang Cash', value: `${balance.coins} coins`, inline: true },
-        { name: '🏦 Bank', value: `${balance.bank} coins`, inline: true },
-        { name: '💰 Total', value: `${balance.coins + balance.bank} coins`, inline: true }
-      ]);
+      const characters = await this.prisma.character.findMany({
+        take: limit,
+        orderBy,
+        include: {
+          user: true
+        }
+      });
 
-    // Add transaction history if exists
-    if (transactions.length > 0) {
-      const historyText = transactions.map(tx => {
-        const amount = tx.amount > 0 ? `+${tx.amount}` : tx.amount;
-        return `${tx.type}: ${amount} coins (${tx.description})`;
-      }).join('\n');
+      return characters.map((char, index) => ({
+        rank: index + 1,
+        name: char.name,
+        discordId: char.user.discordId,
+        value: type === 'coins' ? char.coins + char.bank :
+               type === 'level' ? `Level ${char.level} (${char.experience} EXP)` :
+               char[type]
+      }));
+    } catch (error) {
+      return this.handleError(error, 'GetLeaderboard');
+    }
+  }
+
+  async handleLeaderboard(source: Message | ChatInputCommandInteraction, type?: string): Promise<unknown> {
+    try {
+      const validTypes = ['level', 'wins', 'coins', 'winStreak', 'highestStreak'];
+      const leaderboardType = type && validTypes.includes(type) ? type : 'level';
+
+      const data = await this.getLeaderboard(leaderboardType as any);
       
-      embed.addFields([
-        { name: '📜 Riwayat Transaksi Terakhir', value: historyText }
-      ]);
-    }
+      const typeEmoji = {
+        level: '📊',
+        wins: '⚔️',
+        coins: '💰',
+        winStreak: '🔥',
+        highestStreak: '👑'
+      }[leaderboardType];
 
-    return message.reply({ embeds: [embed] });
+      const typeTitle = {
+        level: 'Level Tertinggi',
+        wins: 'Total Kemenangan',
+        coins: 'Total Kekayaan',
+        winStreak: 'Win Streak Saat Ini',
+        highestStreak: 'Win Streak Tertinggi'
+      }[leaderboardType];
+
+      const embed = new EmbedBuilder()
+        .setTitle(`${typeEmoji} Leaderboard: ${typeTitle}`)
+        .setColor('#ffd700')
+        .setDescription(
+          data.map(entry => 
+            `${entry.rank === 1 ? '👑' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : `${entry.rank}.`} ${entry.name}: ${entry.value}`
+          ).join('\n')
+        )
+        .setFooter({ text: 'Gunakan /lb [level/wins/coins/winStreak/highestStreak] untuk melihat leaderboard lainnya' });
+
+      if (source instanceof ChatInputCommandInteraction) {
+        return source.reply({ 
+          embeds: [embed],
+          flags: MessageFlags.Ephemeral
+        });
+      } else {
+        return source.reply({ embeds: [embed] });
+      }
+    } catch (error) {
+      this.logger.error('Error in handleLeaderboard:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      if (source instanceof ChatInputCommandInteraction) {
+        return source.reply({ 
+          content: `❌ Error: ${errorMessage}`,
+          flags: MessageFlags.Ephemeral
+        });
+      } else {
+        return source.reply(`❌ Error: ${errorMessage}`);
+      }
+    }
   }
 }

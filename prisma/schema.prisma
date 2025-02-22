@@ -16,6 +16,8 @@ model User {
   character     Character?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  @@index([discordId])
 }
 
 model Character {
@@ -28,59 +30,88 @@ model Character {
   attack        Int       @default(10)
   defense       Int       @default(10)
   currentIsland String    @default("foosha")
-  mentor        String?   // YB, Tierison, LYuka, atau GarryAng
+  mentor        String?   
+  
+  // Progress tracking
   luffyProgress Int       @default(0)
   zoroProgress  Int       @default(0)
   usoppProgress Int       @default(0)
   sanjiProgress Int       @default(0)
+  
+  // Daily limits
   dailyHealCount Int      @default(0)
   lastHealTime  DateTime?
-  combo         Int       @default(0)
-  questPoints   Int       @default(0)
-  explorationPoints Int   @default(0)
   lastDailyReset DateTime?
-  statusEffects String    @default("{}")
-  activeBuffs   String    @default("{}")
-  // Currency system
-  coins         Int       @default(0)
-  bank          Int       @default(0)
-  // Gambling stats
-  totalGambled  Int       @default(0)
-  totalWon      Int       @default(0)
-  lastGambleTime DateTime?
-  // Battle stats
+  
+  // Combat stats
+  combo         Int       @default(0)
   wins          Int       @default(0)
   losses        Int       @default(0)
   winStreak     Int       @default(0)
   highestStreak Int       @default(0)
+  
+  // Points system
+  questPoints   Int       @default(0)
+  explorationPoints Int   @default(0)
+  
+  // Effects and buffs
+  statusEffects String    @default("{\"effects\":[]}")
+  activeBuffs   String    @default("{\"buffs\":[]}")
+  
+  // Economy
+  coins         Int       @default(0)
+  bank          Int       @default(0)
+  totalGambled  Int       @default(0)
+  totalWon      Int       @default(0)
+  lastGambleTime DateTime?
+
+  // Equipment slots
+  equippedWeapon String?
+  equippedArmor  String?
+  equippedAccessory String?
+  
   // Relations
   inventory     Inventory[]
   quests        Quest[]
-  battleLogs    BattleLog[]
+  battles       Battle[]
   transactions  Transaction[]
   userId        String    @unique
   user          User      @relation(fields: [userId], references: [id])
   location      Location  @relation(fields: [currentIsland], references: [id])
+  
+  // Timestamps
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  @@index([level, currentIsland])
+  @@index([mentor])
+  @@index([lastDailyReset])
 }
 
-model Transaction {
+model Battle {
   id          String    @id @default(uuid())
   characterId String
   character   Character @relation(fields: [characterId], references: [id])
-  type        String    // HUNT, QUEST_REWARD, SHOP_PURCHASE, TRANSFER, BANK_DEPOSIT, BANK_WITHDRAW, DAILY
-  amount      Int
-  description String
-  createdAt   DateTime  @default(now())
-
-  @@index([characterId])
+  enemyType   String
+  enemyLevel  Int
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+  status      String    @default("IN_PROGRESS")
+  turns       String    @default("[]")
+  finalStats  String?   @default("{}")
+  rewards     String?   @default("{}")
+  
+  @@index([characterId, status])
 }
 
 model Inventory {
   id          String    @id @default(uuid())
   itemId      String
   quantity    Int
+  durability  Int?      
+  isEquipped  Boolean   @default(false)
+  slot        String?   
+  expiresAt   DateTime?
   characterId String
   character   Character @relation(fields: [characterId], references: [id])
   item        Item      @relation(fields: [itemId], references: [id])
@@ -88,25 +119,58 @@ model Inventory {
   updatedAt   DateTime  @updatedAt
 
   @@unique([characterId, itemId])
+  @@index([characterId, isEquipped, slot])
+}
+
+model Item {
+  id            String    @id
+  name          String
+  description   String
+  type          String    
+  value         Int       @default(0)
+  effect        String    @default("{}")
+  maxDurability Int?    
+  stackLimit    Int       @default(999)
+  rarity        String    @default("COMMON")
+  inventory     Inventory[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([type, rarity])
 }
 
 model Quest {
   id          String    @id @default(cuid())
+  templateId  String    @default("none")  // Default value untuk existing rows
   name        String
   description String
-  objectives  String    @default("{\"tasks\":[]}")
+  type        String    
+  objectives  String    @default("{}")
   rewards     String    @default("{}")
-  reward      Int       @default(0)
+  progress    String    @default("{\"current\": 0, \"required\": 1}")
   status      String    @default("ACTIVE")
-  character   Character @relation(fields: [characterId], references: [id])
   characterId String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  type        String    @default("MISC")
-  isDaily     Boolean   @default(false)
+  character   Character @relation(fields: [characterId], references: [id])
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
   expiresAt   DateTime?
+  
+  @@index([characterId, status])
+  @@index([templateId])
+}
 
-  @@index([characterId])
+model QuestTemplate {
+  id            String    @id
+  name          String
+  description   String
+  type          String
+  requirements  String    @default("{}")
+  objectives    String    @default("{}")
+  rewards       String    @default("{}")
+  isRepeatable  Boolean   @default(false)
+  cooldown      Int?     
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model Location {
@@ -120,29 +184,19 @@ model Location {
   characters        Character[]
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
+
+  @@index([level])
+  @@index([weather])
 }
 
-model BattleLog {
+model Transaction {
   id          String    @id @default(uuid())
   characterId String
   character   Character @relation(fields: [characterId], references: [id])
-  enemyType   String
-  enemyLevel  Int
-  damage      Int
-  experience  Int
-  rewards     String    @default("{}")  // Untuk item drops
-  won         Boolean
-  createdAt   DateTime  @default(now())
-}
-
-model Item {
-  id          String      @id
-  name        String
+  type        String    
+  amount      Int
   description String
-  type        String      // CONSUMABLE, WEAPON, ARMOR, MATERIAL, FOOD, INGREDIENT
-  value       Int         @default(0)
-  effect      String      @default("{}")  // JSON string untuk efek item
-  inventory   Inventory[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  createdAt   DateTime  @default(now())
+
+  @@index([characterId, type, createdAt])
 }

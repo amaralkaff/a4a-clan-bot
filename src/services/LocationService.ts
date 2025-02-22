@@ -1,7 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 import { BaseService } from './BaseService';
 import { LocationId } from '@/types/game';
-import { Message, EmbedBuilder } from 'discord.js';
+import { Message, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
+import { createEphemeralReply } from '@/utils/helpers';
+import { LOCATIONS } from '@/config/gameData';
+import { getTierEmoji } from '@/commands/basic/handlers/utils';
+import { CharacterService } from './CharacterService';
 
 interface TravelResult {
   success: boolean;
@@ -64,9 +68,14 @@ const LOCATION_INFO: Record<LocationId, LocationInfo> = {
   }
 };
 
+const NO_CHARACTER_MSG = '❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.';
+
 export class LocationService extends BaseService {
-  constructor(prisma: PrismaClient) {
+  private characterService: CharacterService;
+
+  constructor(prisma: PrismaClient, characterService: CharacterService) {
     super(prisma);
+    this.characterService = characterService;
   }
 
   async travel(characterId: string, destination: LocationId): Promise<TravelResult> {
@@ -122,8 +131,66 @@ export class LocationService extends BaseService {
     return LOCATION_INFO[locationId];
   }
 
-  async handleMap(message: Message) {
-    // Implementation will be added later
-    return message.reply('🔄 Fitur map dalam pengembangan...');
+  async handleMapView(source: Message | ChatInputCommandInteraction) {
+    const userId = source instanceof Message ? source.author.id : source.user.id;
+    const character = await this.characterService.getCharacterByDiscordId(userId);
+    
+    if (!character) {
+      return source instanceof Message 
+        ? source.reply(NO_CHARACTER_MSG)
+        : source.reply(createEphemeralReply({ content: NO_CHARACTER_MSG }));
+    }
+
+    const currentLocation = LOCATIONS[character.currentIsland as LocationId];
+    const embed = new EmbedBuilder()
+      .setTitle('🗺️ Peta Dunia')
+      .setColor('#0099ff')
+      .setDescription('Lokasi yang tersedia untuk dijelajahi:')
+      .addFields([
+        { 
+          name: '📍 Lokasimu Saat Ini', 
+          value: `${currentLocation.name}\n${currentLocation.description}`,
+          inline: false 
+        }
+      ]);
+
+    // Group locations by level requirement
+    const groupedLocations = Object.entries(LOCATIONS).reduce((acc, [id, loc]) => {
+      const tier = loc.level <= 5 ? 'STARTER' :
+                  loc.level <= 15 ? 'INTERMEDIATE' :
+                  'ADVANCED';
+      if (!acc[tier]) {
+        acc[tier] = [];
+      }
+      acc[tier].push({ id, ...loc });
+      return acc;
+    }, {} as Record<string, Array<{id: string; name: string; description: string; level: number}>>);
+
+    // Add fields for each tier
+    for (const [tier, locations] of Object.entries(groupedLocations)) {
+      const locationList = locations.map(loc => 
+        `${loc.name} (Lv.${loc.level}+)\n` +
+        `${character.currentIsland === loc.id ? '📍 ' : ''}${loc.description}`
+      ).join('\n\n');
+
+      embed.addFields([{
+        name: `${getTierEmoji(tier)} ${tier} ISLANDS`,
+        value: locationList
+      }]);
+    }
+
+    // Add travel tip
+    embed.setFooter({ 
+      text: 'Gunakan /a m untuk melihat peta' 
+    });
+
+    return source.reply({ 
+      embeds: [embed], 
+      ephemeral: source instanceof ChatInputCommandInteraction 
+    });
+  }
+
+  async handleMap(source: Message | ChatInputCommandInteraction) {
+    return this.handleMapView(source);
   }
 } 

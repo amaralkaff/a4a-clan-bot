@@ -1,11 +1,12 @@
 // src/index.ts
-import { Client, GatewayIntentBits } from 'discord.js';
+import { Client, GatewayIntentBits, Partials } from 'discord.js';
 import { CONFIG } from './config/config';
 import { loadCommands } from './utils/commandLoader';
 import { setupEventHandlers } from './events/eventHandler';
 import { PrismaClient } from '@prisma/client';
 import { logger } from './utils/logger';
 import { createServices } from './services';
+import { handleMessageCommand } from './commands/basic/handlers/index';
 
 class A4AClanBot {
   private client: Client;
@@ -17,14 +18,19 @@ class A4AClanBot {
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMembers
-      ]
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.DirectMessages
+      ],
+      partials: [Partials.Message, Partials.Channel, Partials.Reaction],
+      failIfNotExists: false
     });
     this.prisma = new PrismaClient();
   }
 
   async start() {
     try {
+      // Setup error handlers first
       this.client.on('error', (error) => {
         logger.error('Discord client error:', error);
       });
@@ -38,74 +44,99 @@ class A4AClanBot {
       });
 
       const services = createServices(this.prisma);
+      await setupEventHandlers(this.client, services);
 
       // Handle normal message commands
+      const cooldowns = new Map();
+      
       this.client.on('messageCreate', async (message) => {
-        // Ignore bot messages
-        if (message.author.bot) return;
-
-        // Check for prefix 'a'
-        if (!message.content.toLowerCase().startsWith('a ')) return;
-
-        const args = message.content.slice(2).trim().split(/ +/);
-        const command = args.shift()?.toLowerCase();
-
-        if (!command) return;
-
         try {
-          switch(command) {
-            case 'p':
-            case 'profile':
-              await services.character.handleProfile(message);
-              break;
-            case 'h':
-            case 'hunt':
-              await services.character.handleHunt(message);
-              break;
-            case 'd':
-            case 'daily':
-              await services.character.handleDaily(message);
-              break;
-            case 'i':
-            case 'inv':
-              await services.character.handleInventory(message);
-              break;
-            case 'u':
-            case 'use':
-              await services.inventory.handleUseItem(message, args[0]);
-              break;
-            case 'b':
-            case 'bal':
-              await services.character.handleBalance(message);
-              break;
-            case 't':
-            case 'train':
-              await services.mentor.handleTraining(message);
-              break;
-            case 'm':
-            case 'map':
-              await services.location.handleMap(message);
-              break;
-            case 's':
-            case 'shop':
-              await services.shop.handleShop(message);
-              break;
-            case 'help':
-              await services.character.handleHelp(message);
-              break;
-            default:
-              await message.reply('❌ Command tidak ditemukan! Gunakan `a help` untuk melihat daftar command.');
+          // Ignore bot messages
+          if (message.author.bot) return;
+
+          // Check for prefix 'a'
+          if (!message.content.toLowerCase().startsWith('a ')) return;
+
+          const args = message.content.slice(2).trim().split(/ +/);
+          const command = args.shift()?.toLowerCase();
+
+          if (!command) return;
+
+          // Check cooldown
+          const cooldownAmount = 3000; // 3 seconds
+          const now = Date.now();
+          const timestamps = cooldowns.get(message.author.id);
+          
+          if (timestamps) {
+            const expirationTime = timestamps + cooldownAmount;
+            if (now < expirationTime) {
+              const timeLeft = (expirationTime - now) / 1000;
+              return message.reply(`⏳ Mohon tunggu ${timeLeft.toFixed(1)} detik sebelum menggunakan command lagi.`);
+            }
+          }
+
+          cooldowns.set(message.author.id, now);
+          setTimeout(() => cooldowns.delete(message.author.id), cooldownAmount);
+
+          // Add loading message
+          let reply;
+          try {
+            reply = await message.reply('⌛ Processing your command...');
+          } catch (error) {
+            logger.error('Failed to send loading message:', error);
+            return;
+          }
+
+          try {
+            await handleMessageCommand(message, services, command, args);
+            
+            // Delete loading message on success
+            try {
+              await reply.delete();
+            } catch (error) {
+              logger.warn('Failed to delete loading message:', error);
+            }
+          } catch (error) {
+            logger.error('Command execution error:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            try {
+              await reply.edit(`❌ Error: ${errorMessage}`);
+            } catch (editError) {
+              logger.error('Failed to edit error message:', editError);
+              try {
+                await message.channel.send(`❌ Error: ${errorMessage}`);
+              } catch (sendError) {
+                logger.error('Failed to send error message:', sendError);
+              }
+            }
           }
         } catch (error) {
-          logger.error('Error executing command:', error);
-          await message.reply(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          logger.error('Message handling error:', error);
+          try {
+            await message.reply('❌ Terjadi kesalahan internal');
+          } catch (replyError) {
+            logger.error('Failed to send error message:', replyError);
+          }
         }
       });
 
-      await this.client.login(CONFIG.BOT_TOKEN);
-      
-      logger.info(`Logged in as ${this.client.user?.tag}`);
-      logger.info('Bot is ready!');
+      // Login with retry mechanism
+      let retries = 3;
+      while (retries > 0) {
+        try {
+          await this.client.login(CONFIG.BOT_TOKEN);
+          logger.info(`Logged in as ${this.client.user?.tag}`);
+          logger.info('Bot is ready!');
+          break;
+        } catch (error) {
+          retries--;
+          if (retries === 0) {
+            throw error;
+          }
+          logger.warn(`Login failed, retrying... (${retries} attempts left)`);
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+      }
     } catch (error) {
       logger.error('Error starting bot:', error);
       await this.stop();

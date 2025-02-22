@@ -1,6 +1,10 @@
 import { PrismaClient } from '@prisma/client';
 import { BaseService } from './BaseService';
-import { Message, EmbedBuilder } from 'discord.js';
+import { Message, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
+import { CharacterService } from './CharacterService';
+import { createEphemeralReply } from '@/utils/helpers';
+
+const NO_CHARACTER_MSG = '❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.';
 
 interface BuyResult {
   success: boolean;
@@ -8,8 +12,11 @@ interface BuyResult {
 }
 
 export class ShopService extends BaseService {
-  constructor(prisma: PrismaClient) {
+  private characterService: CharacterService;
+
+  constructor(prisma: PrismaClient, characterService: CharacterService) {
     super(prisma);
+    this.characterService = characterService;
   }
 
   async buyItem(characterId: string, itemId: string): Promise<BuyResult> {

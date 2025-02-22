@@ -1,9 +1,22 @@
 // src/commands/commandList.ts
-import { basicCommands } from './basic';
+import { data as basicData } from './basic/command';
+import { data as helpData } from './help/command';
+import { data as startData } from './start/command';
+import { execute as handleBasicCommand } from './basic/handlers/index';
+import { handleHelp } from './basic/handlers/help';
+import { handleStart } from './start/handler';
+import { CommandHandler } from '@/types/commands';
 
 // Simplified command structure like OwO bot
-export const commandList = {
-  a: basicCommands
+const basicCommands: CommandHandler = { data: basicData, execute: handleBasicCommand };
+const helpCommand: CommandHandler = { data: helpData, execute: handleHelp };
+const startCommand: CommandHandler = { data: startData, execute: handleStart };
+
+const commandList: Record<string, CommandHandler> = {
+  a: basicCommands,
+  help: helpCommand,
+  start: startCommand
 };
 
-export default commandList; 
+export default commandList;
+export { commandList }; 

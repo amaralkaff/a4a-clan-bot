@@ -26,11 +26,11 @@ export function createServices(prisma: PrismaClient): ServiceContainer {
   const battle = new BattleService(prisma, character);
   character.setBattleService(battle);
   
-  const inventory = new InventoryService(prisma);
+  const inventory = new InventoryService(prisma, character);
   const quest = new QuestService(prisma, character);
-  const shop = new ShopService(prisma);
-  const location = new LocationService(prisma);
-  const mentor = new MentorService(prisma);
+  const shop = new ShopService(prisma, character);
+  const location = new LocationService(prisma, character);
+  const mentor = new MentorService(prisma, character);
 
   return {
     character,

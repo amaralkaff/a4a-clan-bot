@@ -14,5 +14,5 @@ import {
     execute: (
       interaction: ChatInputCommandInteraction, 
       services: ServiceContainer
-    ) => Promise<void | InteractionResponse | Message>;
+    ) => Promise<void | InteractionResponse<boolean> | Message<boolean>>;
   }

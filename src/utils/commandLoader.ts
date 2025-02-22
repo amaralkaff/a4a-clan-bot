@@ -1,14 +1,14 @@
 import { Client, Collection, REST, Routes, RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord.js';
 import { CONFIG } from '../config/config';
 import { logger } from './logger';
-import commands from '../commands';
+import { commandList } from '@/commands';
 import { CommandHandler } from '@/types/commands';
 
 export async function loadCommands(client: Client) {
   const commandCollection = new Collection();
   const commandsArray: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [];
 
-  for (const [name, command] of Object.entries(commands)) {
+  for (const [name, command] of Object.entries(commandList)) {
     const cmd = command as CommandHandler;
     if ('data' in cmd && 'execute' in cmd) {
       logger.info(`Registering command: ${name}`);

@@ -22,17 +22,17 @@ interface QuestReward {
 
 interface DatabaseQuest {
   id: string;
+  templateId: string;
   name: string;
   description: string;
   type: string;
   objectives: string;
   rewards: string;
-  reward: number;
+  progress: string;
   status: string;
   characterId: string;
-  createdAt: Date;
-  updatedAt: Date;
-  isDaily: boolean;
+  startedAt: Date;
+  completedAt: Date | null;
   expiresAt: Date | null;
 }
 
@@ -43,8 +43,8 @@ interface Quest extends DatabaseQuest {
 }
 
 interface QuestProgress {
-  questId: string;      // Original quest ID from config
-  dbQuestId?: string;   // Database-generated quest ID
+  questId: string;
+  dbQuestId?: string;
   objectives: string;
   startedAt: number;
   lastUpdated: number;
@@ -175,26 +175,14 @@ export class QuestService extends BaseService {
 
       // First show active quests with progress
       if (character.quests.length > 0) {
+        const questList = character.quests.map(quest => {
+          const rewards = JSON.parse(quest.rewards);
+          return `**${quest.name}**\n${quest.description}\n💰 Reward: ${rewards.exp || 0} EXP`;
+        }).join('\n\n');
+
         questEmbed.addFields({
           name: '🔄 Quest Aktif',
-          value: character.quests.map(quest => {
-            let objectives;
-            try {
-              objectives = JSON.parse(quest.objectives);
-            } catch {
-              objectives = [{ current: 0, required: 1 }];
-            }
-            
-            const progressText = objectives.map((obj: any) => {
-              const current = obj.current || 0;
-              const required = obj.required || 1;
-              const percent = Math.floor((current / required) * 100);
-              const progressBar = this.createProgressBar(percent);
-              return `${progressBar} (${current}/${required})`;
-            }).join('\n');
-
-            return `**${quest.name}**\n${quest.description}\n${progressText}\n💰 Reward: ${quest.reward} EXP`;
-          }).join('\n\n') || 'Tidak ada quest aktif'
+          value: questList || 'Tidak ada quest aktif'
         });
       }
 
@@ -339,8 +327,8 @@ export class QuestService extends BaseService {
           {
             questId: quest.id,
             objectives: quest.objectives,
-            startedAt: quest.createdAt.getTime(),
-            lastUpdated: quest.updatedAt.getTime()
+            startedAt: quest.startedAt.getTime(),
+            lastUpdated: quest.startedAt.getTime()
           }
         ])
       );
@@ -433,20 +421,24 @@ export class QuestService extends BaseService {
         // Create quest in database with status and store original questId
         const createdQuest = await this.prisma.quest.create({
           data: {
+            templateId: questId,
             name: quest.name,
             description: quest.description,
             objectives: questProgress.objectives,
             rewards: JSON.stringify({ 
-              originalQuestId: questId,  // Store original quest ID explicitly
               exp: quest.reward,
-              questId: questId  // Keep for backwards compatibility
+              questId: questId
             }),
-            reward: quest.reward,
+            progress: JSON.stringify({
+              current: 0,
+              required: 1
+            }),
             type: quest.type,
-            isDaily: quest.type === 'DAILY',
-            expiresAt,
+            status: 'ACTIVE',
             characterId,
-            status: 'ACTIVE'
+            startedAt: new Date(),
+            expiresAt: quest.type === 'DAILY' ? 
+              new Date(new Date().setHours(23, 59, 59, 999)) : null
           }
         });
 
@@ -607,7 +599,7 @@ export class QuestService extends BaseService {
             state.activeQuests.set(dbQuest.id, {
               questId: dbQuest.id,
               objectives: JSON.stringify(objectives),
-              startedAt: dbQuest.createdAt.getTime(),
+              startedAt: dbQuest.startedAt.getTime(),
               lastUpdated: Date.now()
             });
 
@@ -653,10 +645,10 @@ export class QuestService extends BaseService {
           const originalQuestId = rewards.questId;
           
           state.activeQuests.set(quest.id, {
-            questId: originalQuestId, // Use original quest ID from config
+            questId: originalQuestId,
             objectives: quest.objectives,
-            startedAt: quest.createdAt.getTime(),
-            lastUpdated: quest.updatedAt.getTime()
+            startedAt: quest.startedAt.getTime(),
+            lastUpdated: quest.startedAt.getTime()
           });
         } catch (error) {
           this.logger.error(`Error parsing quest rewards for quest ${quest.id}:`, error);
@@ -734,8 +726,8 @@ export class QuestService extends BaseService {
         const questProgress = {
           questId,
           objectives: dbQuest.objectives,
-          startedAt: dbQuest.createdAt.getTime(),
-          lastUpdated: dbQuest.updatedAt.getTime()
+          startedAt: dbQuest.startedAt.getTime(),
+          lastUpdated: dbQuest.startedAt.getTime()
         };
         state.activeQuests.set(questId, questProgress);
         this.logger.info(`Initialized quest progress for quest ${questId}`);
@@ -813,8 +805,13 @@ export class QuestService extends BaseService {
           },
           data: {
             status: 'COMPLETED',
-            updatedAt: new Date(),
-            rewards: JSON.stringify(rewards)
+            completedAt: new Date(),
+            rewards: JSON.stringify(rewards),
+            progress: JSON.stringify({
+              current: 1,
+              required: 1,
+              completed: true
+            })
           }
         })
       ]);
@@ -903,7 +900,7 @@ export class QuestService extends BaseService {
 
         for (const [type, quests] of Object.entries(questsByType)) {
           const questList = quests.map(q => 
-            `**${q.name}**\n${q.description}\n💰 Reward: ${q.reward} EXP`
+            `**${q.name}**\n${q.description}\n💰 Reward: ${JSON.parse(q.rewards).exp || 0} EXP`
           ).join('\n\n');
 
           questEmbed.addFields({

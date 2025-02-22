@@ -330,15 +330,22 @@ export class BattleService extends BaseService {
       });
 
       // Create battle log
-      await this.prisma.battleLog.create({
+      await this.prisma.battle.create({
         data: {
           characterId,
           enemyType: `Level ${enemyLevel} Enemy`,
           enemyLevel,
-          damage: totalDamageDealt,
-          experience,
-          rewards: '{}',
-          won
+          status: won ? 'COMPLETED' : 'FAILED',
+          turns: JSON.stringify([]),
+          finalStats: JSON.stringify({
+            damage: totalDamageDealt,
+            experience,
+            criticalHits
+          }),
+          rewards: JSON.stringify({
+            experience,
+            items: []
+          })
         }
       });
 

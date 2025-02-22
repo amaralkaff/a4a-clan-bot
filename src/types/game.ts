@@ -66,6 +66,19 @@ export interface CreateCharacterDto {
     source: string;
   }
 
+  export enum QuestType {
+    COMBAT = 'COMBAT',
+    GATHERING = 'GATHERING',
+    EXPLORATION = 'EXPLORATION',
+    CRAFTING = 'CRAFTING',
+    HELP = 'HELP',
+    DAILY = 'DAILY',
+    CRITICAL_HIT = 'CRITICAL_HIT',
+    COMBO = 'COMBO',
+    NAVIGATION = 'NAVIGATION',
+    SECRET_DISCOVERY = 'SECRET_DISCOVERY'
+  }
+
   export interface StatusEffects {
     effects: StatusEffect[];
   }
@@ -262,3 +275,28 @@ export type ItemEffect = {
 } | {
   type: 'RANDOM_WEAPON';
 };
+
+export enum ItemType {
+  CONSUMABLE = 'CONSUMABLE',
+  WEAPON = 'WEAPON',
+  ARMOR = 'ARMOR',
+  MATERIAL = 'MATERIAL',
+  FOOD = 'FOOD',
+  INGREDIENT = 'INGREDIENT',
+  ACCESSORY = 'ACCESSORY'
+}
+
+export enum Rarity {
+  COMMON = 'COMMON',
+  RARE = 'RARE',
+  EPIC = 'EPIC',
+  LEGENDARY = 'LEGENDARY'
+}
+
+export enum QuestStatus {
+  TEMPLATE = 'TEMPLATE',
+  ACTIVE = 'ACTIVE',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  EXPIRED = 'EXPIRED'
+}

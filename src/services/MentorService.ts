@@ -1,12 +1,18 @@
 import { PrismaClient } from '@prisma/client';
 import { BaseService } from './BaseService';
-import { Message, EmbedBuilder } from 'discord.js';
+import { Message, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
+import { CharacterService } from './CharacterService';
+import { createEphemeralReply } from '@/utils/helpers';
 import { MentorType } from '@/types/game';
 import { checkCooldown, setCooldown, getRemainingCooldown } from '@/utils/cooldown';
+
+const NO_CHARACTER_MSG = '❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.';
 
 interface TrainingResult {
   success: boolean;
   message: string;
+  exp?: number;
+  coins?: number;
 }
 
 interface MentorStats {
@@ -19,8 +25,11 @@ type MentorTrainingStats = {
 };
 
 export class MentorService extends BaseService {
-  constructor(prisma: PrismaClient) {
+  private characterService: CharacterService;
+
+  constructor(prisma: PrismaClient, characterService: CharacterService) {
     super(prisma);
+    this.characterService = characterService;
   }
 
   async train(characterId: string, trainingType: string): Promise<TrainingResult> {
@@ -137,7 +146,7 @@ export class MentorService extends BaseService {
     });
 
     if (!character) {
-      return message.reply('❌ Kamu belum memiliki karakter! Gunakan `start` untuk membuat karakter.');
+      return message.reply('❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.');
     }
 
     // Get mentor progress
