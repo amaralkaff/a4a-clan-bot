@@ -1,10 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 import { CONFIG } from '../config/config';
 import { logger } from '../utils/logger';
-import { EmbedBuilder, MessageFlags } from 'discord.js';
+import { EmbedBuilder, MessageFlags, Message } from 'discord.js';
 import { QuestService } from './QuestService';
 import { CharacterService } from './CharacterService';
 import { StatusEffect, ActiveBuff, StatusEffects, ActiveBuffs } from '@/types/game';
+import { BaseService } from './BaseService';
 
 interface BattleState {
   combo: number;
@@ -20,17 +21,16 @@ interface DamageResult {
   critMultiplier: number;
 }
 
-export class BattleService {
-  private prisma: PrismaClient;
+export class BattleService extends BaseService {
   private battleStates: Map<string, BattleState>;
   private characterService: CharacterService;
   private questService: QuestService;
 
-  constructor(prisma: PrismaClient, characterService: CharacterService) {
-    this.prisma = prisma;
+  constructor(prisma: PrismaClient, characterService?: CharacterService) {
+    super(prisma);
     this.battleStates = new Map();
-    this.characterService = characterService;
-    this.questService = new QuestService(prisma, characterService);
+    this.characterService = characterService || new CharacterService(prisma);
+    this.questService = new QuestService(prisma, this.characterService);
   }
 
   private async initBattleState(characterId: string): Promise<BattleState> {
@@ -92,24 +92,26 @@ export class BattleService {
       case 'LYuka': // Usopp
         // 20% chance to apply status effect
         if (Math.random() < 0.2) {
-          const newEffect: StatusEffect = {
+          const poisonEffect: StatusEffect = {
             type: 'POISON',
             value: Math.floor(damage * 0.2),
-            duration: 3
+            duration: 3,
+            source: 'battle'
           };
-          battleState.statusEffects.effects.push(newEffect);
+          await this.characterService.addStatusEffect(character.id, poisonEffect);
         }
         break;
 
       case 'GarryAng': // Sanji
         // 15% chance to apply burn
         if (Math.random() < 0.15) {
-          const newEffect: StatusEffect = {
+          const burnEffect: StatusEffect = {
             type: 'BURN',
-            value: Math.floor(damage * 0.3),
-            duration: 2
+            value: Math.floor(damage * 0.15),
+            duration: 2,
+            source: 'battle'
           };
-          battleState.statusEffects.effects.push(newEffect);
+          await this.characterService.addStatusEffect(character.id, burnEffect);
         }
         break;
     }

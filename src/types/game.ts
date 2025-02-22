@@ -34,21 +34,36 @@ export interface CreateCharacterDto {
     lastDailyReset: Date | null;
     statusEffects: string;
     activeBuffs: string;
+    // Currency system
+    coins: number;
+    bank: number;
+    // Gambling stats
+    totalGambled: number;
+    totalWon: number;
+    lastGambleTime: Date | null;
+    // Battle stats
+    wins: number;
+    losses: number;
+    winStreak: number;
+    highestStreak: number;
     userId: string;
     createdAt: Date;
     updatedAt: Date;
   }
   
   export interface StatusEffect {
-    type: 'BURN' | 'POISON' | 'STUN' | 'HEAL_OVER_TIME';
-    value: number;
+    type: 'POISON' | 'BURN' | 'FREEZE' | 'STUN' | 'HEAL_OVER_TIME';
     duration: number;
+    value: number;
+    source: string;
   }
 
   export interface ActiveBuff {
     type: 'ATTACK' | 'DEFENSE' | 'SPEED' | 'ALL';
     value: number;
+    duration: number;
     expiresAt: number;
+    source: string;
   }
 
   export interface StatusEffects {
@@ -75,11 +90,21 @@ export interface CreateCharacterDto {
     combo: number;
     questPoints: number;
     explorationPoints: number;
-    statusEffects: StatusEffects;
-    activeBuffs: ActiveBuffs;
+    statusEffects: StatusEffect[];
+    activeBuffs: ActiveBuff[];
     dailyHealCount: number;
     lastHealTime?: Date;
     lastDailyReset?: Date;
+    // Currency system
+    coins: number;
+    bank: number;
+    totalGambled: number;
+    totalWon: number;
+    lastGambleTime?: Date;
+    wins: number;
+    losses: number;
+    winStreak: number;
+    highestStreak: number;
   }
 
   // NPC
@@ -147,16 +172,13 @@ export interface Location {
 }
 
 export type LocationId = 
-  | 'starter_island'
-  | 'shell_town'
-  | 'orange_town'
+  | 'foosha'
   | 'syrup_village'
   | 'baratie'
-  | 'loguetown'
   | 'arlong_park'
+  | 'loguetown'
   | 'drum_island'
-  | 'cocoyashi'
-  | 'foosha';
+  | 'cocoyashi';
 
 export type LocationMap = Record<LocationId, Location>;
 
@@ -198,3 +220,45 @@ export interface ExplorationResult {
   items: string[];
   messages: string[];
 }
+
+// Currency & Gambling
+export interface Transaction {
+  id: string;
+  characterId: string;
+  type: TransactionType;
+  amount: number;
+  description: string;
+  createdAt: Date;
+}
+
+export type TransactionType = 
+  | 'HUNT'
+  | 'QUEST_REWARD' 
+  | 'BATTLE_REWARD'
+  | 'SHOP_PURCHASE'
+  | 'GAMBLE_BET'
+  | 'GAMBLE_WIN'
+  | 'TRANSFER'
+  | 'BANK_DEPOSIT'
+  | 'BANK_WITHDRAW'
+  | 'DAILY';
+
+export interface ShopItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  effect: ItemEffect;
+  type: 'CONSUMABLE' | 'EQUIPMENT';
+}
+
+export type ItemEffect = {
+  type: 'HEAL';
+  value: number;
+} | {
+  type: 'BUFF';
+  stats: Partial<Record<'attack' | 'defense', number>>;
+  duration: number;
+} | {
+  type: 'RANDOM_WEAPON';
+};

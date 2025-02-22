@@ -9,12 +9,21 @@ import {
   StatusEffect,
   ActiveBuff,
   StatusEffects,
-  ActiveBuffs
+  ActiveBuffs,
+  TransactionType
 } from '@/types/game';
+import { Message, EmbedBuilder } from 'discord.js';
+import { checkCooldown, setCooldown, getRemainingCooldown } from '@/utils/cooldown';
 
 export class CharacterService extends BaseService {
+  private battleService: any; // Will be injected
+
   constructor(prisma: PrismaClient) {
     super(prisma);
+  }
+
+  setBattleService(battleService: any) {
+    this.battleService = battleService;
   }
 
   async createCharacter(dto: CreateCharacterDto): Promise<Character> {
@@ -80,7 +89,7 @@ export class CharacterService extends BaseService {
                 maxHealth: health,
                 attack,
                 defense,
-                currentIsland: 'starter_island' as LocationId,
+                currentIsland: 'foosha' as LocationId,
                 statusEffects: JSON.stringify(initialStatusEffects),
                 activeBuffs: JSON.stringify(initialActiveBuffs),
                 combo: 0,
@@ -187,11 +196,20 @@ export class CharacterService extends BaseService {
         combo: character.combo,
         questPoints: character.questPoints,
         explorationPoints: character.explorationPoints,
-        statusEffects,
-        activeBuffs,
+        statusEffects: statusEffects.effects,
+        activeBuffs: activeBuffs.buffs,
         dailyHealCount: character.dailyHealCount,
         lastHealTime: character.lastHealTime || undefined,
-        lastDailyReset: character.lastDailyReset || undefined
+        lastDailyReset: character.lastDailyReset || undefined,
+        coins: character.coins,
+        bank: character.bank,
+        totalGambled: character.totalGambled,
+        totalWon: character.totalWon,
+        lastGambleTime: character.lastGambleTime || undefined,
+        wins: character.wins,
+        losses: character.losses,
+        winStreak: character.winStreak,
+        highestStreak: character.highestStreak
       };
     } catch (error) {
       return this.handleError(error, 'GetCharacterStats');
@@ -529,5 +547,541 @@ export class CharacterService extends BaseService {
     if (!['YB', 'Tierison', 'LYuka', 'GarryAng'].includes(mentor)) {
       throw new Error(`Invalid mentor type: ${mentor}`);
     }
+  }
+
+  async addCoins(characterId: string, amount: number, type: TransactionType, description: string) {
+    return this.prisma.$transaction(async (prisma) => {
+      const character = await prisma.character.update({
+        where: { id: characterId },
+        data: { coins: { increment: amount } }
+      });
+
+      await prisma.transaction.create({
+        data: {
+          characterId,
+          type,
+          amount,
+          description
+        }
+      });
+
+      return character.coins;
+    });
+  }
+
+  async removeCoins(characterId: string, amount: number, type: TransactionType, description: string) {
+    return this.prisma.$transaction(async (prisma) => {
+      const character = await prisma.character.update({
+        where: { id: characterId },
+        data: { coins: { decrement: amount } }
+      });
+
+      await prisma.transaction.create({
+        data: {
+          characterId,
+          type,
+          amount: -amount,
+          description
+        }
+      });
+
+      return character.coins;
+    });
+  }
+
+  async transferCoins(senderId: string, receiverId: string, amount: number) {
+    return this.prisma.$transaction(async (prisma) => {
+      // Remove from sender
+      await prisma.character.update({
+        where: { id: senderId },
+        data: { coins: { decrement: amount } }
+      });
+
+      // Add to receiver
+      await prisma.character.update({
+        where: { id: receiverId },
+        data: { coins: { increment: amount } }
+      });
+
+      // Create transactions
+      await prisma.transaction.createMany({
+        data: [
+          {
+            characterId: senderId,
+            type: 'TRANSFER',
+            amount: -amount,
+            description: `Transfer to ${receiverId}`
+          },
+          {
+            characterId: receiverId,
+            type: 'TRANSFER',
+            amount: amount,
+            description: `Transfer from ${senderId}`
+          }
+        ]
+      });
+    });
+  }
+
+  async depositToBank(characterId: string, amount: number): Promise<void> {
+    try {
+      const character = await this.prisma.character.findUnique({
+        where: { id: characterId }
+      });
+
+      if (!character) throw new Error('Character not found');
+      if (character.coins < amount) throw new Error('Insufficient coins');
+
+      await this.prisma.$transaction([
+        // Remove from coins
+        this.prisma.character.update({
+          where: { id: characterId },
+          data: {
+            coins: { decrement: amount },
+            bank: { increment: amount }
+          }
+        }),
+        // Create transaction record
+        this.prisma.transaction.create({
+          data: {
+            characterId,
+            type: 'BANK_DEPOSIT',
+            amount,
+            description: `Deposited ${amount} coins to bank`
+          }
+        })
+      ]);
+    } catch (error) {
+      return this.handleError(error, 'DepositToBank');
+    }
+  }
+
+  async withdrawFromBank(characterId: string, amount: number): Promise<void> {
+    try {
+      const character = await this.prisma.character.findUnique({
+        where: { id: characterId }
+      });
+
+      if (!character) throw new Error('Character not found');
+      if (character.bank < amount) throw new Error('Insufficient bank balance');
+
+      await this.prisma.$transaction([
+        // Add to coins
+        this.prisma.character.update({
+          where: { id: characterId },
+          data: {
+            coins: { increment: amount },
+            bank: { decrement: amount }
+          }
+        }),
+        // Create transaction record
+        this.prisma.transaction.create({
+          data: {
+            characterId,
+            type: 'BANK_WITHDRAW',
+            amount: -amount,
+            description: `Withdrew ${amount} coins from bank`
+          }
+        })
+      ]);
+    } catch (error) {
+      return this.handleError(error, 'WithdrawFromBank');
+    }
+  }
+
+  async updateGamblingStats(characterId: string, bet: number, won: boolean): Promise<void> {
+    try {
+      await this.prisma.character.update({
+        where: { id: characterId },
+        data: {
+          totalGambled: { increment: bet },
+          totalWon: won ? { increment: bet * 2 } : undefined,
+          lastGambleTime: new Date()
+        }
+      });
+    } catch (error) {
+      return this.handleError(error, 'UpdateGamblingStats');
+    }
+  }
+
+  async updateBattleStats(characterId: string, won: boolean): Promise<void> {
+    try {
+      if (won) {
+        const character = await this.prisma.character.findUnique({
+          where: { id: characterId },
+          select: { winStreak: true, highestStreak: true }
+        });
+
+        if (!character) throw new Error('Character not found');
+
+        const newStreak = character.winStreak + 1;
+        const newHighestStreak = Math.max(newStreak, character.highestStreak);
+
+        await this.prisma.character.update({
+          where: { id: characterId },
+          data: {
+            wins: { increment: 1 },
+            winStreak: newStreak,
+            highestStreak: newHighestStreak
+          }
+        });
+      } else {
+        await this.prisma.character.update({
+          where: { id: characterId },
+          data: {
+            losses: { increment: 1 },
+            winStreak: 0
+          }
+        });
+      }
+    } catch (error) {
+      return this.handleError(error, 'UpdateBattleStats');
+    }
+  }
+
+  async getBalance(characterId: string): Promise<{ coins: number; bank: number }> {
+    try {
+      const character = await this.prisma.character.findUnique({
+        where: { id: characterId },
+        select: {
+          coins: true,
+          bank: true
+        }
+      });
+
+      if (!character) throw new Error('Character not found');
+
+      return {
+        coins: character.coins,
+        bank: character.bank
+      };
+    } catch (error) {
+      return this.handleError(error, 'GetBalance');
+    }
+  }
+
+  async getTransactionHistory(characterId: string, limit: number = 10): Promise<any[]> {
+    try {
+      return await this.prisma.transaction.findMany({
+        where: { characterId },
+        orderBy: { createdAt: 'desc' },
+        take: limit
+      });
+    } catch (error) {
+      return this.handleError(error, 'GetTransactionHistory');
+    }
+  }
+
+  // Add message-based command handlers
+  async handleProfile(message: Message) {
+    const character = await this.getCharacterByDiscordId(message.author.id);
+    if (!character) {
+      return message.reply('❌ Kamu belum memiliki karakter! Gunakan `start` untuk membuat karakter.');
+    }
+
+    const stats = await this.getCharacterStats(character.id);
+    const balance = await this.getBalance(character.id);
+
+    const embed = new EmbedBuilder()
+      .setTitle(`📊 ${character.name}'s Profile`)
+      .setColor('#0099ff')
+      .addFields(
+        { 
+          name: '📈 Level & Experience', 
+          value: `Level: ${stats.level}\nEXP: ${stats.experience}/${stats.level * 1000}`,
+          inline: true 
+        },
+        {
+          name: '❤️ Health',
+          value: `${stats.health}/${stats.maxHealth} HP`,
+          inline: true
+        },
+        { 
+          name: '💰 Balance', 
+          value: `Coins: ${balance.coins}\nBank: ${balance.bank}`,
+          inline: true 
+        },
+        { 
+          name: '⚔️ Battle Stats', 
+          value: `ATK: ${stats.attack}\nDEF: ${stats.defense}\nWins: ${stats.wins}\nLosses: ${stats.losses}\nStreak: ${stats.winStreak}`,
+          inline: true 
+        }
+      );
+
+    // Add mentor info if exists
+    if (stats.mentor) {
+      embed.addFields({
+        name: '👨‍🏫 Mentor',
+        value: `${this.getMentorEmoji(stats.mentor)} ${stats.mentor}`,
+        inline: true
+      });
+    }
+
+    return message.reply({ embeds: [embed] });
+  }
+
+  async handleHelp(message: Message) {
+    const embed = new EmbedBuilder()
+      .setTitle('❓ A4A CLAN BOT - Panduan')
+      .setColor('#00ff00')
+      .setDescription('One Piece RPG Game')
+      .addFields([
+        { 
+          name: '📜 Basic Commands', 
+          value: 
+`\`a p\` - 📊 Lihat profil
+\`a h\` - 🗡️ Berburu (15s cd)
+\`a d\` - 🎁 Daily reward
+\`a i\` - 🎒 Inventory
+\`a u\` - 📦 Gunakan item
+\`a b\` - 💰 Balance
+\`a t\` - ⚔️ Training
+\`a m\` - 🗺️ Map
+\`a s\` - 🛍️ Shop`
+        },
+        {
+          name: '🎮 Tips',
+          value: 'Mulai dengan berburu di Foosha Village untuk mendapatkan EXP dan item!'
+        }
+      ]);
+
+    return message.reply({ embeds: [embed] });
+  }
+
+  async handleHunt(message: Message) {
+    // Check cooldown
+    if (!checkCooldown(message.author.id, 'hunt')) {
+      const remainingTime = getRemainingCooldown(message.author.id, 'hunt');
+      return message.reply(`⏰ Hunt sedang cooldown! Tunggu ${remainingTime} detik lagi.`);
+    }
+
+    const character = await this.getCharacterByDiscordId(message.author.id);
+    if (!character) {
+      return message.reply('❌ Kamu belum memiliki karakter! Gunakan `start` untuk membuat karakter.');
+    }
+
+    // Get random monster based on character level
+    const monster = this.getRandomMonster(character.level);
+    
+    // Calculate rewards
+    const exp = monster.exp;
+    const coins = Math.floor(Math.random() * (monster.coins[1] - monster.coins[0] + 1)) + monster.coins[0];
+
+    // Process battle
+    const result = await this.battleService.processBattle(character.id, monster.level[0]);
+    
+    // Update rewards if won
+    if (result.won) {
+      await this.addExperience(character.id, exp);
+      await this.addCoins(character.id, coins, 'HUNT', `Hunt reward from ${monster.name}`);
+    }
+
+    // Create result embed
+    const embed = new EmbedBuilder()
+      .setTitle(`🗡️ Hunt Result: ${monster.name}`)
+      .setColor(result.won ? '#00ff00' : '#ff0000')
+      .setDescription(result.won ? 'You won!' : 'You lost!')
+      .addFields(
+        { name: '✨ Experience', value: result.won ? `+${exp} EXP` : '0 EXP', inline: true },
+        { name: '💰 Coins', value: result.won ? `+${coins} coins` : '0 coins', inline: true }
+      );
+
+    // Set cooldown
+    setCooldown(message.author.id, 'hunt');
+
+    return message.reply({ embeds: [embed] });
+  }
+
+  async handleDaily(message: Message) {
+    // Check cooldown
+    if (!checkCooldown(message.author.id, 'daily')) {
+      const remainingTime = getRemainingCooldown(message.author.id, 'daily');
+      const hours = Math.floor(remainingTime / 3600);
+      const minutes = Math.floor((remainingTime % 3600) / 60);
+      return message.reply(`⏰ Daily reward sedang cooldown!\nTunggu ${hours}h ${minutes}m lagi.`);
+    }
+
+    const character = await this.getCharacterByDiscordId(message.author.id);
+    if (!character) {
+      return message.reply('❌ Kamu belum memiliki karakter! Gunakan `start` untuk membuat karakter.');
+    }
+
+    // Calculate rewards
+    const exp = 100 + Math.floor(Math.random() * 50);
+    const coins = 100 + Math.floor(Math.random() * 100);
+    
+    // Update character
+    await this.addExperience(character.id, exp);
+    await this.addCoins(character.id, coins, 'DAILY', 'Daily reward');
+    
+    const embed = new EmbedBuilder()
+      .setTitle('🎁 Daily Rewards')
+      .setColor('#00ff00')
+      .setDescription('Kamu telah mengklaim hadiah harian!')
+      .addFields(
+        { name: '✨ Experience', value: `+${exp} EXP`, inline: true },
+        { name: '💰 Coins', value: `+${coins} coins`, inline: true }
+      );
+
+    // Set cooldown
+    setCooldown(message.author.id, 'daily');
+
+    return message.reply({ embeds: [embed] });
+  }
+
+  private getRandomMonster(characterLevel: number) {
+    const ENCOUNTERS = {
+      COMMON: {
+        chance: 0.7,
+        monsters: [
+          { name: '🐗 Wild Boar', level: [1, 3], exp: 20, coins: [10, 30] },
+          { name: '🐺 Wolf', level: [2, 4], exp: 25, coins: [15, 35] },
+          { name: '🦊 Fox', level: [3, 5], exp: 30, coins: [20, 40] }
+        ]
+      },
+      RARE: {
+        chance: 0.2,
+        monsters: [
+          { name: '🐉 Baby Dragon', level: [4, 6], exp: 50, coins: [40, 60] },
+          { name: '🦁 Lion', level: [5, 7], exp: 55, coins: [45, 65] },
+          { name: '🐯 Tiger', level: [6, 8], exp: 60, coins: [50, 70] }
+        ]
+      },
+      EPIC: {
+        chance: 0.08,
+        monsters: [
+          { name: '🐲 Adult Dragon', level: [7, 9], exp: 100, coins: [80, 120] },
+          { name: '🦅 Giant Eagle', level: [8, 10], exp: 110, coins: [90, 130] },
+          { name: '🐘 War Elephant', level: [9, 11], exp: 120, coins: [100, 140] }
+        ]
+      },
+      LEGENDARY: {
+        chance: 0.02,
+        monsters: [
+          { name: '🔥 Phoenix', level: [10, 12], exp: 200, coins: [150, 250] },
+          { name: '⚡ Thunder Bird', level: [11, 13], exp: 220, coins: [170, 270] },
+          { name: '🌊 Leviathan', level: [12, 14], exp: 240, coins: [190, 290] }
+        ]
+      }
+    };
+
+    const rand = Math.random();
+    let cumChance = 0;
+    
+    for (const [rarity, data] of Object.entries(ENCOUNTERS)) {
+      cumChance += data.chance;
+      if (rand <= cumChance) {
+        const possibleMonsters = data.monsters.filter(m => 
+          m.level[0] <= characterLevel + 3 && m.level[1] >= characterLevel - 1
+        );
+        if (possibleMonsters.length === 0) continue;
+        return possibleMonsters[Math.floor(Math.random() * possibleMonsters.length)];
+      }
+    }
+    
+    return ENCOUNTERS.COMMON.monsters[0]; // Fallback to first common monster
+  }
+
+  private getMentorEmoji(mentor: string): string {
+    const emojiMap: Record<string, string> = {
+      'YB': '⚔️',
+      'Tierison': '🗡️',
+      'LYuka': '🎯',
+      'GarryAng': '🔥'
+    };
+    return emojiMap[mentor] || '👨‍🏫';
+  }
+
+  async handleInventory(message: Message) {
+    const character = await this.getCharacterByDiscordId(message.author.id);
+    if (!character) {
+      return message.reply('❌ Kamu belum memiliki karakter! Gunakan `start` untuk membuat karakter.');
+    }
+
+    const inventory = await this.prisma.inventory.findMany({
+      where: { characterId: character.id },
+      include: { item: true }
+    });
+
+    if (!inventory || inventory.length === 0) {
+      return message.reply('📦 Inventorymu masih kosong!');
+    }
+
+    // Group items by type
+    const groupedItems = inventory.reduce((acc: Record<string, Array<{name: string; description: string; quantity: number; type: string}>>, inv) => {
+      if (!acc[inv.item.type]) {
+        acc[inv.item.type] = [];
+      }
+      acc[inv.item.type].push({
+        name: inv.item.name,
+        description: inv.item.description,
+        quantity: inv.quantity,
+        type: inv.item.type
+      });
+      return acc;
+    }, {});
+
+    const embed = new EmbedBuilder()
+      .setTitle(`📦 Inventory ${character.name}`)
+      .setColor('#0099ff');
+
+    // Add fields for each item type
+    for (const [type, items] of Object.entries(groupedItems)) {
+      const itemList = items.map(item => 
+        `${item.name} (x${item.quantity})\n${item.description}`
+      ).join('\n\n');
+
+      embed.addFields([{
+        name: `${this.getItemTypeEmoji(type)} ${type}`,
+        value: itemList || 'Kosong'
+      }]);
+    }
+
+    return message.reply({ embeds: [embed] });
+  }
+
+  private getItemTypeEmoji(type: string): string {
+    const emojiMap: Record<string, string> = {
+      'CONSUMABLE': '🧪',
+      'WEAPON': '⚔️',
+      'ARMOR': '🛡️',
+      'MATERIAL': '📦',
+      'FOOD': '🍖',
+      'INGREDIENT': '🌿'
+    };
+    return emojiMap[type] || '📦';
+  }
+
+  async handleBalance(message: Message) {
+    const character = await this.getCharacterByDiscordId(message.author.id);
+    if (!character) {
+      return message.reply('❌ Kamu belum memiliki karakter! Gunakan `start` untuk membuat karakter.');
+    }
+
+    const balance = await this.getBalance(character.id);
+    const transactions = await this.getTransactionHistory(character.id, 5);
+
+    const embed = new EmbedBuilder()
+      .setTitle('💰 Dompetmu')
+      .setColor('#ffd700')
+      .addFields([
+        { name: '💵 Uang Cash', value: `${balance.coins} coins`, inline: true },
+        { name: '🏦 Bank', value: `${balance.bank} coins`, inline: true },
+        { name: '💰 Total', value: `${balance.coins + balance.bank} coins`, inline: true }
+      ]);
+
+    // Add transaction history if exists
+    if (transactions.length > 0) {
+      const historyText = transactions.map(tx => {
+        const amount = tx.amount > 0 ? `+${tx.amount}` : tx.amount;
+        return `${tx.type}: ${amount} coins (${tx.description})`;
+      }).join('\n');
+      
+      embed.addFields([
+        { name: '📜 Riwayat Transaksi Terakhir', value: historyText }
+      ]);
+    }
+
+    return message.reply({ embeds: [embed] });
   }
 }

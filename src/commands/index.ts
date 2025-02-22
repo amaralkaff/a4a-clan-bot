@@ -1,20 +1,25 @@
 // src/commands/index.ts
-import { help } from './help';
-import { createCommand } from './character/create';
-import { interactNpc } from './character/interact';
-import { statusCommand } from './character/statusCommand';
-import { explorationCommands } from './exploration/explorationCommands';
-import { inventoryCommands } from './inventory/inventoryCommands';
-import { questCommands } from './quest/questCommands';
-import { battleCommands } from './battle/battleCommands';
+export { default } from './commandList';
+export * from './constants';
 
-export default {
-  help,
-  create: createCommand,
-  interact: interactNpc,
-  status: statusCommand,
-  explore: explorationCommands,
-  inventory: inventoryCommands,
-  quest: questCommands,
-  battle: battleCommands
+// Command cooldowns (in milliseconds)
+export const COOLDOWNS = {
+  hunt: 15000,      // 15 seconds
+  battle: 30000,    // 30 seconds
+  daily: 86400000,  // 24 hours
+};
+
+// Command descriptions for help
+export const COMMAND_DESCRIPTIONS = {
+  // Basic commands
+  'help': '❓ Tampilkan panduan bermain',
+  'p': '📊 Lihat profilmu',
+  'h': '🗡️ Berburu monster (15s cd)',
+  'd': '🎁 Hadiah harian (24h cd)',
+  'i': '🎒 Lihat inventorymu',
+  'u': '📦 Gunakan item',
+  'b': '💰 Lihat uangmu',
+  't': '⚔️ Latihan dengan mentor',
+  'm': '🗺️ Lihat peta dunia',
+  's': '🛍️ Buka toko'
 }; 

@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
 import { BaseService } from './BaseService';
+import { Message, EmbedBuilder } from 'discord.js';
 
 interface ItemEffect {
   type: 'HEAL' | 'BUFF';
@@ -161,5 +162,15 @@ export class InventoryService extends BaseService {
       logger.error('Error getting inventory:', error);
       throw error;
     }
+  }
+
+  async handleUseItem(message: Message, itemId: string) {
+    // Implementation will be added later
+    return message.reply('🔄 Fitur use item dalam pengembangan...');
+  }
+
+  async handleInventory(message: Message) {
+    // Implementation will be added later
+    return message.reply('🔄 Fitur inventory dalam pengembangan...');
   }
 }

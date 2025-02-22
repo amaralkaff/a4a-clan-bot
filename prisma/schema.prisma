@@ -27,7 +27,7 @@ model Character {
   maxHealth     Int       @default(100)
   attack        Int       @default(10)
   defense       Int       @default(10)
-  currentIsland String    @default("starter_island")
+  currentIsland String    @default("foosha")
   mentor        String?   // YB, Tierison, LYuka, atau GarryAng
   luffyProgress Int       @default(0)
   zoroProgress  Int       @default(0)
@@ -41,14 +41,40 @@ model Character {
   lastDailyReset DateTime?
   statusEffects String    @default("{}")
   activeBuffs   String    @default("{}")
+  // Currency system
+  coins         Int       @default(0)
+  bank          Int       @default(0)
+  // Gambling stats
+  totalGambled  Int       @default(0)
+  totalWon      Int       @default(0)
+  lastGambleTime DateTime?
+  // Battle stats
+  wins          Int       @default(0)
+  losses        Int       @default(0)
+  winStreak     Int       @default(0)
+  highestStreak Int       @default(0)
+  // Relations
   inventory     Inventory[]
   quests        Quest[]
   battleLogs    BattleLog[]
+  transactions  Transaction[]
   userId        String    @unique
   user          User      @relation(fields: [userId], references: [id])
   location      Location  @relation(fields: [currentIsland], references: [id])
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+model Transaction {
+  id          String    @id @default(uuid())
+  characterId String
+  character   Character @relation(fields: [characterId], references: [id])
+  type        String    // HUNT, QUEST_REWARD, SHOP_PURCHASE, TRANSFER, BANK_DEPOSIT, BANK_WITHDRAW, DAILY
+  amount      Int
+  description String
+  createdAt   DateTime  @default(now())
+
+  @@index([characterId])
 }
 
 model Inventory {
@@ -113,7 +139,7 @@ model Item {
   id          String      @id
   name        String
   description String
-  type        String      // INGREDIENT, FOOD, EQUIPMENT, etc.
+  type        String      // CONSUMABLE, WEAPON, ARMOR, MATERIAL, FOOD, INGREDIENT
   value       Int         @default(0)
   effect      String      @default("{}")  // JSON string untuk efek item
   inventory   Inventory[]

@@ -6,56 +6,23 @@ import {
   } from 'discord.js';
   import { CommandHandler } from '@/types/commands';
   import { createEphemeralReply } from '@/utils/helpers';
-  import { StatusEffect, ActiveBuff, StatusEffects, ActiveBuffs } from '@/types/game';
-  
+
   export const statusCommand: CommandHandler = {
     data: new SlashCommandBuilder()
       .setName('status')
-      .setDescription('Tampilkan status karakter dan cuaca saat ini'),
+      .setDescription('Tampilkan status karaktermu'),
   
-    async execute(interaction, services) {
+    async execute(interaction: ChatInputCommandInteraction, services) {
       try {
         const character = await services.character.getCharacterByDiscordId(interaction.user.id);
   
         if (!character) {
           return interaction.reply(createEphemeralReply({
-            content: '❌ Kamu harus membuat karakter terlebih dahulu dengan command `/create`'
+            content: '❌ Kamu harus membuat karakter terlebih dahulu dengan `/start`'
           }));
         }
   
         const stats = await services.character.getCharacterStats(character.id);
-        const currentWeather = services.weather.getCurrentWeather();
-
-        // Ensure status effects and buffs exist with default values
-        const statusEffects: StatusEffects = stats.statusEffects || { effects: [] };
-        const activeBuffs: ActiveBuffs = stats.activeBuffs || { buffs: [] };
-
-        // Format status effects
-        const statusEffectsText = statusEffects.effects?.length > 0 ?
-          statusEffects.effects.map(effect => {
-            let emoji = '';
-            switch(effect.type) {
-              case 'BURN': emoji = '🔥'; break;
-              case 'POISON': emoji = '☠️'; break;
-              case 'STUN': emoji = '⚡'; break;
-              case 'HEAL_OVER_TIME': emoji = '💚'; break;
-            }
-            return `${emoji} ${effect.type}: ${effect.value} (${effect.duration} turn)`;
-          }).join('\n') : 'Tidak ada';
-
-        // Format active buffs
-        const activeBuffsText = activeBuffs.buffs?.length > 0 ?
-          activeBuffs.buffs.map(buff => {
-            let emoji = '';
-            switch(buff.type) {
-              case 'ATTACK': emoji = '⚔️'; break;
-              case 'DEFENSE': emoji = '🛡️'; break;
-              case 'SPEED': emoji = '💨'; break;
-              case 'ALL': emoji = '🌟'; break;
-            }
-            const timeLeft = Math.max(0, Math.floor((buff.expiresAt - Date.now()) / 1000));
-            return `${emoji} ${buff.type}: +${buff.value} (${timeLeft}s)`;
-          }).join('\n') : 'Tidak ada';
   
         const embed = new EmbedBuilder()
           .setTitle(`📊 Status ${character.name}`)
@@ -81,18 +48,13 @@ import {
               value: `🏝️ ${stats.location}`,
               inline: true 
             },
-            { 
-              name: '🌤️ Current Weather', 
-              value: currentWeather.description,
-              inline: true 
-            },
             {
               name: '📊 Progress',
               value: `🎯 Quest Points: ${stats.questPoints}\n🗺️ Exploration Points: ${stats.explorationPoints}`,
               inline: true
             }
           );
-
+  
         // Add mentor progress if exists
         if (stats.mentor) {
           embed.addFields({
@@ -101,21 +63,7 @@ import {
             inline: true
           });
         }
-
-        // Add status effects if any
-        embed.addFields({
-          name: '✨ Status Effects',
-          value: statusEffectsText,
-          inline: true
-        });
-
-        // Add active buffs if any
-        embed.addFields({
-          name: '⚡ Active Buffs',
-          value: activeBuffsText,
-          inline: true
-        });
-
+  
         // Add daily heal info if character has Sanji as mentor
         if (stats.mentor === 'GarryAng') {
           embed.addFields({
@@ -124,7 +72,7 @@ import {
             inline: true
           });
         }
-
+  
         // Add daily reset info
         if (stats.lastDailyReset) {
           const nextReset = new Date(stats.lastDailyReset);

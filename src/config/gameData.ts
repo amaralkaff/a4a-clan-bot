@@ -442,4 +442,333 @@ export const SPECIAL_EVENTS = {
       rareItemChance: 2.0
     }
   }
-} as const; 
+} as const;
+
+// Tambahan: Combat Moves
+export const COMBAT_MOVES = {
+  // Luffy's Moves
+  'gomu_punch': {
+    name: '👊 Gomu Gomu no Pistol',
+    damage: 1.2,
+    cooldown: 2,
+    description: 'Pukulan dasar dengan kekuatan karet'
+  },
+  'gomu_bazooka': {
+    name: '💥 Gomu Gomu no Bazooka',
+    damage: 1.5,
+    cooldown: 4,
+    description: 'Serangan ganda dengan kedua tangan'
+  },
+  'gear_second': {
+    name: '⚡ Gear Second',
+    type: 'BUFF',
+    duration: 3,
+    effects: {
+      attack: 2.0,
+      speed: 2.0
+    },
+    cooldown: 10,
+    description: 'Tingkatkan kecepatan dan kekuatan drastis'
+  },
+
+  // Zoro's Moves
+  'oni_giri': {
+    name: '⚔️ Oni Giri',
+    damage: 1.4,
+    cooldown: 3,
+    description: 'Tebasan tiga pedang dasar'
+  },
+  'tatsumaki': {
+    name: '🌪️ Tatsumaki',
+    damage: 1.6,
+    aoe: true,
+    cooldown: 5,
+    description: 'Serangan berputar yang mengenai area luas'
+  },
+  'asura': {
+    name: '👹 Asura',
+    type: 'BUFF',
+    duration: 2,
+    effects: {
+      attack: 2.5
+    },
+    cooldown: 12,
+    description: 'Manifestasi sembilan pedang'
+  },
+
+  // Usopp's Moves
+  'lead_star': {
+    name: '🔫 Lead Star',
+    damage: 1.1,
+    range: 'LONG',
+    cooldown: 2,
+    description: 'Tembakan jarak jauh akurat'
+  },
+  'fire_bird_star': {
+    name: '🔥 Fire Bird Star',
+    damage: 1.3,
+    dot: 0.2,
+    cooldown: 4,
+    description: 'Tembakan api yang membakar musuh'
+  },
+  'impact_dial': {
+    name: '💫 Impact Dial',
+    damage: 'STORED',
+    cooldown: 8,
+    description: 'Mengembalikan damage yang diterima'
+  },
+
+  // Sanji's Moves
+  'collier_shoot': {
+    name: '🦵 Collier Shoot',
+    damage: 1.3,
+    cooldown: 3,
+    description: 'Tendangan kuat ke leher'
+  },
+  'diable_jambe': {
+    name: '🔥 Diable Jambe',
+    type: 'BUFF',
+    duration: 3,
+    effects: {
+      attack: 1.8,
+      dot: 0.3
+    },
+    cooldown: 8,
+    description: 'Tendangan berapi yang membakar'
+  },
+  'party_table': {
+    name: '🍽️ Party Table Kick Course',
+    damage: 1.5,
+    aoe: true,
+    cooldown: 6,
+    description: 'Tendangan berputar yang mengenai area luas'
+  }
+};
+
+// Tambahan: Combo System
+export const COMBO_SYSTEM = {
+  // Luffy's Combos
+  'rubber_fury': {
+    name: '💫 Rubber Fury',
+    moves: ['gomu_punch', 'gomu_punch', 'gomu_bazooka'],
+    bonus_damage: 1.5,
+    description: 'Kombinasi pukulan karet mematikan'
+  },
+  'storm_rush': {
+    name: '⚡ Storm Rush',
+    moves: ['gear_second', 'gomu_punch', 'gomu_bazooka'],
+    bonus_damage: 2.0,
+    description: 'Serangan beruntun super cepat'
+  },
+
+  // Zoro's Combos
+  'three_sword_fury': {
+    name: '⚔️ Three Sword Fury',
+    moves: ['oni_giri', 'tatsumaki', 'oni_giri'],
+    bonus_damage: 1.8,
+    description: 'Kombinasi tebasan tiga pedang'
+  },
+  'demon_slash': {
+    name: '👹 Demon Slash',
+    moves: ['asura', 'oni_giri', 'tatsumaki'],
+    bonus_damage: 2.2,
+    description: 'Serangan Asura mematikan'
+  },
+
+  // Usopp's Combos
+  'sniper_barrage': {
+    name: '🎯 Sniper Barrage',
+    moves: ['lead_star', 'lead_star', 'fire_bird_star'],
+    bonus_damage: 1.6,
+    description: 'Rentetan tembakan akurat'
+  },
+  'impact_burst': {
+    name: '💥 Impact Burst',
+    moves: ['lead_star', 'fire_bird_star', 'impact_dial'],
+    bonus_damage: 1.9,
+    description: 'Kombinasi tembakan dengan Impact Dial'
+  },
+
+  // Sanji's Combos
+  'cooking_hell': {
+    name: '🔥 Cooking Hell',
+    moves: ['collier_shoot', 'diable_jambe', 'party_table'],
+    bonus_damage: 2.0,
+    description: 'Kombinasi tendangan berapi'
+  },
+  'restaurant_rush': {
+    name: '🍴 Restaurant Rush',
+    moves: ['diable_jambe', 'collier_shoot', 'party_table'],
+    bonus_damage: 1.7,
+    description: 'Serangan beruntun ala koki'
+  }
+};
+
+// Tambahan: Training System
+export const TRAINING_SYSTEM = {
+  // Basic Training
+  'basic': {
+    duration: 300, // 5 minutes
+    exp_gain: 50,
+    stat_gain: {
+      attack: 1,
+      defense: 1
+    }
+  },
+
+  // Mentor-specific Training
+  'YB': {
+    'rubber_mastery': {
+      required_level: 5,
+      duration: 1800, // 30 minutes
+      exp_gain: 200,
+      stat_gain: {
+        attack: 3,
+        speed: 2
+      },
+      unlock: 'gear_second'
+    },
+    'haki_basics': {
+      required_level: 10,
+      duration: 3600, // 1 hour
+      exp_gain: 400,
+      stat_gain: {
+        attack: 5,
+        defense: 3
+      },
+      unlock: 'armament_haki'
+    }
+  },
+
+  'Tierison': {
+    'sword_technique': {
+      required_level: 5,
+      duration: 1800,
+      exp_gain: 200,
+      stat_gain: {
+        attack: 4,
+        defense: 1
+      },
+      unlock: 'oni_giri'
+    },
+    'meditation': {
+      required_level: 10,
+      duration: 3600,
+      exp_gain: 400,
+      stat_gain: {
+        attack: 3,
+        defense: 5
+      },
+      unlock: 'asura'
+    }
+  },
+
+  'LYuka': {
+    'target_practice': {
+      required_level: 5,
+      duration: 1800,
+      exp_gain: 200,
+      stat_gain: {
+        accuracy: 4,
+        speed: 1
+      },
+      unlock: 'fire_bird_star'
+    },
+    'gadget_mastery': {
+      required_level: 10,
+      duration: 3600,
+      exp_gain: 400,
+      stat_gain: {
+        attack: 2,
+        defense: 6
+      },
+      unlock: 'impact_dial'
+    }
+  },
+
+  'GarryAng': {
+    'kick_technique': {
+      required_level: 5,
+      duration: 1800,
+      exp_gain: 200,
+      stat_gain: {
+        attack: 3,
+        speed: 2
+      },
+      unlock: 'diable_jambe'
+    },
+    'cooking_mastery': {
+      required_level: 10,
+      duration: 3600,
+      exp_gain: 400,
+      stat_gain: {
+        healing: 5,
+        defense: 3
+      },
+      unlock: 'recovery_meal'
+    }
+  }
+};
+
+// Tambahan: Achievement System
+export const ACHIEVEMENTS = {
+  // Combat Achievements
+  'first_blood': {
+    name: '🗡️ First Blood',
+    description: 'Menangkan pertarungan pertamamu',
+    reward: {
+      exp: 100,
+      coins: 500,
+      title: 'Rookie Fighter'
+    }
+  },
+  'combo_master': {
+    name: '💫 Combo Master',
+    description: 'Lakukan 10 combo dalam satu pertarungan',
+    reward: {
+      exp: 500,
+      coins: 1000,
+      title: 'Combo King'
+    }
+  },
+
+  // Exploration Achievements
+  'world_traveler': {
+    name: '🗺️ World Traveler',
+    description: 'Kunjungi semua lokasi',
+    reward: {
+      exp: 1000,
+      coins: 2000,
+      title: 'Explorer'
+    }
+  },
+  'treasure_hunter': {
+    name: '💎 Treasure Hunter',
+    description: 'Temukan 100 item langka',
+    reward: {
+      exp: 800,
+      coins: 1500,
+      title: 'Master Collector'
+    }
+  },
+
+  // Training Achievements
+  'training_addict': {
+    name: '💪 Training Addict',
+    description: 'Selesaikan 50 sesi latihan',
+    reward: {
+      exp: 700,
+      coins: 1200,
+      title: 'Dedicated Student'
+    }
+  },
+  'mentor_bond': {
+    name: '🤝 Mentor Bond',
+    description: 'Capai level maksimal dengan mentormu',
+    reward: {
+      exp: 1500,
+      coins: 3000,
+      title: 'Trusted Apprentice'
+    }
+  }
+}; 

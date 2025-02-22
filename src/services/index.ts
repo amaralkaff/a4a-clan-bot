@@ -1,38 +1,45 @@
 // src/services/index.ts
 import { PrismaClient } from '@prisma/client';
-import { CharacterService } from '@/services/CharacterService';
-import { BattleService } from '@/services/BattleService';
-import { InventoryService } from '@/services/InventoryService';
-import { QuestService } from '@/services/QuestService';
-import { WeatherService } from '@/services/WeatherService';
-import { ExplorationService } from '@/services/ExplorationService';
-import { NpcService } from '@/services/NpcService';
-import { CraftingService } from '@/services/CraftingService';
+import { CharacterService } from './CharacterService';
+import { InventoryService } from './InventoryService';
+import { QuestService } from './QuestService';
+import { BattleService } from './BattleService';
+import { ShopService } from './ShopService';
+import { LocationService } from './LocationService';
+import { MentorService } from './MentorService';
 import { logger } from '@/utils/logger';
 
-export class ServiceContainer {
-  public readonly character: CharacterService;
-  public readonly battle: BattleService;
-  public readonly inventory: InventoryService;
-  public readonly quest: QuestService;
-  public readonly weather: WeatherService;
-  public readonly exploration: ExplorationService;
-  public readonly npc: NpcService;
-  public readonly crafting: CraftingService;
-  public readonly logger = logger;
-
-  constructor(prisma: PrismaClient) {
-    this.character = new CharacterService(prisma);
-    this.battle = new BattleService(prisma, this.character);
-    this.inventory = new InventoryService(prisma);
-    this.quest = new QuestService(prisma, this.character);
-    this.weather = new WeatherService();
-    this.exploration = new ExplorationService(prisma, this.character);
-    this.npc = new NpcService(prisma);
-    this.crafting = new CraftingService(prisma, this.character);
-  }
+export interface ServiceContainer {
+  character: CharacterService;
+  inventory: InventoryService;
+  quest: QuestService;
+  battle: BattleService;
+  shop: ShopService;
+  location: LocationService;
+  mentor: MentorService;
+  logger: typeof logger;
 }
 
-export function createServiceContainer(prisma: PrismaClient): ServiceContainer {
-  return new ServiceContainer(prisma);
+export function createServices(prisma: PrismaClient): ServiceContainer {
+  // Create services in correct order (dependency injection)
+  const character = new CharacterService(prisma);
+  const battle = new BattleService(prisma, character);
+  character.setBattleService(battle);
+  
+  const inventory = new InventoryService(prisma);
+  const quest = new QuestService(prisma, character);
+  const shop = new ShopService(prisma);
+  const location = new LocationService(prisma);
+  const mentor = new MentorService(prisma);
+
+  return {
+    character,
+    inventory,
+    quest,
+    battle,
+    shop,
+    location,
+    mentor,
+    logger
+  };
 }

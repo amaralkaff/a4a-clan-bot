@@ -1,35 +1,26 @@
 // src/index.ts
-import { Client, GatewayIntentBits, Collection } from 'discord.js';
+import { Client, GatewayIntentBits } from 'discord.js';
 import { CONFIG } from './config/config';
 import { loadCommands } from './utils/commandLoader';
 import { setupEventHandlers } from './events/eventHandler';
 import { PrismaClient } from '@prisma/client';
-import { WeatherService } from './services/WeatherService';
 import { logger } from './utils/logger';
-import { BotCommand } from './types/discord';
-import { ServiceContainer, createServiceContainer } from './services';
+import { createServices } from './services';
 
 class A4AClanBot {
   private client: Client;
   private prisma: PrismaClient;
-  private services: ServiceContainer;
 
   constructor() {
     this.client = new Client({
       intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.GuildMembers,
         GatewayIntentBits.MessageContent,
-        GatewayIntentBits.DirectMessages,
-        GatewayIntentBits.GuildPresences,
-        GatewayIntentBits.GuildMessageReactions,
-      ],
+        GatewayIntentBits.GuildMembers
+      ]
     });
-    
-    this.client.commands = new Collection<string, BotCommand>();
     this.prisma = new PrismaClient();
-    this.services = createServiceContainer(this.prisma);
   }
 
   async start() {
@@ -46,10 +37,70 @@ class A4AClanBot {
         logger.debug('Discord client debug:', info);
       });
 
-      const commands = await loadCommands(this.client);
-      (this.client as any).commands = commands;
+      const services = createServices(this.prisma);
 
-      setupEventHandlers(this.client, this.services);
+      // Handle normal message commands
+      this.client.on('messageCreate', async (message) => {
+        // Ignore bot messages
+        if (message.author.bot) return;
+
+        // Check for prefix 'a'
+        if (!message.content.toLowerCase().startsWith('a ')) return;
+
+        const args = message.content.slice(2).trim().split(/ +/);
+        const command = args.shift()?.toLowerCase();
+
+        if (!command) return;
+
+        try {
+          switch(command) {
+            case 'p':
+            case 'profile':
+              await services.character.handleProfile(message);
+              break;
+            case 'h':
+            case 'hunt':
+              await services.character.handleHunt(message);
+              break;
+            case 'd':
+            case 'daily':
+              await services.character.handleDaily(message);
+              break;
+            case 'i':
+            case 'inv':
+              await services.character.handleInventory(message);
+              break;
+            case 'u':
+            case 'use':
+              await services.inventory.handleUseItem(message, args[0]);
+              break;
+            case 'b':
+            case 'bal':
+              await services.character.handleBalance(message);
+              break;
+            case 't':
+            case 'train':
+              await services.mentor.handleTraining(message);
+              break;
+            case 'm':
+            case 'map':
+              await services.location.handleMap(message);
+              break;
+            case 's':
+            case 'shop':
+              await services.shop.handleShop(message);
+              break;
+            case 'help':
+              await services.character.handleHelp(message);
+              break;
+            default:
+              await message.reply('❌ Command tidak ditemukan! Gunakan `a help` untuk melihat daftar command.');
+          }
+        } catch (error) {
+          logger.error('Error executing command:', error);
+          await message.reply(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      });
 
       await this.client.login(CONFIG.BOT_TOKEN);
       
@@ -63,8 +114,13 @@ class A4AClanBot {
   }
 
   async stop() {
-    await this.prisma.$disconnect();
-    this.client.destroy();
+    try {
+      await this.client.destroy();
+      await this.prisma.$disconnect();
+      logger.info('Bot stopped successfully');
+    } catch (error) {
+      logger.error('Error stopping bot:', error);
+    }
   }
 }
 

@@ -3,17 +3,17 @@
   "version": "1.0.0",
   "description": "Discord RPG Bot untuk A4A Clan",
   "main": "dist/index.js",
-  "prisma": {
-    "seed": "bun prisma/seed.ts"
-  },
   "scripts": {
     "start": "bun dist/index.js",
     "build": "bun build ./src/index.ts --outdir ./dist --target node",
     "dev": "bun run src/index.ts",
     "deploy": "bun run src/deploy-commands.ts",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev", 
+    "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "prisma db seed"
+  },
+  "prisma": {
+    "seed": "bun prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.9.1",
