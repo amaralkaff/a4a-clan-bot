@@ -134,7 +134,9 @@ export class MentorService extends BaseService {
     // Check cooldown
     if (!checkCooldown(message.author.id, 'train')) {
       const remainingTime = getRemainingCooldown(message.author.id, 'train');
-      return message.reply(`⏰ Training sedang cooldown! Tunggu ${remainingTime} detik lagi.`);
+      const minutes = Math.floor(remainingTime / 60);
+      const seconds = remainingTime % 60;
+      return message.reply(`⏰ Training sedang cooldown! Tunggu ${minutes}m ${seconds}s lagi.`);
     }
 
     const character = await this.prisma.character.findFirst({

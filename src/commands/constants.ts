@@ -5,6 +5,7 @@ export const COOLDOWNS = {
   hunt: 15000,      // 15 seconds
   battle: 30000,    // 30 seconds
   daily: 86400000,  // 24 hours
+  train: 300000,    // 5 minutes
 };
 
 // Command descriptions for help
@@ -25,7 +26,7 @@ export const COMMAND_DESCRIPTIONS = {
   'quest': '📜 Lihat dan ambil quest',
   
   // Mentor interaction
-  'train': '👥 Berlatih dengan mentormu',
+  'train': '👥 Berlatih dengan mentormu (5m cooldown)',
   
   // Location
   'map': '🗺️ Lihat peta dan lokasi',

@@ -10,7 +10,7 @@ export async function createHelpEmbed() {
     { cmd: 'a i', desc: '🎒 Inventory' },
     { cmd: 'a u', desc: '📦 Gunakan item' },
     { cmd: 'a b', desc: '💰 Balance' },
-    { cmd: 'a t', desc: '⚔️ Training' },
+    { cmd: 'a t', desc: '⚔️ Training (5m cd)' },
     { cmd: 'a m', desc: '🗺️ Map' },
     { cmd: 'a s', desc: '🛍️ Shop' },
     { cmd: 'a lb', desc: '👑 Leaderboard' }
