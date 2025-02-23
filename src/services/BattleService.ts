@@ -6,6 +6,7 @@ import { QuestService } from './QuestService';
 import { CharacterService } from './CharacterService';
 import { StatusEffect, ActiveBuff, StatusEffects, ActiveBuffs } from '@/types/game';
 import { BaseService } from './BaseService';
+import { MONSTERS, ITEMS } from '../config/gameData';
 
 interface BattleState {
   combo: number;
@@ -305,6 +306,65 @@ export class BattleService extends BaseService {
         await this.questService.updateQuestProgress(characterId, 'COMBO', 1);
       }
 
+      // Add experience and check for level up
+      const expResult = await this.characterService.addExperience(characterId, experience);
+
+      // Calculate item drops if won
+      let droppedItems = [];
+      if (won) {
+        // Get monster based on level range
+        const possibleMonsters = Object.values(MONSTERS).filter(
+          m => m.level === enemyLevel
+        );
+        
+        if (possibleMonsters.length > 0) {
+          // Randomly select one monster from the level range
+          const monster = possibleMonsters[Math.floor(Math.random() * possibleMonsters.length)];
+          
+          // Calculate drops for the monster
+          if (monster.drops) {
+            for (const itemId of monster.drops) {
+              const item = ITEMS[itemId as keyof typeof ITEMS];
+              if (item) {
+                // Base drop rate 20%
+                const dropChance = 0.20;
+                if (Math.random() < dropChance) {
+                  droppedItems.push({
+                    id: itemId,
+                    name: item.name,
+                    quantity: 1
+                  });
+
+                  // Add item to inventory
+                  try {
+                    await this.prisma.inventory.upsert({
+                      where: {
+                        characterId_itemId: {
+                          characterId,
+                          itemId
+                        }
+                      },
+                      update: {
+                        quantity: {
+                          increment: 1
+                        }
+                      },
+                      create: {
+                        characterId,
+                        itemId,
+                        quantity: 1
+                      }
+                    });
+                  } catch (error) {
+                    this.logger.error('Error adding item to inventory:', error);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
       // Create battle result embed
       const resultEmbed = new EmbedBuilder()
         .setTitle(won ? '🎉 Kemenangan!' : '💀 Kekalahan!')
@@ -313,10 +373,36 @@ export class BattleService extends BaseService {
           `Selamat! Kamu berhasil mengalahkan musuh level ${enemyLevel}!` :
           'Kamu kalah dalam pertarungan ini...')
         .addFields(
-          { name: 'HP Tersisa', value: `❤️ ${Math.max(0, characterHealth)}`, inline: true },
-          { name: 'Total Turn', value: `🔄 ${turnCount}`, inline: true },
-          { name: 'Experience', value: `✨ +${experience} EXP`, inline: true }
+          { name: '❤️ HP Tersisa', value: `${Math.max(0, characterHealth)}`, inline: true },
+          { name: '🔄 Total Turn', value: `${turnCount}`, inline: true },
+          { name: '✨ Experience', value: `+${experience} EXP`, inline: true }
         );
+
+      // Add dropped items to embed if any
+      if (droppedItems.length > 0) {
+        resultEmbed.addFields({
+          name: '🎁 Item Drop',
+          value: droppedItems.map(item => `${item.name} x${item.quantity}`).join('\n'),
+          inline: false
+        });
+      }
+
+      // Add level up notification if leveled up
+      if (expResult.leveledUp) {
+        const statsGained = expResult.statsGained!;
+        resultEmbed.addFields(
+          { 
+            name: '🎊 LEVEL UP!', 
+            value: `Level ${expResult.newLevel! - expResult.levelsGained!} ➔ ${expResult.newLevel!}`,
+            inline: false 
+          },
+          {
+            name: '📈 Stat Gains',
+            value: `⚔️ Attack +${statsGained.attack}\n🛡️ Defense +${statsGained.defense}\n❤️ Max HP +${statsGained.maxHealth}`,
+            inline: false
+          }
+        );
+      }
 
       battleLog.push({ embeds: [resultEmbed] });
 
@@ -324,8 +410,7 @@ export class BattleService extends BaseService {
       await this.prisma.character.update({
         where: { id: characterId },
         data: {
-          health: Math.max(0, characterHealth),
-          experience: { increment: experience }
+          health: Math.max(0, characterHealth)
         }
       });
 

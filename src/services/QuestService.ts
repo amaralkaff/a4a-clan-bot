@@ -788,12 +788,13 @@ export class QuestService extends BaseService {
       };
 
       // Update character stats and quest status in transaction
+      const expResult = await this.characterService.addExperience(characterId, finalReward);
+
       await this.prisma.$transaction([
         // Update character stats
         this.prisma.character.update({
           where: { id: characterId },
           data: {
-            experience: { increment: finalReward },
             questPoints: { increment: questConfig.reward }
           }
         }),
@@ -834,6 +835,23 @@ export class QuestService extends BaseService {
           { name: '💰 Reward', value: `${finalReward} EXP${bonusReward > 0 ? ` (Bonus: +${Math.floor(bonusReward * 100)}%)` : ''}`, inline: true },
           { name: '🎯 Quest Points', value: `+${questConfig.reward} (Total: ${state.questPoints})`, inline: true }
         );
+
+      // Add level up notification if leveled up
+      if (expResult.leveledUp) {
+        const statsGained = expResult.statsGained!;
+        completeEmbed.addFields(
+          { 
+            name: '🎊 LEVEL UP!', 
+            value: `Level ${expResult.newLevel! - expResult.levelsGained!} ➔ ${expResult.newLevel!}`,
+            inline: false 
+          },
+          {
+            name: '📈 Stat Gains',
+            value: `⚔️ Attack +${statsGained.attack}\n🛡️ Defense +${statsGained.defense}\n❤️ Max HP +${statsGained.maxHealth}`,
+            inline: false
+          }
+        );
+      }
 
       if (rewards.items.length > 0) {
         completeEmbed.addFields({

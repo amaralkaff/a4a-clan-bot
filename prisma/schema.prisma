@@ -112,6 +112,7 @@ model Inventory {
   isEquipped  Boolean   @default(false)
   slot        String?   
   expiresAt   DateTime?
+  effect      String?   @default("{}")
   characterId String
   character   Character @relation(fields: [characterId], references: [id])
   item        Item      @relation(fields: [itemId], references: [id])

@@ -771,4 +771,97 @@ export const ACHIEVEMENTS = {
       title: 'Trusted Apprentice'
     }
   }
+};
+
+export const WEAPON_UPGRADES = {
+  'wooden_sword': {
+    name: '🗡️ Pedang Kayu',
+    maxLevel: 5,
+    baseAttack: 5,
+    upgradeAttackPerLevel: 2,
+    materials: {
+      'wood': 3,
+      'iron_ingot': 1
+    },
+    coins: 100
+  },
+  'steel_sword': {
+    name: '⚔️ Pedang Baja',
+    maxLevel: 7,
+    baseAttack: 10,
+    upgradeAttackPerLevel: 3,
+    materials: {
+      'iron_ingot': 3,
+      'steel_ingot': 1
+    },
+    coins: 300
+  },
+  'wado_ichimonji': {
+    name: '🗡️ Wado Ichimonji',
+    maxLevel: 10,
+    baseAttack: 25,
+    upgradeAttackPerLevel: 5,
+    materials: {
+      'steel_ingot': 3,
+      'rare_ore': 1,
+      'magic_crystal': 1
+    },
+    coins: 1000
+  },
+  'kitchen_knife': {
+    name: '🔪 Pisau Dapur',
+    maxLevel: 5,
+    baseAttack: 8,
+    upgradeAttackPerLevel: 2,
+    materials: {
+      'iron_ingot': 2,
+      'wood': 1
+    },
+    coins: 200
+  },
+  'slingshot': {
+    name: '🎯 Ketapel',
+    maxLevel: 5,
+    baseAttack: 7,
+    upgradeAttackPerLevel: 2,
+    materials: {
+      'wood': 2,
+      'leather': 1
+    },
+    coins: 150
+  }
+};
+
+// Tambahkan material baru untuk upgrade
+export const MATERIALS = {
+  'wood': { 
+    name: '🪵 Kayu',
+    description: 'Material dasar untuk upgrade senjata',
+    dropFrom: ['wild_monkey', 'angry_boar']
+  },
+  'iron_ingot': {
+    name: '⚔️ Besi',
+    description: 'Material untuk upgrade senjata tingkat menengah',
+    dropFrom: ['marine_trainee', 'axe_hand']
+  },
+  'steel_ingot': {
+    name: '🗡️ Baja',
+    description: 'Material untuk upgrade senjata tingkat tinggi',
+    dropFrom: ['corrupt_marine', 'helmeppo']
+  },
+  'rare_ore': {
+    name: '💎 Bijih Langka',
+    description: 'Material langka untuk upgrade senjata legendaris',
+    dropFrom: ['morgan', 'buggy']
+  },
+  'magic_crystal': {
+    name: '✨ Kristal Sihir',
+    description: 'Material mistis untuk upgrade senjata legendaris',
+    dropFrom: ['buggy', 'kuro']
+  },
+  'leather': {
+    name: '🥋 Kulit',
+    description: 'Material untuk upgrade senjata dan armor',
+    dropFrom: ['angry_boar', 'wild_monkey']
+  }
 }; 

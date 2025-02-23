@@ -262,6 +262,12 @@ export class CharacterService extends BaseService implements ICharacterService {
     leveledUp: boolean;
     newLevel?: number;
     newExp: number;
+    levelsGained?: number;
+    statsGained?: {
+      attack: number;
+      defense: number;
+      maxHealth: number;
+    }
   }> {
     try {
       const character = await this.prisma.character.findUnique({
@@ -270,40 +276,61 @@ export class CharacterService extends BaseService implements ICharacterService {
 
       if (!character) throw new Error('Character not found');
 
-      const newExp = character.experience + amount;
-      const currentLevel = character.level;
-      const expNeeded = this.calculateExpNeeded(currentLevel);
+      let currentExp = character.experience;
+      let currentLevel = character.level;
+      let totalExp = currentExp + amount;
+      let levelsGained = 0;
+      let attackGained = 0;
+      let defenseGained = 0;
+      let newMaxHealth = character.maxHealth;
 
-      if (newExp >= expNeeded) {
-        // Level up!
-        const newLevel = currentLevel + 1;
+      // Handle multiple level ups
+      while (totalExp >= this.calculateExpNeeded(currentLevel)) {
+        totalExp -= this.calculateExpNeeded(currentLevel);
+        currentLevel++;
+        levelsGained++;
+        attackGained += 2;
+        defenseGained += 2;
+        newMaxHealth = this.calculateMaxHealth(currentLevel);
+      }
+
+      if (levelsGained > 0) {
+        // Level up occurred
         await this.prisma.character.update({
           where: { id: characterId },
           data: {
-            level: newLevel,
-            experience: newExp,
-            health: this.calculateMaxHealth(newLevel),
-            attack: { increment: 2 },
-            defense: { increment: 2 }
+            level: currentLevel,
+            experience: totalExp,
+            health: newMaxHealth,
+            maxHealth: newMaxHealth,
+            attack: { increment: attackGained },
+            defense: { increment: defenseGained }
           }
         });
 
         return {
           leveledUp: true,
-          newLevel,
-          newExp
+          newLevel: currentLevel,
+          newExp: totalExp,
+          levelsGained,
+          statsGained: {
+            attack: attackGained,
+            defense: defenseGained,
+            maxHealth: newMaxHealth - character.maxHealth
+          }
         };
       } else {
+        // Just update experience
         await this.prisma.character.update({
           where: { id: characterId },
           data: {
-            experience: newExp
+            experience: totalExp
           }
         });
 
         return {
           leveledUp: false,
-          newExp
+          newExp: totalExp
         };
       }
     } catch (error) {
