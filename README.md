@@ -1,4 +1,4 @@
-**🎌 A4A CLAN BOT: Synchronized Feature-Character Integration Guide**  
+**A4A CLAN BOT: Synchronized Feature-Character Integration Guide**  
 *One Piece-Themed RPG Where Key Features Directly Interact with #YB (Luffy), #Tierison (Zoro), #LYuka (Usopp), and #GarryAng (Sanji)*  
 
 ---
