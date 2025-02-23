@@ -217,17 +217,34 @@ async function main() {
   console.log('Starting seeding...');
 
   try {
-    // Clean existing data
-    await prisma.$transaction([
-      prisma.inventory.deleteMany(),
-      prisma.quest.deleteMany(),
-      prisma.item.deleteMany(),
-      prisma.location.deleteMany(),
-      prisma.character.deleteMany(),
-      prisma.user.deleteMany(),
-    ]);
+    // Clean existing data dengan urutan yang benar
+    console.log('Cleaning existing data...');
+    
+    // 1. Hapus inventory (bergantung pada character dan item)
+    await prisma.inventory.deleteMany();
+    
+    // 2. Hapus quest (bergantung pada character)
+    await prisma.quest.deleteMany();
+    
+    // 3. Hapus transaction (jika ada, bergantung pada character)
+    await prisma.transaction?.deleteMany().catch(() => null);
+    
+    // 4. Hapus battle (jika ada, bergantung pada character)
+    await prisma.battle?.deleteMany().catch(() => null);
+    
+    // 5. Hapus character (bergantung pada user dan location)
+    await prisma.character.deleteMany();
+    
+    // 6. Hapus user
+    await prisma.user.deleteMany();
+    
+    // 7. Hapus item
+    await prisma.item.deleteMany();
+    
+    // 8. Hapus location
+    await prisma.location.deleteMany();
 
-    // Seed locations first
+    // Mulai seeding data baru
     console.log('Seeding locations...');
     for (const [id, location] of Object.entries(LOCATIONS)) {
       await prisma.location.create({

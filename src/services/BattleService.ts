@@ -293,6 +293,47 @@ export class BattleService extends BaseService {
       const won = characterHealth > 0;
       const experience = won ? Math.floor(enemyLevel * 10 * (1 + turnCount * 0.1)) : Math.floor(enemyLevel * 2);
 
+      // Tambahkan perhitungan coins
+      const baseCoins = enemyLevel * 25; // Base 25 coins per level musuh
+      const coinMultipliers = {
+        winBonus: 1.5,      // Bonus 50% jika menang
+        critBonus: 0.2,     // Bonus 20% per critical hit
+        comboBonus: 0.1,    // Bonus 10% per combo
+        levelDiffBonus: 0.3 // Bonus 30% per level diatas karakter
+      };
+
+      let totalCoins = baseCoins;
+
+      if (won) {
+        // Bonus menang
+        totalCoins *= coinMultipliers.winBonus;
+        
+        // Bonus critical hits
+        totalCoins += baseCoins * (criticalHits * coinMultipliers.critBonus);
+        
+        // Bonus combo
+        if (battleState.combo > 0) {
+          totalCoins += baseCoins * (battleState.combo * coinMultipliers.comboBonus);
+        }
+        
+        // Bonus level difference (jika melawan musuh level lebih tinggi)
+        const levelDiff = enemyLevel - character.level;
+        if (levelDiff > 0) {
+          totalCoins += baseCoins * (levelDiff * coinMultipliers.levelDiffBonus);
+        }
+        
+        // Pembulatan ke atas
+        totalCoins = Math.ceil(totalCoins);
+        
+        // Update karakter dengan coins yang didapat
+        await this.characterService.addCoins(
+          characterId, 
+          totalCoins, 
+          'BATTLE_REWARD',
+          `Battle reward from defeating Level ${enemyLevel} enemy`
+        );
+      }
+
       // Update quest progress
       await this.questService.updateQuestProgress(characterId, 'COMBAT', 1);
       
@@ -337,26 +378,66 @@ export class BattleService extends BaseService {
 
                   // Add item to inventory
                   try {
-                    await this.prisma.inventory.upsert({
+                    // Pertama, periksa apakah item ada
+                    const item = await this.prisma.item.findUnique({
+                      where: { id: itemId }
+                    });
+
+                    if (!item) {
+                      throw new Error(`Item dengan ID ${itemId} tidak ditemukan`);
+                    }
+
+                    // Periksa apakah character ada
+                    const character = await this.prisma.character.findUnique({
+                      where: { id: characterId }
+                    });
+
+                    if (!character) {
+                      throw new Error(`Character dengan ID ${characterId} tidak ditemukan`);
+                    }
+
+                    // Coba temukan inventory yang ada
+                    const existingInventory = await this.prisma.inventory.findUnique({
                       where: {
                         characterId_itemId: {
                           characterId,
                           itemId
                         }
-                      },
-                      update: {
-                        quantity: {
-                          increment: 1
-                        }
-                      },
-                      create: {
-                        characterId,
-                        itemId,
-                        quantity: 1
                       }
                     });
+
+                    if (existingInventory) {
+                      // Update jika sudah ada
+                      await this.prisma.inventory.update({
+                        where: {
+                          characterId_itemId: {
+                            characterId,
+                            itemId
+                          }
+                        },
+                        data: {
+                          quantity: { increment: 1 }
+                        }
+                      });
+                    } else {
+                      // Buat baru jika belum ada
+                      await this.prisma.inventory.create({
+                        data: {
+                          characterId,
+                          itemId,
+                          quantity: 1
+                        }
+                      });
+                    }
                   } catch (error) {
                     this.logger.error('Error adding item to inventory:', error);
+                    // Tambahkan logging yang lebih detail
+                    this.logger.error('Details:', {
+                      characterId,
+                      itemId,
+                      error: error instanceof Error ? error.message : 'Unknown error'
+                    });
+                    throw error;
                   }
                 }
               }
@@ -375,8 +456,35 @@ export class BattleService extends BaseService {
         .addFields(
           { name: '❤️ HP Tersisa', value: `${Math.max(0, characterHealth)}`, inline: true },
           { name: '🔄 Total Turn', value: `${turnCount}`, inline: true },
-          { name: '✨ Experience', value: `+${experience} EXP`, inline: true }
+          { name: '✨ Experience', value: `+${experience} EXP`, inline: true },
+          { name: '💰 Coins', value: won ? `+${totalCoins} coins` : '0 coins', inline: true }
         );
+
+      // Jika menang, tambahkan detail bonus
+      if (won && (criticalHits > 0 || battleState.combo > 0 || enemyLevel > character.level)) {
+        let bonusDetails = ['💰 Bonus Breakdown:'];
+        bonusDetails.push(`• Base: ${baseCoins} coins`);
+        bonusDetails.push(`• Win Bonus: +${Math.floor(baseCoins * (coinMultipliers.winBonus - 1))} coins`);
+        
+        if (criticalHits > 0) {
+          bonusDetails.push(`• Critical Hits (${criticalHits}x): +${Math.floor(baseCoins * (criticalHits * coinMultipliers.critBonus))} coins`);
+        }
+        
+        if (battleState.combo > 0) {
+          bonusDetails.push(`• Combo (${battleState.combo}x): +${Math.floor(baseCoins * (battleState.combo * coinMultipliers.comboBonus))} coins`);
+        }
+        
+        const levelDiff = enemyLevel - character.level;
+        if (levelDiff > 0) {
+          bonusDetails.push(`• Level Difference (+${levelDiff}): +${Math.floor(baseCoins * (levelDiff * coinMultipliers.levelDiffBonus))} coins`);
+        }
+        
+        resultEmbed.addFields({
+          name: '💎 Bonus Details',
+          value: bonusDetails.join('\n'),
+          inline: false
+        });
+      }
 
       // Add dropped items to embed if any
       if (droppedItems.length > 0) {
