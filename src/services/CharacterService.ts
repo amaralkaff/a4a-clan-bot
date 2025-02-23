@@ -555,6 +555,55 @@ export class CharacterService extends BaseService implements ICharacterService {
     }
   }
 
+  async resetCharacter(discordId: string): Promise<void> {
+    try {
+      // Get user and character
+      const user = await this.prisma.user.findUnique({
+        where: { discordId },
+        include: { character: true }
+      });
+
+      if (!user || !user.character) {
+        throw new Error('Karakter tidak ditemukan');
+      }
+
+      // Delete all related data in a transaction
+      await this.prisma.$transaction(async (tx) => {
+        // Delete inventory items
+        await tx.inventory.deleteMany({
+          where: { characterId: user.character!.id }
+        });
+
+        // Delete quests
+        await tx.quest.deleteMany({
+          where: { characterId: user.character!.id }
+        });
+
+        // Delete battles
+        await tx.battle.deleteMany({
+          where: { characterId: user.character!.id }
+        });
+
+        // Delete transactions
+        await tx.transaction.deleteMany({
+          where: { characterId: user.character!.id }
+        });
+
+        // Delete character
+        await tx.character.delete({
+          where: { id: user.character!.id }
+        });
+
+        // Delete user
+        await tx.user.delete({
+          where: { id: user.id }
+        });
+      });
+    } catch (error) {
+      return this.handleError(error, 'ResetCharacter');
+    }
+  }
+
   private validateMentor(mentor: string): asserts mentor is MentorType {
     if (!['YB', 'Tierison', 'LYuka', 'GarryAng'].includes(mentor)) {
       throw new Error(`Invalid mentor type: ${mentor}`);
