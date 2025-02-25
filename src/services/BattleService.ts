@@ -6,7 +6,7 @@ import { QuestService } from './QuestService';
 import { CharacterService } from './CharacterService';
 import { StatusEffect, ActiveBuff, StatusEffects, ActiveBuffs } from '@/types/game';
 import { BaseService } from './BaseService';
-import { MONSTERS, ITEMS } from '../config/gameData';
+import { MONSTERS, ITEMS, Monster } from '../config/gameData';
 
 interface BattleState {
   combo: number;
@@ -20,6 +20,21 @@ interface DamageResult {
   damage: number;
   isCritical: boolean;
   critMultiplier: number;
+}
+
+// Add type guard for Monster
+function isMonster(m: unknown): m is Monster {
+  return (
+    typeof m === 'object' &&
+    m !== null &&
+    'name' in m &&
+    'level' in m &&
+    'hp' in m &&
+    'attack' in m &&
+    'defense' in m &&
+    'exp' in m &&
+    'drops' in m
+  );
 }
 
 export class BattleService extends BaseService {
@@ -184,395 +199,131 @@ export class BattleService extends BaseService {
     return { damage: Math.floor(damage), isCritical, critMultiplier };
   }
 
+  private getRandomMonster(level: number): Monster {
+    // Filter monsters by level range
+    const availableMonsters = Object.values(MONSTERS).filter(m => 
+      isMonster(m) && Math.abs(m.level - level) <= 2
+    );
+
+    if (availableMonsters.length === 0) {
+      // Return default monster if no suitable monsters found
+      return MONSTERS.bandit_weak;
+    }
+
+    // Get random monster from available ones
+    const randomIndex = Math.floor(Math.random() * availableMonsters.length);
+    const monster = availableMonsters[randomIndex];
+    
+    if (!isMonster(monster)) {
+      return MONSTERS.bandit_weak;
+    }
+
+    return monster;
+  }
+
   async processBattle(characterId: string, enemyLevel: number) {
     try {
       const character = await this.prisma.character.findUnique({
-        where: { id: characterId },
+        where: { id: characterId }
       });
 
-      if (!character) throw new Error('Character not found');
+      if (!character) {
+        throw new Error('Character not found');
+      }
 
-      // Generate enemy stats based on level
-      const enemy = {
-        health: 50 + (enemyLevel * 10),
-        attack: 5 + (enemyLevel * 2),
-        defense: 5 + (enemyLevel * 2),
+      // Get enemy monster
+      const enemy = this.getRandomMonster(enemyLevel);
+      let enemyHp = enemy.hp;
+      let characterHp = character.health;
+
+      // Initialize battle state
+      const battleState: BattleState = {
+        combo: 0,
+        isGearSecond: false,
+        gearSecondTurns: 0,
+        activeBuffs: { buffs: [] },
+        statusEffects: { effects: [] }
       };
 
-      // Initialize or get battle state
-      let battleState = this.battleStates.get(characterId) || await this.initBattleState(characterId);
-      this.battleStates.set(characterId, battleState);
-
-      // Battle simulation
-      let characterHealth = character.health;
-      let enemyHealth = enemy.health;
+      // Battle log
       const battleLog = [];
-      let criticalHits = 0;
+      battleLog.push(`⚔️ Pertarungan dimulai!\n${character.name} VS ${enemy.name}`);
+      battleLog.push(`${enemy.name} (Level ${enemy.level})\nHP: ${enemyHp}/${enemy.hp}\nAttack: ${enemy.attack}\nDefense: ${enemy.defense}`);
 
-      // Create rich embed for battle start
-      const battleEmbed = new EmbedBuilder()
-        .setTitle('⚔️ Pertarungan Dimulai!')
-        .setColor('#ff0000')
-        .addFields(
-          { name: '👤 Karakter', value: `${character.name}\n❤️ HP: ${characterHealth}\n💪 ATK: ${character.attack}\n🛡️ DEF: ${character.defense}`, inline: true },
-          { name: '👾 Musuh', value: `Level ${enemyLevel}\n❤️ HP: ${enemyHealth}\n💪 ATK: ${enemy.attack}\n🛡️ DEF: ${enemy.defense}`, inline: true }
-        );
-
-      battleLog.push({ embeds: [battleEmbed] });
-
-      let turnCount = 0;
-      let totalDamageDealt = 0;
-      while (characterHealth > 0 && enemyHealth > 0) {
-        turnCount++;
+      // Battle loop
+      let turn = 1;
+      while (enemyHp > 0 && characterHp > 0) {
+        // Character's turn
+        const characterDamage = this.calculateDamage(character.attack, enemy.defense);
+        enemyHp -= characterDamage.damage;
         
-        // Character attacks
-        const { damage: baseDamage, isCritical, critMultiplier } = this.calculateDamage(character.attack, enemy.defense);
-        let finalDamage = await this.applyMentorEffects(character, baseDamage, isCritical, battleState);
-        enemyHealth -= finalDamage;
-        totalDamageDealt += finalDamage;
-
-        if (isCritical) criticalHits++;
-
-        // Create turn embed
-        const turnEmbed = new EmbedBuilder()
-          .setColor(isCritical ? '#ffd700' : '#0099ff')
-          .setTitle(`Turn ${turnCount}`);
-
-        // Add combo indicator if exists
-        if (battleState.combo > 0) {
-          turnEmbed.setFooter({ text: `🔄 Combo: ${battleState.combo}` });
+        let turnLog = `Turn ${turn} - ${character.name}`;
+        if (characterDamage.isCritical) {
+          turnLog += ` �� Critical Hit! (x${characterDamage.critMultiplier})`;
         }
+        turnLog += `\n⚔️ Damage: ${characterDamage.damage}\n${enemy.name} HP: ${Math.max(0, enemyHp)}/${enemy.hp}`;
+        battleLog.push(turnLog);
 
-        // Character attack message
-        let attackMessage = `👤 ${character.name} menyerang!`;
-        if (isCritical) {
-          attackMessage += critMultiplier >= 3 ? 
-            ' ⚡⚡⚡ SUPER CRITICAL! ⚡⚡⚡' : 
-            ' ⚡ CRITICAL! ⚡';
-        }
-        if (battleState.isGearSecond) {
-          attackMessage += ' 🔥 [GEAR SECOND ACTIVE!]';
-        }
-        attackMessage += `\n💥 Damage: ${finalDamage}`;
-
-        turnEmbed.addFields({ name: 'Serangan Karakter', value: attackMessage });
-
-        // Process enemy turn if still alive
-        if (enemyHealth > 0) {
-          const { damage: enemyDamage, isCritical: isEnemyCritical } = this.calculateDamage(enemy.attack, character.defense);
-          characterHealth -= enemyDamage;
-
-          turnEmbed.addFields({
-            name: 'Serangan Musuh',
-            value: `👾 Musuh menyerang!${isEnemyCritical ? ' ⚡ CRITICAL! ⚡' : ''}\n💥 Damage: ${enemyDamage}`
-          });
-        }
-
-        // Process status effects
-        const { health: newHealth, messages: statusMessages } = await this.processStatusEffects(characterId, battleState, characterHealth);
-        characterHealth = newHealth;
-        if (statusMessages.length > 0) {
-          turnEmbed.addFields({
-            name: 'Status Effects',
-            value: statusMessages.join('\n')
-          });
-        }
-
-        // Update HP bars
-        const characterHpPercent = Math.max(0, Math.min(100, (characterHealth / character.maxHealth) * 100));
-        const enemyHpPercent = Math.max(0, Math.min(100, (enemyHealth / enemy.health) * 100));
-
-        turnEmbed.addFields(
-          { name: 'HP Karakter', value: this.createHpBar(characterHpPercent, characterHealth), inline: true },
-          { name: 'HP Musuh', value: this.createHpBar(enemyHpPercent, enemyHealth), inline: true }
-        );
-
-        battleLog.push({ embeds: [turnEmbed] });
-      }
-
-      const won = characterHealth > 0;
-      const experience = won ? Math.floor(enemyLevel * 10 * (1 + turnCount * 0.1)) : Math.floor(enemyLevel * 2);
-
-      // Tambahkan perhitungan coins
-      const baseCoins = enemyLevel * 25; // Base 25 coins per level musuh
-      const coinMultipliers = {
-        winBonus: 1.5,      // Bonus 50% jika menang
-        critBonus: 0.2,     // Bonus 20% per critical hit
-        comboBonus: 0.1,    // Bonus 10% per combo
-        levelDiffBonus: 0.3 // Bonus 30% per level diatas karakter
-      };
-
-      let totalCoins = baseCoins;
-
-      if (won) {
-        // Bonus menang
-        totalCoins *= coinMultipliers.winBonus;
-        
-        // Bonus critical hits
-        totalCoins += baseCoins * (criticalHits * coinMultipliers.critBonus);
-        
-        // Bonus combo
-        if (battleState.combo > 0) {
-          totalCoins += baseCoins * (battleState.combo * coinMultipliers.comboBonus);
-        }
-        
-        // Bonus level difference (jika melawan musuh level lebih tinggi)
-        const levelDiff = enemyLevel - character.level;
-        if (levelDiff > 0) {
-          totalCoins += baseCoins * (levelDiff * coinMultipliers.levelDiffBonus);
-        }
-        
-        // Pembulatan ke atas
-        totalCoins = Math.ceil(totalCoins);
-        
-        // Update karakter dengan coins yang didapat
-        await this.characterService.addCoins(
-          characterId, 
-          totalCoins, 
-          'BATTLE_REWARD',
-          `Battle reward from defeating Level ${enemyLevel} enemy`
-        );
-      }
-
-      // Update quest progress
-      await this.questService.updateQuestProgress(characterId, 'COMBAT', 1);
-      
-      // Update critical hits progress if using Usopp's weapon
-      if (character.mentor === 'LYuka' && criticalHits > 0) {
-        await this.questService.updateQuestProgress(characterId, 'CRITICAL_HIT', criticalHits);
-      }
-
-      // Update combo progress for Luffy's quests
-      if (character.mentor === 'YB' && battleState.combo >= 5) {
-        await this.questService.updateQuestProgress(characterId, 'COMBO', 1);
-      }
-
-      // Add experience and check for level up
-      const expResult = await this.characterService.addExperience(characterId, experience);
-
-      // Calculate item drops if won
-      let droppedItems = [];
-      if (won) {
-        // Get monster based on level range
-        const possibleMonsters = Object.values(MONSTERS).filter(
-          m => m.level === enemyLevel
-        );
-        
-        if (possibleMonsters.length > 0) {
-          // Randomly select one monster from the level range
-          const monster = possibleMonsters[Math.floor(Math.random() * possibleMonsters.length)];
+        // Enemy's turn if still alive
+        if (enemyHp > 0) {
+          const enemyDamage = this.calculateDamage(enemy.attack, character.defense);
+          characterHp -= enemyDamage.damage;
           
-          // Calculate drops for the monster
-          if (monster.drops) {
-            for (const itemId of monster.drops) {
-              const item = ITEMS[itemId as keyof typeof ITEMS];
-              if (item) {
-                // Base drop rate 20%
-                const dropChance = 0.20;
-                if (Math.random() < dropChance) {
-                  droppedItems.push({
-                    id: itemId,
-                    name: item.name,
-                    quantity: 1
-                  });
-
-                  // Add item to inventory
-                  try {
-                    // Pertama, periksa apakah item ada
-                    const item = await this.prisma.item.findUnique({
-                      where: { id: itemId }
-                    });
-
-                    if (!item) {
-                      throw new Error(`Item dengan ID ${itemId} tidak ditemukan`);
-                    }
-
-                    // Periksa apakah character ada
-                    const character = await this.prisma.character.findUnique({
-                      where: { id: characterId }
-                    });
-
-                    if (!character) {
-                      throw new Error(`Character dengan ID ${characterId} tidak ditemukan`);
-                    }
-
-                    // Coba temukan inventory yang ada
-                    const existingInventory = await this.prisma.inventory.findUnique({
-                      where: {
-                        characterId_itemId: {
-                          characterId,
-                          itemId
-                        }
-                      }
-                    });
-
-                    if (existingInventory) {
-                      // Update jika sudah ada
-                      await this.prisma.inventory.update({
-                        where: {
-                          characterId_itemId: {
-                            characterId,
-                            itemId
-                          }
-                        },
-                        data: {
-                          quantity: { increment: 1 }
-                        }
-                      });
-                    } else {
-                      // Buat baru jika belum ada
-                      await this.prisma.inventory.create({
-                        data: {
-                          characterId,
-                          itemId,
-                          quantity: 1
-                        }
-                      });
-                    }
-                  } catch (error) {
-                    this.logger.error('Error adding item to inventory:', error);
-                    // Tambahkan logging yang lebih detail
-                    this.logger.error('Details:', {
-                      characterId,
-                      itemId,
-                      error: error instanceof Error ? error.message : 'Unknown error'
-                    });
-                    throw error;
-                  }
-                }
-              }
-            }
+          turnLog = `${enemy.name}`;
+          if (enemyDamage.isCritical) {
+            turnLog += ` 🎯 Critical Hit! (x${enemyDamage.critMultiplier})`;
           }
+          turnLog += `\n⚔️ Damage: ${enemyDamage.damage}\n${character.name} HP: ${Math.max(0, characterHp)}/${character.maxHealth}`;
+          battleLog.push(turnLog);
         }
+
+        turn++;
       }
 
-      // Create battle result embed
-      const resultEmbed = new EmbedBuilder()
-        .setTitle(won ? '🎉 Kemenangan!' : '💀 Kekalahan!')
-        .setColor(won ? '#00ff00' : '#ff0000')
-        .setDescription(won ? 
-          `Selamat! Kamu berhasil mengalahkan musuh level ${enemyLevel}!` :
-          'Kamu kalah dalam pertarungan ini...')
-        .addFields(
-          { name: '❤️ HP Tersisa', value: `${Math.max(0, characterHealth)}`, inline: true },
-          { name: '🔄 Total Turn', value: `${turnCount}`, inline: true },
-          { name: '✨ Experience', value: `+${experience} EXP`, inline: true },
-          { name: '💰 Coins', value: won ? `+${totalCoins} coins` : '0 coins', inline: true }
-        );
-
-      // Jika menang, tambahkan detail bonus
-      if (won && (criticalHits > 0 || battleState.combo > 0 || enemyLevel > character.level)) {
-        let bonusDetails = ['💰 Bonus Breakdown:'];
-        bonusDetails.push(`• Base: ${baseCoins} coins`);
-        bonusDetails.push(`• Win Bonus: +${Math.floor(baseCoins * (coinMultipliers.winBonus - 1))} coins`);
-        
-        if (criticalHits > 0) {
-          bonusDetails.push(`• Critical Hits (${criticalHits}x): +${Math.floor(baseCoins * (criticalHits * coinMultipliers.critBonus))} coins`);
-        }
-        
-        if (battleState.combo > 0) {
-          bonusDetails.push(`• Combo (${battleState.combo}x): +${Math.floor(baseCoins * (battleState.combo * coinMultipliers.comboBonus))} coins`);
-        }
-        
-        const levelDiff = enemyLevel - character.level;
-        if (levelDiff > 0) {
-          bonusDetails.push(`• Level Difference (+${levelDiff}): +${Math.floor(baseCoins * (levelDiff * coinMultipliers.levelDiffBonus))} coins`);
-        }
-        
-        resultEmbed.addFields({
-          name: '💎 Bonus Details',
-          value: bonusDetails.join('\n'),
-          inline: false
-        });
-      }
-
-      // Add dropped items to embed if any
-      if (droppedItems.length > 0) {
-        resultEmbed.addFields({
-          name: '🎁 Item Drop',
-          value: droppedItems.map(item => `${item.name} x${item.quantity}`).join('\n'),
-          inline: false
-        });
-      }
-
-      // Add level up notification if leveled up
-      if (expResult.leveledUp) {
-        const statsGained = expResult.statsGained!;
-        resultEmbed.addFields(
-          { 
-            name: '🎊 LEVEL UP!', 
-            value: `Level ${expResult.newLevel! - expResult.levelsGained!} ➔ ${expResult.newLevel!}`,
-            inline: false 
-          },
-          {
-            name: '📈 Stat Gains',
-            value: `⚔️ Attack +${statsGained.attack}\n🛡️ Defense +${statsGained.defense}\n❤️ Max HP +${statsGained.maxHealth}`,
-            inline: false
-          }
-        );
-      }
-
-      battleLog.push({ embeds: [resultEmbed] });
+      // Determine battle result
+      const won = enemyHp <= 0;
+      const result = {
+        won,
+        exp: won ? enemy.exp : 0,
+        drops: won ? this.generateDrops(enemy) : [],
+        finalHp: characterHp
+      };
 
       // Update character stats
       await this.prisma.character.update({
         where: { id: characterId },
         data: {
-          health: Math.max(0, characterHealth)
+          health: Math.max(0, characterHp)
         }
       });
 
-      // Create battle log
+      // Create battle record
       await this.prisma.battle.create({
         data: {
           characterId,
-          enemyType: `Level ${enemyLevel} Enemy`,
-          enemyLevel,
-          status: won ? 'COMPLETED' : 'FAILED',
-          turns: JSON.stringify([]),
+          enemyType: enemy.name,
+          enemyLevel: enemy.level,
+          status: won ? 'WON' : 'LOST',
+          turns: JSON.stringify(battleLog),
           finalStats: JSON.stringify({
-            damage: totalDamageDealt,
-            experience,
-            criticalHits
+            characterHp: characterHp,
+            enemyHp: enemyHp
           }),
           rewards: JSON.stringify({
-            experience,
-            items: []
+            exp: result.exp,
+            drops: result.drops
           })
         }
       });
 
-      // Clear battle state if battle is over
-      this.battleStates.delete(characterId);
-
-      // Update mentor progress berdasarkan tipe pertarungan
-      if (won) {
-        switch(character.mentor) {
-          case 'YB':
-            await this.characterService.updateMentorProgress(characterId, 'YB', 5);
-            break;
-          case 'Tierison':
-            if (criticalHits > 0) {
-              await this.characterService.updateMentorProgress(characterId, 'Tierison', 3);
-            }
-            break;
-          case 'LYuka':
-            await this.characterService.updateMentorProgress(characterId, 'LYuka', 5);
-            break;
-          case 'GarryAng':
-            await this.characterService.updateMentorProgress(characterId, 'GarryAng', 5);
-            break;
-        }
-      }
-
       return {
         won,
-        battleLog,
-        remainingHealth: Math.max(0, characterHealth),
-        experience
+        exp: result.exp,
+        drops: result.drops,
+        battleLog
       };
     } catch (error) {
-      logger.error('Error in battle:', error);
+      this.logger.error('Error in processBattle:', error);
       throw error;
     }
   }
@@ -583,5 +334,20 @@ export class BattleService extends BaseService {
     const emptyBars = barLength - filledBars;
     
     return `[${'🟩'.repeat(filledBars)}${'⬜'.repeat(emptyBars)}] ${currentHp} HP`;
+  }
+
+  private generateDrops(monster: Monster): string[] {
+    const drops: string[] = [];
+    
+    // Base drop rate 20%
+    const baseDropRate = 0.2;
+    
+    for (const itemId of monster.drops) {
+      if (Math.random() < baseDropRate) {
+        drops.push(itemId);
+      }
+    }
+    
+    return drops;
   }
 }

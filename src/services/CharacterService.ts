@@ -15,6 +15,7 @@ import {
 import { Message, EmbedBuilder, ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import { checkCooldown, setCooldown, getRemainingCooldown } from '@/utils/cooldown';
 import { createEphemeralReply } from '@/utils/helpers';
+import { createHelpEmbed } from '@/commands/basic/handlers/help';
 
 export type InteractionHandler = (source: Message | ChatInputCommandInteraction) => Promise<unknown>;
 
@@ -25,6 +26,13 @@ export interface ICharacterService {
   handleDaily: InteractionHandler;
   handleHelp: InteractionHandler;
   // ... other methods ...
+}
+
+// Tambahkan interface untuk buff
+interface BuffType {
+  type: string;
+  value: number;
+  expiresAt: number;
 }
 
 export class CharacterService extends BaseService implements ICharacterService {
@@ -87,58 +95,91 @@ export class CharacterService extends BaseService implements ICharacterService {
 
       // Create character in transaction with starter items
       const result = await this.prisma.$transaction(async (tx) => {
-        // Create user and character
-        const user = await tx.user.create({
+        // Create user if not exists
+        const user = await tx.user.upsert({
+          where: { discordId },
+          update: {},
+          create: { discordId }
+        });
+
+        // Create character
+        const character = await tx.character.create({
           data: {
-            discordId,
-            character: {
-              create: {
-                name,
-                mentor,
-                level: 1,
-                experience: 0,
-                health,
-                maxHealth: health,
-                attack,
-                defense,
-                currentIsland: 'foosha' as LocationId,
-                statusEffects: JSON.stringify(initialStatusEffects),
-                activeBuffs: JSON.stringify(initialActiveBuffs),
-                combo: 0,
-                questPoints: 0,
-                explorationPoints: 0,
-                luffyProgress: 0,
-                zoroProgress: 0,
-                usoppProgress: 0,
-                sanjiProgress: 0,
-                dailyHealCount: 0
-              },
-            },
-          },
-          include: { character: true },
+            name,
+            mentor,
+            level: 1,
+            experience: 0,
+            health,
+            maxHealth: health,
+            attack,
+            defense,
+            currentIsland: 'starter_island' as LocationId,
+            statusEffects: JSON.stringify(initialStatusEffects),
+            activeBuffs: JSON.stringify(initialActiveBuffs),
+            combo: 0,
+            questPoints: 0,
+            explorationPoints: 0,
+            luffyProgress: 0,
+            zoroProgress: 0,
+            usoppProgress: 0,
+            sanjiProgress: 0,
+            dailyHealCount: 0,
+            userId: user.id
+          }
         });
 
         // Add starter items to inventory
         const starterItems = [
+          { 
+            itemId: 'wooden_sword',
+            quantity: 1,
+            durability: 100,
+            maxDurability: 100,
+            stats: JSON.stringify({
+              attack: 5,
+              defense: 0
+            }),
+            level: 1,
+            upgrades: 0
+          },
+          { 
+            itemId: 'training_gi',
+            quantity: 1,
+            durability: 100,
+            maxDurability: 100,
+            stats: JSON.stringify({
+              attack: 0,
+              defense: 5
+            }),
+            level: 1,
+            upgrades: 0
+          },
           { itemId: 'potion', quantity: 5 },
-          { itemId: 'attack_buff', quantity: 3 },
-          { itemId: 'defense_buff', quantity: 3 },
-          { itemId: 'combat_ration', quantity: 3 },
-          { itemId: 'starter_sword', quantity: 1 },
-          { itemId: 'starter_armor', quantity: 1 }
+          { itemId: 'attack_boost', quantity: 3 },
+          { itemId: 'defense_boost', quantity: 3 },
+          { itemId: 'combat_ration', quantity: 3 }
         ];
 
+        // Verify items exist before creating inventory
         for (const item of starterItems) {
+          const itemExists = await tx.item.findUnique({
+            where: { id: item.itemId }
+          });
+
+          if (!itemExists) {
+            this.logger.error(`Item ${item.itemId} not found in database`);
+            continue;
+          }
+
           await tx.inventory.create({
             data: {
-              itemId: item.itemId,
-              quantity: item.quantity,
-              characterId: user.character!.id
+              characterId: character.id,
+              ...item
             }
           });
         }
 
-        return user.character!;
+        return character;
       });
 
       return result;
@@ -173,24 +214,43 @@ export class CharacterService extends BaseService implements ICharacterService {
       // Parse and validate status effects
       let statusEffects: StatusEffects;
       try {
-        statusEffects = JSON.parse(character.statusEffects) as StatusEffects;
+        statusEffects = JSON.parse(character.statusEffects);
         if (!statusEffects || !Array.isArray(statusEffects.effects)) {
           statusEffects = { effects: [] };
         }
+        // Filter out expired effects
+        statusEffects.effects = statusEffects.effects.filter(effect => 
+          effect && effect.duration && effect.duration > 0
+        );
       } catch (error) {
+        this.logger.error('Error parsing status effects:', error);
         statusEffects = { effects: [] };
       }
 
       // Parse and validate active buffs
       let activeBuffs: ActiveBuffs;
       try {
-        activeBuffs = JSON.parse(character.activeBuffs) as ActiveBuffs;
+        activeBuffs = JSON.parse(character.activeBuffs);
         if (!activeBuffs || !Array.isArray(activeBuffs.buffs)) {
           activeBuffs = { buffs: [] };
         }
+        // Filter out expired buffs
+        activeBuffs.buffs = activeBuffs.buffs.filter(buff => 
+          buff && buff.expiresAt && buff.expiresAt > Date.now()
+        );
       } catch (error) {
+        this.logger.error('Error parsing active buffs:', error);
         activeBuffs = { buffs: [] };
       }
+
+      // Update character with cleaned buffs and effects
+      await this.prisma.character.update({
+        where: { id: characterId },
+        data: {
+          statusEffects: JSON.stringify(statusEffects),
+          activeBuffs: JSON.stringify(activeBuffs)
+        }
+      });
 
       return {
         level: character.level,
@@ -221,7 +281,10 @@ export class CharacterService extends BaseService implements ICharacterService {
         wins: character.wins,
         losses: character.losses,
         winStreak: character.winStreak,
-        highestStreak: character.highestStreak
+        highestStreak: character.highestStreak,
+        huntStreak: character.huntStreak || 0,
+        highestHuntStreak: character.highestHuntStreak || 0,
+        lastHuntTime: character.lastHuntTime || undefined
       };
     } catch (error) {
       return this.handleError(error, 'GetCharacterStats');
@@ -870,6 +933,50 @@ export class CharacterService extends BaseService implements ICharacterService {
     const stats = await this.getCharacterStats(character.id);
     const balance = await this.getBalance(character.id);
 
+    // Get equipped items
+    const inventory = await this.prisma.inventory.findMany({
+      where: {
+        characterId: character.id,
+        isEquipped: true
+      },
+      include: {
+        item: true
+      }
+    });
+
+    // Calculate total bonus stats from equipment
+    let equipmentStats = {
+      attack: 0,
+      defense: 0
+    };
+
+    const equippedItems = inventory.map(inv => {
+      const effect = JSON.parse(inv.item.effect);
+      if (effect.stats) {
+        equipmentStats.attack += effect.stats.attack || 0;
+        equipmentStats.defense += effect.stats.defense || 0;
+      }
+      
+      let durabilityText = '';
+      if (inv.durability !== null) {
+        const maxDurability = inv.item.maxDurability || 100;
+        durabilityText = ` [${inv.durability}/${maxDurability}]`;
+      }
+      
+      return `${inv.item.name} (${inv.item.type})${durabilityText}`;
+    });
+
+    // Parse active buffs
+    let activeBuffs: BuffType[] = [];
+    try {
+      const buffs = JSON.parse(character.activeBuffs);
+      if (buffs && Array.isArray(buffs.buffs)) {
+        activeBuffs = buffs.buffs.filter((buff: BuffType) => buff.expiresAt > Date.now());
+      }
+    } catch (error) {
+      this.logger.error('Error parsing active buffs:', error);
+    }
+
     const embed = new EmbedBuilder()
       .setTitle(`📊 ${character.name}'s Profile`)
       .setColor('#0099ff')
@@ -888,14 +995,58 @@ export class CharacterService extends BaseService implements ICharacterService {
           name: '💰 Balance', 
           value: `Coins: ${balance.coins}\nBank: ${balance.bank}`,
           inline: true 
-        },
-        { 
-          name: '⚔️ Battle Stats', 
-          value: `ATK: ${stats.attack}\nDEF: ${stats.defense}\nWins: ${stats.wins}\nLosses: ${stats.losses}\nStreak: ${stats.winStreak}`,
-          inline: true 
         }
       );
 
+    // Add combat stats with equipment bonus
+    embed.addFields({
+      name: '⚔️ Combat Stats',
+      value: [
+        `💪 Attack: ${stats.attack} (Base) + ${equipmentStats.attack} (Equipment) = ${stats.attack + equipmentStats.attack}`,
+        `🛡️ Defense: ${stats.defense} (Base) + ${equipmentStats.defense} (Equipment) = ${stats.defense + equipmentStats.defense}`,
+        `🎯 Wins/Losses: ${stats.wins}/${stats.losses}`,
+        `🔥 Win Streak: ${stats.winStreak} (Highest: ${stats.highestStreak})`,
+        `⚔️ Hunt Streak: ${stats.huntStreak} (Highest: ${stats.highestHuntStreak})`
+      ].join('\n'),
+      inline: false
+    });
+
+    // Add equipment section if any items equipped
+    if (equippedItems.length > 0) {
+      embed.addFields({
+        name: '🎽 Equipment',
+        value: equippedItems.join('\n'),
+        inline: true
+      });
+
+      // Add total equipment bonus
+      embed.addFields({
+        name: '🔧 Equipment Bonus',
+        value: [
+          `⚔️ Attack: +${equipmentStats.attack}`,
+          `🛡️ Defense: +${equipmentStats.defense}`
+        ].join('\n'),
+        inline: true
+      });
+    }
+
+    // Add active buffs section if any
+    if (activeBuffs.length > 0) {
+      const buffsList = activeBuffs.map(buff => {
+        const duration = Math.ceil((buff.expiresAt - Date.now()) / 1000 / 60); // minutes
+        const buffName = this.getBuffName(buff.type);
+        const emoji = this.getBuffEmoji(buff.type);
+        return `${emoji} ${buffName}: +${buff.value} (${duration}m)`;
+      }).join('\n');
+
+      embed.addFields({
+        name: '⚡ Active Buffs',
+        value: buffsList || 'Tidak ada buff aktif',
+        inline: true
+      });
+    }
+
+    // Add mentor info if exists
     if (stats.mentor) {
       embed.addFields({
         name: '👨‍🏫 Mentor',
@@ -904,7 +1055,63 @@ export class CharacterService extends BaseService implements ICharacterService {
       });
     }
 
+    // Add progress section
+    embed.addFields({
+      name: '📊 Progress',
+      value: [
+        `🎯 Quest Points: ${stats.questPoints}`,
+        `🗺️ Exploration: ${stats.explorationPoints}`,
+        `${this.getMentorEmoji(stats.mentor as string)} Mentor Progress: ${this.getMentorProgress(stats)}`
+      ].join('\n'),
+      inline: false
+    });
+
     return embed;
+  }
+
+  private getBuffName(type: string): string {
+    const buffNames: Record<string, string> = {
+      'ATTACK': 'Attack Boost',
+      'DEFENSE': 'Defense Boost',
+      'SPEED': 'Speed Boost',
+      'ALL': 'Full Power',
+      'HEAL': 'Regeneration',
+      'HEAL_OVER_TIME': 'Healing',
+      'BURN': 'Burning',
+      'POISON': 'Poisoned',
+      'STUN': 'Stunned'
+    };
+    return buffNames[type] || type;
+  }
+
+  private getBuffEmoji(type: string): string {
+    const emojis: Record<string, string> = {
+      'ATTACK': '⚔️',
+      'DEFENSE': '🛡️',
+      'SPEED': '💨',
+      'ALL': '💫',
+      'HEAL': '❤️',
+      'HEAL_OVER_TIME': '💚',
+      'BURN': '🔥',
+      'POISON': '☠️',
+      'STUN': '💫'
+    };
+    return emojis[type] || '⚡';
+  }
+
+  private getMentorProgress(stats: any): string {
+    switch(stats.mentor) {
+      case 'YB':
+        return `${stats.luffyProgress}/100`;
+      case 'Tierison':
+        return `${stats.zoroProgress}/100`;
+      case 'LYuka':
+        return `${stats.usoppProgress}/100`;
+      case 'GarryAng':
+        return `${stats.sanjiProgress}/100`;
+      default:
+        return '0/100';
+    }
   }
 
   private async createBalanceEmbed(userId: string) {
@@ -991,6 +1198,17 @@ export class CharacterService extends BaseService implements ICharacterService {
           : source.reply(createEphemeralReply({ content: message }));
       }
 
+      // Check hunt streak
+      const now = new Date();
+      const lastHuntTime = character.lastHuntTime;
+      let huntStreak = character.huntStreak || 0;
+      let highestHuntStreak = character.highestHuntStreak || 0;
+
+      // Reset streak if more than 24 hours since last hunt
+      if (lastHuntTime && (now.getTime() - lastHuntTime.getTime()) > 24 * 60 * 60 * 1000) {
+        huntStreak = 0;
+      }
+
       // Get random monster based on character level
       const monster = this.getRandomMonster(character.level);
       
@@ -1002,14 +1220,40 @@ export class CharacterService extends BaseService implements ICharacterService {
       // Process battle with animation
       const battleResult = await this.battleService.processBattle(character.id, monster.level[0]);
 
-      // Calculate rewards
+      // Calculate rewards and streak bonus
       const exp = monster.exp;
-      const coins = Math.floor(Math.random() * (monster.coins[1] - monster.coins[0] + 1)) + monster.coins[0];
+      const baseCoins = Math.floor(Math.random() * (monster.coins[1] - monster.coins[0] + 1)) + monster.coins[0];
+      
+      // Add streak bonus (10% per streak up to 100%)
+      const streakBonus = Math.min(huntStreak * 0.1, 1.0);
+      const coins = Math.floor(baseCoins * (1 + streakBonus));
 
       // Update rewards if won
       if (battleResult.won) {
         await this.addExperience(character.id, exp);
         await this.addCoins(character.id, coins, 'HUNT', `Hunt reward from ${monster.name}`);
+        
+        // Update hunt streak
+        huntStreak++;
+        highestHuntStreak = Math.max(huntStreak, highestHuntStreak);
+        
+        await this.prisma.character.update({
+          where: { id: character.id },
+          data: {
+            huntStreak,
+            highestHuntStreak,
+            lastHuntTime: now
+          }
+        });
+      } else {
+        // Reset streak on loss
+        await this.prisma.character.update({
+          where: { id: character.id },
+          data: {
+            huntStreak: 0,
+            lastHuntTime: now
+          }
+        });
       }
 
       // Send battle log messages one by one with animation
@@ -1041,7 +1285,8 @@ export class CharacterService extends BaseService implements ICharacterService {
           .setColor(battleResult.won ? '#00ff00' : '#ff0000')
           .addFields(
             { name: '✨ Experience', value: battleResult.won ? `+${exp} EXP` : '0 EXP', inline: true },
-            { name: '💰 Coins', value: battleResult.won ? `+${coins} coins` : '0 coins', inline: true }
+            { name: '💰 Coins', value: battleResult.won ? `+${coins} coins${streakBonus > 0 ? ` (${Math.floor(streakBonus * 100)}% streak bonus)` : ''}` : '0 coins', inline: true },
+            { name: '⚔️ Hunt Streak', value: battleResult.won ? `${huntStreak} (Highest: ${highestHuntStreak})` : 'Streak Reset!', inline: true }
           );
 
         await source.followUp({
@@ -1056,7 +1301,7 @@ export class CharacterService extends BaseService implements ICharacterService {
           .setDescription(battleResult.won ? 'You won!' : 'You lost!')
           .addFields(
             { name: '✨ Experience', value: battleResult.won ? `+${exp} EXP` : '0 EXP', inline: true },
-            { name: '💰 Coins', value: battleResult.won ? `+${coins} coins` : '0 coins', inline: true }
+            { name: '💰 Coins', value: battleResult.won ? `+${coins} coins${streakBonus > 0 ? ` (${Math.floor(streakBonus * 100)}% streak bonus)` : ''}` : '0 coins', inline: true }
           );
 
         return source.reply({ embeds: [embed] });
@@ -1133,37 +1378,7 @@ export class CharacterService extends BaseService implements ICharacterService {
 
   async handleHelp(source: Message | ChatInputCommandInteraction): Promise<unknown> {
     try {
-      const commandList = [
-        { cmd: '/a h', desc: '🗡️ Berburu dengan battle log animasi (15s cd)' },
-        { cmd: 'a h', desc: '🗡️ Berburu tanpa animasi (15s cd)' },
-        { cmd: 'a p', desc: '📊 Lihat profil' },
-        { cmd: 'a d', desc: '🎁 Daily reward' },
-        { cmd: 'a i', desc: '🎒 Inventory' },
-        { cmd: 'a u', desc: '📦 Gunakan item' },
-        { cmd: 'a b', desc: '💰 Balance' },
-        { cmd: 'a t', desc: '⚔️ Training' },
-        { cmd: 'a m', desc: '🗺️ Map' },
-        { cmd: 'a s', desc: '🛍️ Shop' }
-      ];
-
-      const embed = new EmbedBuilder()
-        .setTitle('❓ A4A CLAN BOT - Panduan')
-        .setColor('#00ff00')
-        .setDescription('A4A CLAN BOT adalah game RPG One Piece yang dikembangkan oleh <@714556781912653855>')
-        .addFields([
-          { 
-            name: '📜 Basic Commands', 
-            value: commandList.map(c => `\`${c.cmd}\` - ${c.desc}`).join('\n')
-          },
-          {
-            name: '💡 Perbedaan Hunt Command',
-            value: '• `/a h` - Dengan battle log animasi\n• `a h` - Langsung hasil akhir'
-          },
-          {
-            name: '🎮 Tips',
-            value: 'Gunakan `/a h` untuk melihat battle log animasi saat berburu!\nMulai dengan berburu di Foosha Village untuk mendapatkan EXP dan item!'
-          }
-        ]);
+      const embed = await createHelpEmbed();
 
       if (source instanceof ChatInputCommandInteraction) {
         return source.reply({ 

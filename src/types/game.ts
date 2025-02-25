@@ -2,6 +2,36 @@
 
 import { EmbedBuilder } from 'discord.js';
 
+// Basic Types
+export type EffectType = 'EQUIP' | 'BUFF' | 'HEAL' | 'HEAL_AND_BUFF';
+
+export interface Stats {
+  attack?: number;
+  defense?: number;
+  speed?: number;
+  health?: number;
+  accuracy?: number;
+  healing?: number;
+  exp_gain?: number;
+  charisma?: number;
+  luck?: number;
+  cold_resist?: number;
+  regeneration?: number;
+}
+
+export interface EffectData {
+  type: EffectType;
+  stats?: Stats;
+  health?: number;
+  duration?: number;
+}
+
+export type Effect = EffectData | string;
+
+export type ItemType = 'WEAPON' | 'ARMOR' | 'ACCESSORY' | 'CONSUMABLE' | 'MATERIAL';
+
+export type Rarity = 'COMMON' | 'UNCOMMON' | 'RARE' | 'EPIC' | 'LEGENDARY';
+
 // Character
 export interface CreateCharacterDto {
     discordId: string;
@@ -108,7 +138,6 @@ export interface CreateCharacterDto {
     dailyHealCount: number;
     lastHealTime?: Date;
     lastDailyReset?: Date;
-    // Currency system
     coins: number;
     bank: number;
     totalGambled: number;
@@ -118,6 +147,9 @@ export interface CreateCharacterDto {
     losses: number;
     winStreak: number;
     highestStreak: number;
+    huntStreak: number;
+    highestHuntStreak: number;
+    lastHuntTime?: Date;
   }
 
   // NPC
@@ -185,6 +217,7 @@ export interface Location {
 }
 
 export type LocationId = 
+  | 'starter_island'
   | 'foosha'
   | 'syrup_village'
   | 'baratie'
@@ -275,23 +308,6 @@ export type ItemEffect = {
 } | {
   type: 'RANDOM_WEAPON';
 };
-
-export enum ItemType {
-  CONSUMABLE = 'CONSUMABLE',
-  WEAPON = 'WEAPON',
-  ARMOR = 'ARMOR',
-  MATERIAL = 'MATERIAL',
-  FOOD = 'FOOD',
-  INGREDIENT = 'INGREDIENT',
-  ACCESSORY = 'ACCESSORY'
-}
-
-export enum Rarity {
-  COMMON = 'COMMON',
-  RARE = 'RARE',
-  EPIC = 'EPIC',
-  LEGENDARY = 'LEGENDARY'
-}
 
 export enum QuestStatus {
   TEMPLATE = 'TEMPLATE',

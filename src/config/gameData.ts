@@ -1,272 +1,801 @@
 // src/config/gameData.ts
-import { WeatherType, SpecialEventType, LocationId } from '@/types/game';
+import { ItemType, Rarity, EffectType, Stats, Effect, LocationId } from '../types/game';
 
-export const MONSTERS = {
-  // Starter Island (Level 1-5)
-  'sea_beast_small': { name: '🦑 Baby Sea King', level: 1, hp: 50, attack: 5, defense: 3, exp: 20, drops: ['fish_small', 'sea_crystal'] },
-  'bandit_weak': { name: '👤 Bandit Lemah', level: 1, hp: 45, attack: 6, defense: 2, exp: 15, drops: ['wooden_sword', 'bandage'] },
-  'wild_monkey': { name: '🐒 Monyet Liar', level: 2, hp: 60, attack: 7, defense: 4, exp: 25, drops: ['banana', 'monkey_fur'] },
-  'angry_boar': { name: '🐗 Babi Hutan', level: 2, hp: 70, attack: 8, defense: 5, exp: 30, drops: ['meat_raw', 'boar_tusk'] },
-  'pirate_rookie': { name: '🏴‍☠️ Bajak Laut Pemula', level: 3, hp: 80, attack: 10, defense: 6, exp: 35, drops: ['pirate_coin', 'rum'] },
+export interface GameItem {
+  name: string;
+  type: ItemType;
+  description: string;
+  price: number;
+  effect?: Effect;
+  baseStats?: Stats;
+  upgradeStats?: Stats;
+  maxLevel?: number;
+  maxDurability?: number;
+  stackLimit?: number;
+  rarity: Rarity;
+}
 
-  // Shell Town (Level 5-10)
-  'marine_trainee': { name: '👮 Marinir Pelatih', level: 5, hp: 100, attack: 12, defense: 8, exp: 45, drops: ['marine_badge', 'training_manual'] },
-  'axe_hand': { name: '🪓 Tangan Kapak', level: 6, hp: 120, attack: 15, defense: 10, exp: 50, drops: ['steel_axe', 'iron_plate'] },
-  'corrupt_marine': { name: '🦹‍♂️ Marinir Korup', level: 7, hp: 130, attack: 16, defense: 12, exp: 55, drops: ['bribe_money', 'corrupt_badge'] },
-  'helmeppo': { name: '👑 Helmeppo', level: 8, hp: 150, attack: 18, defense: 15, exp: 70, drops: ['golden_sword', 'fancy_clothes'] },
-  'morgan': { name: '💀 Kapten Morgan', level: 10, hp: 200, attack: 25, defense: 20, exp: 100, drops: ['morgan_axe', 'captain_coat'] },
+export interface QuestData {
+  name: string;
+  description: string;
+  reward: number;
+  requiredLevel: number;
+  type: string;
+  mentor?: string;
+}
 
-  // Orange Town (Level 10-15)
-  'buggy_pirate': { name: '🤡 Anak Buah Buggy', level: 10, hp: 160, attack: 20, defense: 15, exp: 75, drops: ['circus_knife', 'red_nose'] },
-  'mohji_richie': { name: '🦁 Mohji & Richie', level: 12, hp: 180, attack: 22, defense: 18, exp: 85, drops: ['lion_fang', 'beast_tamer_whip'] },
-  'cabaji': { name: '🎪 Cabaji', level: 13, hp: 190, attack: 23, defense: 19, exp: 90, drops: ['acrobat_sword', 'unicycle'] },
-  'buggy': { name: '🃏 Buggy si Badut', level: 15, hp: 250, attack: 30, defense: 25, exp: 120, drops: ['bara_bara_fruit', 'buggy_cape'] },
+export interface WeaponUpgradeData {
+  name: string;
+  maxLevel: number;
+  baseAttack: number;
+  upgradeAttackPerLevel: number;
+  materials: Record<string, number>;
+  coins: number;
+}
 
-  // Syrup Village (Level 15-20)
-  'black_cat_pirate': { name: '🐱‍👤 Bajak Laut Kucing Hitam', level: 15, hp: 200, attack: 25, defense: 20, exp: 95, drops: ['cat_claw', 'black_flag'] },
-  'sham': { name: '😺 Sham', level: 16, hp: 210, attack: 26, defense: 21, exp: 100, drops: ['cat_bell', 'stealth_boots'] },
-  'buchi': { name: '😾 Buchi', level: 16, hp: 220, attack: 27, defense: 22, exp: 100, drops: ['heavy_paw', 'cat_armor'] },
-  'jango': { name: '🎩 Jango', level: 17, hp: 230, attack: 28, defense: 23, exp: 110, drops: ['hypno_ring', 'chakram'] },
-  'kuro': { name: '👓 Kuro', level: 20, hp: 300, attack: 35, defense: 30, exp: 150, drops: ['cat_claws', 'kuro_glasses'] },
+export interface MaterialData {
+  name: string;
+  description: string;
+  dropFrom: string[];
+  rarity: Rarity;
+  stackLimit: number;
+}
 
-  // Baratie (Level 20-25)
-  'cook_pirate': { name: '👨‍🍳 Bajak Laut Koki', level: 20, hp: 250, attack: 30, defense: 25, exp: 120, drops: ['kitchen_knife', 'spice_set'] },
+export interface Monster {
+  name: string;
+  level: number;
+  hp: number;
+  attack: number;
+  defense: number;
+  exp: number;
+  drops: string[];
+}
 
-  // Loguetown (Level 25-30)
-  'street_thug': { name: '🦹 Preman Jalanan', level: 25, hp: 280, attack: 32, defense: 28, exp: 130, drops: ['brass_knuckles', 'leather_jacket'] },
-  'corrupt_merchant': { name: '🤑 Pedagang Licik', level: 26, hp: 290, attack: 33, defense: 29, exp: 135, drops: ['fake_berry', 'merchant_list'] },
-  'bounty_hunter': { name: '🎯 Pemburu Hadiah', level: 27, hp: 300, attack: 35, defense: 30, exp: 140, drops: ['wanted_poster', 'hunter_badge'] },
-  'smoker': { name: '💨 Kapten Smoker', level: 30, hp: 400, attack: 45, defense: 40, exp: 200, drops: ['smoke_fruit', 'justice_coat'] },
+export interface Location {
+  name: string;
+  description: string;
+  level: number;
+  monsters: string[];
+  items: string[];
+  quests: string[];
+  connections: string[];
+}
 
-  // Arlong Park (Level 30-35)
-  'fishman_grunt': { name: '🐟 Anak Buah Arlong', level: 30, hp: 350, attack: 40, defense: 35, exp: 160, drops: ['fish_scale', 'water_pearl'] },
-  'chu': { name: '💦 Chu', level: 31, hp: 360, attack: 42, defense: 36, exp: 165, drops: ['water_gun', 'fish_teeth'] },
-  'kuroobi': { name: '🥋 Kuroobi', level: 32, hp: 370, attack: 44, defense: 38, exp: 170, drops: ['karate_gi', 'ray_fin'] },
-  'hatchan': { name: '🐙 Hatchan', level: 33, hp: 380, attack: 46, defense: 40, exp: 175, drops: ['six_swords', 'takoyaki'] },
-  'arlong': { name: '🦈 Arlong', level: 35, hp: 500, attack: 55, defense: 50, exp: 250, drops: ['saw_nose', 'shark_tooth'] },
-
-  // Drum Island (Level 35-40)
-  'snow_beast': { name: '❄️ Binatang Salju', level: 35, hp: 400, attack: 48, defense: 42, exp: 180, drops: ['winter_fur', 'ice_crystal'] },
-  'lapahn': { name: '🐰 Lapahn', level: 36, hp: 410, attack: 50, defense: 44, exp: 185, drops: ['rabbit_meat', 'snow_boots'] },
-  'wapol_soldier': { name: '🤖 Tentara Wapol', level: 37, hp: 420, attack: 52, defense: 46, exp: 190, drops: ['metal_piece', 'tin_plate'] },
-  'chess': { name: '♟️ Chess', level: 38, hp: 430, attack: 54, defense: 48, exp: 195, drops: ['chess_piece', 'strategy_book'] },
-  'wapol': { name: '🤴 Wapol', level: 40, hp: 600, attack: 65, defense: 60, exp: 300, drops: ['munch_fruit', 'crown'] }
-};
-
-export const ITEMS = {
-  // Healing Items
-  'potion': { name: '🧪 Potion', type: 'HEAL', value: 50, description: '❤️ Memulihkan 50 HP', price: 100 },
-  'super_potion': { name: '🔮 Super Potion', type: 'HEAL', value: 100, description: '❤️ Memulihkan 100 HP', price: 200 },
-  'bandage': { name: '🩹 Perban', type: 'HEAL', value: 30, description: '❤️ Memulihkan 30 HP', price: 50 },
-  'meat_cooked': { name: '🍖 Daging Panggang', type: 'HEAL', value: 80, description: '❤️ Memulihkan 80 HP', price: 150 },
-  'sanji_special': { name: '👨‍🍳 Masakan Spesial Sanji', type: 'HEAL', value: 200, description: '❤️ Memulihkan 200 HP', price: 500 },
-
-  // Buff Items
-  'attack_boost': { name: '⚔️ Attack Boost', type: 'BUFF', value: 5, description: '💪 ATK +5 selama pertarungan', price: 300 },
-  'defense_boost': { name: '🛡️ Defense Boost', type: 'BUFF', value: 5, description: '🛡️ DEF +5 selama pertarungan', price: 300 },
-  'speed_boost': { name: '💨 Speed Boost', type: 'BUFF', value: 5, description: '🏃 SPD +5 selama pertarungan', price: 300 },
-  'all_boost': { name: '🌟 All Stats Boost', type: 'BUFF', value: 3, description: '💫 Semua stats +3 selama pertarungan', price: 500 },
-
-  // Weapons
-  'wooden_sword': { name: '🗡️ Pedang Kayu', type: 'WEAPON', attack: 5, description: '⚔️ Pedang latihan basic', price: 100 },
-  'steel_sword': { name: '⚔️ Pedang Baja', type: 'WEAPON', attack: 10, description: '⚔️ Pedang standar marinir', price: 300 },
-  'wado_ichimonji': { name: '🗡️ Wado Ichimonji', type: 'WEAPON', attack: 25, description: '⚔️ Pedang legendaris Zoro', price: 1000 },
-  'kitchen_knife': { name: '🔪 Pisau Dapur', type: 'WEAPON', attack: 8, description: '⚔️ Senjata khas koki Baratie', price: 200 },
-  'slingshot': { name: '🎯 Ketapel', type: 'WEAPON', attack: 7, description: '🎯 Senjata andalan Usopp', price: 150 },
-
-  // Armor
-  'straw_hat': { name: '🎩 Topi Jerami', type: 'ARMOR', defense: 5, description: '🛡️ Topi legendaris Luffy', price: 1000 },
-  'marine_coat': { name: '🧥 Jubah Marinir', type: 'ARMOR', defense: 8, description: '🛡️ Seragam standar marinir', price: 300 },
-  'pirate_armor': { name: '👕 Baju Bajak Laut', type: 'ARMOR', defense: 7, description: '🛡️ Pakaian bajak laut', price: 250 },
-  'chef_outfit': { name: '👨‍🍳 Seragam Koki', type: 'ARMOR', defense: 6, description: '🛡️ Seragam koki Baratie', price: 200 },
-
-  // Materials & Quest Items
-  'sea_crystal': { name: '💎 Kristal Laut', type: 'MATERIAL', description: '✨ Kristal langka dari dasar laut', price: 500 },
-  'pirate_coin': { name: '💰 Koin Bajak Laut', type: 'MATERIAL', description: '💰 Mata uang bajak laut', price: 100 },
-
-  // Additional Healing Items
-  'rumble_ball': { name: '💊 Rumble Ball', type: 'HEAL', value: 150, description: '❤️ Memulihkan 150 HP dan memberikan buff', price: 400 },
-  'doctor_tony': { name: '🦌 Ramuan Dr. Tony', type: 'HEAL', value: 120, description: '❤️ Memulihkan 120 HP dan menghilangkan status buruk', price: 350 },
-  'meat_raw': { name: '🥩 Daging Mentah', type: 'MATERIAL', description: '🍖 Bahan makanan mentah', price: 50 },
-  'fish_fresh': { name: '🐟 Ikan Segar', type: 'MATERIAL', description: '🍣 Bahan makanan laut', price: 40 },
-  'herbs': { name: '🌿 Herbal', type: 'MATERIAL', description: '💊 Bahan ramuan obat', price: 30 },
-
-  // Additional Weapons
-  'three_sword': { name: '⚔️ Three Sword Style', type: 'WEAPON', attack: 30, description: '⚔️ Set pedang lengkap Zoro', price: 2000 },
-  'clima_tact': { name: '🌪️ Clima Tact', type: 'WEAPON', attack: 15, description: '🌡️ Senjata pengendali cuaca', price: 800 },
-  'impact_dial': { name: '🌊 Impact Dial', type: 'WEAPON', attack: 20, description: '💥 Menyerap dan melepaskan dampak', price: 600 },
-  'shark_sword': { name: '🦈 Kiribachi', type: 'WEAPON', attack: 28, description: '⚔️ Pedang gergaji Arlong', price: 1500 },
-  'smoke_jitte': { name: '💨 Jitte Asap', type: 'WEAPON', attack: 25, description: '⚔️ Senjata Kapten Smoker', price: 1200 },
-
-  // Additional Armor
-  'dojo_gi': { name: '🥋 Seragam Dojo', type: 'ARMOR', defense: 10, description: '🛡️ Pakaian latihan', price: 400 },
-  'snow_coat': { name: '🧥 Mantel Salju', type: 'ARMOR', defense: 12, description: '🛡️ Melindungi dari dingin', price: 500 },
-  'fishman_suit': { name: '🏊 Baju Renang', type: 'ARMOR', defense: 11, description: '🛡️ Cocok untuk pertarungan air', price: 450 },
-  'metal_armor': { name: '🛡️ Armor Logam', type: 'ARMOR', defense: 15, description: '🛡️ Pelindung berat', price: 800 },
-
-  // Additional Materials
-  'adam_wood': { name: '🌳 Kayu Adam', type: 'MATERIAL', description: '✨ Kayu legendaris', price: 2000 },
-  'sea_stone': { name: '💠 Batu Laut', type: 'MATERIAL', description: '✨ Melemahkan pengguna buah iblis', price: 1500 },
-  'cola': { name: '🥤 Cola', type: 'MATERIAL', description: '⚡ Sumber energi', price: 50 },
-  'treasure_map': { name: '🗺️ Peta Harta Karun', type: 'MATERIAL', description: '💰 Menunjukkan lokasi harta', price: 1000 },
-  'den_den_mushi': { name: '🐌 Den Den Mushi', type: 'MATERIAL', description: '📞 Siput komunikasi', price: 300 }
-};
-
-export const QUESTS = {
-  // Luffy's Quests
-  "luffy_training_1": {
-    name: "🥊 Latihan Dasar Luffy",
-    description: "Kalahkan 5 monster di Starter Island",
-    reward: 100,
-    requiredLevel: 1,
-    mentor: "YB",
-    type: "COMBAT"
+// Export items
+export const ITEMS: Record<string, GameItem> = {
+  'wooden_sword': {
+    name: '🗡️ Wooden Sword',
+    type: 'WEAPON',
+    description: '⚔️ Pedang kayu untuk pemula',
+    price: 100,
+    effect: {
+      type: 'EQUIP',
+      stats: { attack: 5 }
+    },
+    baseStats: { attack: 5, defense: 0 },
+    upgradeStats: { attack: 2, defense: 1 },
+    maxLevel: 5,
+    rarity: 'COMMON',
+    stackLimit: 1,
+    maxDurability: 100
   },
-  "find_meat_quest": {
-    name: "🍖 Mencari Daging",
-    description: "Kumpulkan 3 daging dari babi hutan",
-    reward: 150,
-    requiredLevel: 2,
-    mentor: "YB",
-    type: "GATHERING"
+  'training_gi': {
+    name: '🥋 Training Gi',
+    type: 'ARMOR',
+    description: '🛡️ Baju latihan dasar',
+    price: 100,
+    effect: {
+      type: 'EQUIP',
+      stats: { defense: 5 }
+    },
+    baseStats: { defense: 5 },
+    upgradeStats: { defense: 2 },
+    maxLevel: 5,
+    rarity: 'COMMON',
+    stackLimit: 1,
+    maxDurability: 100
   },
-  "gear_second_training": {
-    name: "⚡ Latihan Gear Second",
-    description: "Capai 5 combo dalam pertarungan",
-    reward: 200,
-    requiredLevel: 5,
-    mentor: "YB",
-    type: "COMBAT"
+  'potion': {
+    name: '🧪 Health Potion',
+    type: 'CONSUMABLE',
+    description: '❤️ Memulihkan 50 HP',
+    price: 50,
+    effect: {
+      type: 'HEAL',
+      health: 50
+    },
+    rarity: 'COMMON',
+    stackLimit: 99
   },
-
-  // Zoro's Quests
-  "zoro_training_1": {
-    name: "⚔️ Latihan Pedang Dasar",
-    description: "Kalahkan 3 marinir di Shell Town",
-    reward: 120,
-    requiredLevel: 3,
-    mentor: "Tierison",
-    type: "COMBAT"
+  'gomu_gomu': {
+    name: '🍎 Gomu Gomu no Mi',
+    type: 'WEAPON',
+    description: '🌟 Buah iblis yang memberikan kekuatan karet',
+    price: 500000,
+    effect: {
+      type: 'EQUIP',
+      stats: {
+      attack: 100,
+      defense: 50
+      }
+    },
+    baseStats: {
+      attack: 100,
+      defense: 50
+    },
+    upgradeStats: {
+      attack: 20,
+      defense: 10
+    },
+    maxLevel: 10,
+    rarity: 'LEGENDARY',
+    stackLimit: 1
   },
-  "find_swords": {
-    name: "🗡️ Mencari Pedang",
-    description: "Temukan pedang legendaris di Shell Town",
-    reward: 180,
-    requiredLevel: 4,
-    mentor: "Tierison",
-    type: "EXPLORATION"
+  'mera_mera': {
+    name: '🔥 Mera Mera no Mi',
+    type: 'WEAPON',
+    description: '🌟 Buah iblis api yang sangat kuat',
+    price: 500000,
+    effect: {
+      type: 'EQUIP',
+      stats: {
+      attack: 120,
+      defense: 30
+      }
+    },
+    baseStats: {
+      attack: 120,
+      defense: 30
+    },
+    upgradeStats: {
+      attack: 25,
+      defense: 5
+    },
+    maxLevel: 10,
+    rarity: 'LEGENDARY',
+    stackLimit: 1
   },
-
-  // Usopp's Quests
-  "usopp_training_1": {
-    name: "🎯 Latihan Menembak",
-    description: "Capai 5 critical hit dengan ketapel",
-    reward: 130,
-    requiredLevel: 2,
-    mentor: "LYuka",
-    type: "COMBAT"
+  'wado_ichimonji': {
+    name: '⚔️ Wado Ichimonji',
+    type: 'WEAPON',
+    description: '✨ Pedang warisan Kuina',
+    price: 500000,
+    effect: {
+      type: 'EQUIP',
+      stats: {
+      attack: 80,
+      defense: 15
+      }
+    },
+    baseStats: {
+      attack: 80,
+      defense: 15
+    },
+    upgradeStats: {
+      attack: 15,
+      defense: 5
+    },
+    maxLevel: 8,
+    rarity: 'EPIC',
+    stackLimit: 1,
+    maxDurability: 800
   },
-  "protect_village": {
-    name: "🏠 Lindungi Desa",
-    description: "Kalahkan bajak laut kucing hitam",
-    reward: 160,
-    requiredLevel: 4,
-    mentor: "LYuka",
-    type: "COMBAT"
+  'clima_tact': {
+    name: '🌪️ Clima-Tact',
+    type: 'WEAPON',
+    description: '✨ Senjata pengendali cuaca Nami',
+    price: 450000,
+    effect: {
+      type: 'EQUIP',
+      stats: {
+      attack: 70,
+      defense: 20
+      }
+    },
+    baseStats: {
+      attack: 70,
+      defense: 20
+    },
+    upgradeStats: {
+      attack: 15,
+      defense: 5
+    },
+    maxLevel: 8,
+    rarity: 'EPIC',
+    stackLimit: 1,
+    maxDurability: 700
   },
-
-  // Sanji's Quests
-  "sanji_training_1": {
-    name: "👨‍🍳 Latihan Memasak",
-    description: "Buat 3 hidangan dengan bahan segar",
-    reward: 140,
-    requiredLevel: 2,
-    mentor: "GarryAng",
-    type: "CRAFTING"
+  'kitetsu': {
+    name: '🗡️ Kitetsu',
+    type: 'WEAPON',
+    description: '💫 Pedang terkutuk',
+    price: 200000,
+    effect: {
+      type: 'EQUIP',
+      stats: {
+      attack: 50,
+      defense: 10
+      }
+    },
+    baseStats: {
+      attack: 50,
+      defense: 10
+    },
+    upgradeStats: {
+      attack: 10,
+      defense: 3
+    },
+    maxLevel: 6,
+    rarity: 'RARE',
+    stackLimit: 1,
+    maxDurability: 500
   },
-  "baratie_defense": {
-    name: "🏰 Pertahanan Baratie",
-    description: "Kalahkan bajak laut yang menyerang Baratie",
-    reward: 170,
-    requiredLevel: 5,
-    mentor: "GarryAng",
-    type: "COMBAT"
+  'sea_stone_armor': {
+    name: '💠 Sea Stone Armor',
+    type: 'ARMOR',
+    description: '🌟 Armor dari batu laut',
+    price: 900000,
+    effect: {
+      type: 'EQUIP',
+      stats: {
+      defense: 100,
+      attack: 20
+      }
+    },
+    baseStats: {
+      defense: 100,
+      attack: 20
+    },
+    upgradeStats: {
+      defense: 20,
+      attack: 5
+    },
+    maxLevel: 10,
+    rarity: 'LEGENDARY',
+    stackLimit: 1,
+    maxDurability: 1000
   },
-
-  // Additional Luffy's Quests
-  "luffy_rescue": {
-    name: "💪 Misi Penyelamatan",
-    description: "Selamatkan teman dari marinir",
-    reward: 250,
-    requiredLevel: 8,
-    mentor: "YB",
-    type: "COMBAT"
+  'marine_admiral_coat': {
+    name: '🧥 Marine Admiral Coat',
+    type: 'ARMOR',
+    description: '✨ Jubah khusus Admiral Angkatan Laut',
+    price: 600000,
+    effect: {
+      type: 'EQUIP',
+      stats: {
+      defense: 80,
+      attack: 15
+      }
+    },
+    baseStats: {
+      defense: 80,
+      attack: 15
+    },
+    upgradeStats: {
+      defense: 15,
+      attack: 3
+    },
+    maxLevel: 8,
+    rarity: 'EPIC',
+    stackLimit: 1,
+    maxDurability: 800
   },
-  "pirate_king_dream": {
-    name: "👑 Impian Raja Bajak Laut",
-    description: "Kalahkan 10 kapten bajak laut",
-    reward: 500,
-    requiredLevel: 15,
-    mentor: "YB",
-    type: "COMBAT"
+  'pirate_armor': {
+    name: '🥋 Pirate Armor',
+    type: 'ARMOR',
+    description: '💫 Armor bajak laut elit',
+    price: 250000,
+    effect: {
+      type: 'EQUIP',
+      stats: {
+      defense: 50,
+      attack: 10
+      }
+    },
+    baseStats: {
+      defense: 50,
+      attack: 10
+    },
+    upgradeStats: {
+      defense: 10,
+      attack: 2
+    },
+    maxLevel: 6,
+    rarity: 'RARE',
+    stackLimit: 1,
+    maxDurability: 500
   },
-
-  // Additional Zoro's Quests
-  "sword_master": {
-    name: "⚔️ Jalan Pedang",
-    description: "Kumpulkan 3 pedang legendaris",
-    reward: 400,
-    requiredLevel: 12,
-    mentor: "Tierison",
-    type: "GATHERING"
+  'roger_hat': {
+    name: '👒 Roger\'s Hat',
+    type: 'ACCESSORY',
+    description: '🌟 Topi legendaris Raja Bajak Laut',
+    price: 1500000,
+    effect: {
+      type: 'EQUIP',
+      stats: {
+      attack: 50,
+      defense: 50
+      }
+    },
+    baseStats: {
+      attack: 50,
+      defense: 50
+    },
+    upgradeStats: {
+      attack: 10,
+      defense: 10
+    },
+    maxLevel: 10,
+    rarity: 'LEGENDARY',
+    stackLimit: 1
   },
-  "lost_navigation": {
-    name: "🗺️ Tersesat Lagi",
-    description: "Bantu Zoro menemukan jalan pulang",
-    reward: 300,
-    requiredLevel: 10,
-    mentor: "Tierison",
-    type: "EXPLORATION"
+  'log_pose': {
+    name: '🧭 Eternal Log Pose',
+    type: 'ACCESSORY',
+    description: '✨ Penunjuk arah abadi',
+    price: 400000,
+    effect: {
+      type: 'EQUIP',
+      stats: {
+      attack: 30,
+      defense: 30
+      }
+    },
+    baseStats: {
+      attack: 30,
+      defense: 30
+    },
+    upgradeStats: {
+      attack: 5,
+      defense: 5
+    },
+    maxLevel: 8,
+    rarity: 'EPIC',
+    stackLimit: 1
   },
-
-  // Additional Usopp's Quests
-  "sniper_king": {
-    name: "🎯 Raja Penembak Jitu",
-    description: "Tembak 10 target dari jarak jauh",
-    reward: 350,
-    requiredLevel: 10,
-    mentor: "LYuka",
-    type: "COMBAT"
+  'rumble_ball': {
+    name: '💊 Rumble Ball',
+    type: 'CONSUMABLE',
+    description: '⚡ Meningkatkan kekuatan 2x lipat selama 1 jam',
+    price: 1000,
+    effect: {
+      type: 'BUFF',
+      stats: {
+        attack: 50,
+        defense: 50
+      },
+      duration: 3600 
+    },
+    rarity: 'EPIC',
+    stackLimit: 5
   },
-  "brave_warrior": {
-    name: "🦸‍♂️ Prajurit Pemberani",
-    description: "Hadapi ketakutanmu",
-    reward: 280,
-    requiredLevel: 8,
-    mentor: "LYuka",
-    type: "EXPLORATION"
+  'meat': {
+    name: '🍖 Daging Super',
+    type: 'CONSUMABLE',
+    description: '❤️ Memulihkan 1000 HP dan memberikan buff',
+    price: 800,
+    effect: {
+      type: 'HEAL_AND_BUFF',
+      health: 1000,
+      stats: {
+        attack: 20,
+        defense: 20
+      },
+      duration: 1800 
+    },
+    rarity: 'RARE',
+    stackLimit: 10
   },
-
-  // Additional Sanji's Quests
-  "ultimate_recipe": {
-    name: "👨‍🍳 Resep Legendaris",
-    description: "Temukan bahan langka dan buat hidangan spesial",
-    reward: 450,
-    requiredLevel: 15,
-    mentor: "GarryAng",
-    type: "CRAFTING"
+  'sea_stone': {
+    name: '💠 Batu Laut',
+    type: 'MATERIAL',
+    description: '✨ Material langka untuk upgrade senjata',
+    price: 200000,
+    rarity: 'EPIC',
+    stackLimit: 100
   },
-  "ladies_first": {
-    name: "🌹 Ladies First",
-    description: "Bantu 5 karakter wanita dalam kesulitan",
-    reward: 320,
-    requiredLevel: 10,
-    mentor: "GarryAng",
-    type: "HELP"
+  'adam_wood': {
+    name: '🌳 Kayu Adam',
+    type: 'MATERIAL',
+    description: '✨ Kayu terkuat untuk upgrade armor',
+    price: 150000,
+    rarity: 'EPIC',
+    stackLimit: 100
+  },
+  'den_den_mushi': {
+    name: '🐌 Den Den Mushi',
+    type: 'MATERIAL',
+    description: '📞 Siput komunikasi',
+    price: 50000,
+    rarity: 'RARE',
+    stackLimit: 5
+  },
+  'wood': {
+    name: '🪵 Kayu',
+    type: 'MATERIAL',
+    description: 'Material dasar untuk upgrade senjata',
+    price: 100,
+    rarity: 'COMMON',
+    stackLimit: 100
+  },
+  'iron_ingot': {
+    name: '⚔️ Besi',
+    type: 'MATERIAL',
+    description: 'Material untuk upgrade senjata tingkat menengah',
+    price: 500,
+    rarity: 'COMMON',
+    stackLimit: 50
+  },
+  'steel_ingot': {
+    name: '🛡️ Baja',
+    type: 'MATERIAL',
+    description: 'Material berkualitas untuk senjata kuat',
+    price: 2000,
+    rarity: 'UNCOMMON',
+    stackLimit: 30
+  },
+  'rare_ore': {
+    name: '💎 Bijih Langka',
+    type: 'MATERIAL',
+    description: 'Material langka untuk senjata tingkat tinggi',
+    price: 10000,
+    rarity: 'RARE',
+    stackLimit: 20
+  },
+  'magic_crystal': {
+    name: '✨ Kristal Sihir',
+    type: 'MATERIAL',
+    description: 'Kristal dengan kekuatan magis untuk senjata legendaris',
+    price: 50000,
+    rarity: 'EPIC',
+    stackLimit: 10
+  },
+  'leather': {
+    name: '🥋 Kulit',
+    type: 'MATERIAL',
+    description: 'Material dasar untuk armor dan aksesoris',
+    price: 200,
+    rarity: 'COMMON',
+    stackLimit: 50
+  },
+  'bandage': {
+    name: '🩹 Bandage',
+    type: 'CONSUMABLE',
+    description: 'Memulihkan 20 HP',
+    price: 20,
+    effect: {
+      type: 'HEAL',
+      health: 20
+    },
+    rarity: 'COMMON',
+    stackLimit: 99
+  },
+  'fish_small': {
+    name: '🐟 Ikan Kecil',
+    type: 'CONSUMABLE',
+    description: 'Memulihkan 30 HP',
+    price: 30,
+    effect: {
+      type: 'HEAL',
+      health: 30
+    },
+    rarity: 'COMMON',
+    stackLimit: 99
+  },
+  'sea_crystal': {
+    name: '💎 Kristal Laut',
+    type: 'MATERIAL',
+    description: 'Kristal indah dari dasar laut',
+    price: 1000,
+    rarity: 'UNCOMMON',
+    stackLimit: 50
+  },
+  'banana': {
+    name: '🍌 Pisang',
+    type: 'CONSUMABLE',
+    description: 'Memulihkan 25 HP',
+    price: 25,
+    effect: {
+      type: 'HEAL',
+      health: 25
+    },
+    rarity: 'COMMON',
+    stackLimit: 99
+  },
+  'monkey_fur': {
+    name: '🦊 Bulu Monyet',
+    type: 'MATERIAL',
+    description: 'Bulu halus untuk crafting',
+    price: 150,
+    rarity: 'COMMON',
+    stackLimit: 99
+  },
+  'meat_raw': {
+    name: '🥩 Daging Mentah',
+    type: 'MATERIAL',
+    description: 'Bisa dimasak menjadi makanan',
+    price: 100,
+    rarity: 'COMMON',
+    stackLimit: 50
+  },
+  'boar_tusk': {
+    name: '🦷 Taring Babi Hutan',
+    type: 'MATERIAL',
+    description: 'Material untuk crafting senjata',
+    price: 300,
+    rarity: 'UNCOMMON',
+    stackLimit: 50
+  },
+  'pirate_coin': {
+    name: '🪙 Koin Bajak Laut',
+    type: 'MATERIAL',
+    description: 'Koin langka dari bajak laut',
+    price: 500,
+    rarity: 'UNCOMMON',
+    stackLimit: 999
+  },
+  'rum': {
+    name: '🍺 Rum',
+    type: 'CONSUMABLE',
+    description: 'Meningkatkan ATK sementara',
+    price: 200,
+    effect: {
+      type: 'BUFF',
+      stats: {
+        attack: 10
+      },
+      duration: 300
+    },
+    rarity: 'UNCOMMON',
+    stackLimit: 10
+  },
+  'marine_badge': {
+    name: '📛 Lencana Marine',
+    type: 'MATERIAL',
+    description: 'Bukti mengalahkan marinir',
+    price: 1000,
+    rarity: 'UNCOMMON',
+    stackLimit: 100
+  },
+  'training_manual': {
+    name: '📖 Manual Latihan',
+    type: 'CONSUMABLE',
+    description: 'Memberikan bonus EXP',
+    price: 500,
+    effect: {
+      type: 'BUFF',
+      stats: {
+        exp_gain: 50
+      },
+      duration: 1800
+    },
+    rarity: 'UNCOMMON',
+    stackLimit: 10
+  },
+  'steel_axe': {
+    name: '🪓 Kapak Baja',
+    type: 'WEAPON',
+    description: 'Kapak kuat dari baja',
+    price: 5000,
+    effect: {
+      type: 'EQUIP',
+      stats: {
+        attack: 15
+      }
+    },
+    baseStats: {
+      attack: 15
+    },
+    upgradeStats: {
+      attack: 3
+    },
+    maxLevel: 5,
+    rarity: 'UNCOMMON',
+    stackLimit: 1,
+    maxDurability: 200
+  },
+  'iron_plate': {
+    name: '🛡️ Plat Besi',
+    type: 'MATERIAL',
+    description: 'Material untuk armor',
+    price: 1000,
+    rarity: 'UNCOMMON',
+    stackLimit: 50
+  },
+  'golden_sword': {
+    name: '⚔️ Pedang Emas',
+    type: 'WEAPON',
+    description: 'Pedang mewah berlapis emas',
+    price: 20000,
+    effect: {
+      type: 'EQUIP',
+      stats: {
+        attack: 25,
+        defense: 5
+      }
+    },
+    baseStats: {
+      attack: 25,
+      defense: 5
+    },
+    upgradeStats: {
+      attack: 5,
+      defense: 1
+    },
+    maxLevel: 5,
+    rarity: 'RARE',
+    stackLimit: 1,
+    maxDurability: 300
+  },
+  'fancy_clothes': {
+    name: '👔 Baju Mewah',
+    type: 'ARMOR',
+    description: 'Baju berkelas tinggi',
+    price: 15000,
+    effect: {
+      type: 'EQUIP',
+      stats: {
+      defense: 15,
+        charisma: 10
+      }
+    },
+    baseStats: {
+      defense: 15,
+      charisma: 10
+    },
+    upgradeStats: {
+      defense: 3,
+      charisma: 2
+    },
+    maxLevel: 5,
+    rarity: 'RARE',
+    stackLimit: 1,
+    maxDurability: 200
+  },
+  'morgan_axe': {
+    name: '🪓 Kapak Morgan',
+    type: 'WEAPON',
+    description: 'Kapak legendaris Kapten Morgan',
+    price: 100000,
+    effect: {
+      type: 'EQUIP',
+      stats: {
+        attack: 40,
+        defense: 10
+      }
+    },
+    baseStats: {
+      attack: 40,
+      defense: 10
+    },
+    upgradeStats: {
+      attack: 8,
+      defense: 2
+    },
+    maxLevel: 8,
+    rarity: 'EPIC',
+    stackLimit: 1,
+    maxDurability: 500
+  },
+  'captain_coat': {
+    name: '🧥 Jubah Kapten',
+    type: 'ARMOR',
+    description: 'Jubah resmi Kapten Marine',
+    price: 80000,
+    effect: {
+      type: 'EQUIP',
+      stats: {
+        defense: 30,
+        charisma: 20
+      }
+    },
+    baseStats: {
+      defense: 30,
+      charisma: 20
+    },
+    upgradeStats: {
+      defense: 6,
+      charisma: 4
+    },
+    maxLevel: 8,
+    rarity: 'EPIC',
+    stackLimit: 1,
+    maxDurability: 400
+  },
+  'circus_knife': {
+    name: '🔪 Pisau Sirkus',
+    type: 'WEAPON',
+    description: 'Pisau lempar akrobatik',
+    price: 8000,
+    effect: {
+      type: 'EQUIP',
+      stats: {
+        attack: 20,
+        accuracy: 15
+      }
+    },
+    baseStats: {
+      attack: 20,
+      accuracy: 15
+    },
+    upgradeStats: {
+      attack: 4,
+      accuracy: 3
+    },
+    maxLevel: 6,
+    rarity: 'RARE',
+    stackLimit: 1,
+    maxDurability: 250
+  },
+  'red_nose': {
+    name: '👃 Hidung Merah',
+    type: 'ACCESSORY',
+    description: 'Hidung badut ajaib',
+    price: 5000,
+    effect: {
+      type: 'EQUIP',
+      stats: {
+        luck: 10,
+        charisma: 5
+      }
+    },
+    baseStats: {
+      luck: 10,
+      charisma: 5
+    },
+    upgradeStats: {
+      luck: 2,
+      charisma: 1
+    },
+    maxLevel: 5,
+    rarity: 'RARE',
+    stackLimit: 1
+  },
+  'winter_coat': {
+    name: '🧥 Mantel Musim Dingin',
+    type: 'ARMOR',
+    description: 'Melindungi dari cuaca dingin',
+    price: 30000,
+    effect: {
+      type: 'EQUIP',
+      stats: {
+        defense: 25,
+        cold_resist: 50
+      }
+    },
+    baseStats: {
+      defense: 25,
+      cold_resist: 50
+    },
+    upgradeStats: {
+      defense: 5,
+      cold_resist: 10
+    },
+    maxLevel: 7,
+    rarity: 'RARE',
+    stackLimit: 1,
+    maxDurability: 300
+  },
+  'medical_herb': {
+    name: '🌿 Herbal Medis',
+    type: 'CONSUMABLE',
+    description: 'Ramuan penyembuh kuat',
+    price: 1500,
+    effect: {
+      type: 'HEAL_AND_BUFF',
+      health: 200,
+      stats: {
+        regeneration: 10
+      },
+      duration: 600
+    },
+    rarity: 'UNCOMMON',
+    stackLimit: 20
   }
 };
 
-export const LOCATIONS = {
+// Export locations
+export const LOCATIONS: Record<LocationId, Location> = {
   'starter_island': {
     name: '🏝️ Starter Island',
     description: 'Pulau pertama dalam petualanganmu',
@@ -276,512 +805,93 @@ export const LOCATIONS = {
     quests: ['luffy_training_1', 'find_meat_quest'],
     connections: ['shell_town', 'orange_town']
   },
-  'shell_town': {
-    name: '🏘️ Shell Town',
-    description: 'Kota marinir tempat Zoro ditahan',
-    level: 5,
-    monsters: ['marine_trainee', 'axe_hand', 'corrupt_marine', 'helmeppo', 'morgan'],
-    items: ['steel_sword', 'marine_coat', 'super_potion'],
-    quests: ['zoro_training_1', 'find_swords'],
-    connections: ['starter_island', 'orange_town']
-  },
-  'orange_town': {
-    name: '🏠 Orange Town',
-    description: 'Kota yang dikuasai Buggy si Badut',
-    level: 10,
-    monsters: ['buggy_pirate', 'mohji_richie', 'cabaji', 'buggy'],
-    items: ['circus_knife', 'attack_boost', 'defense_boost'],
-    quests: ['protect_civilians', 'defeat_buggy'],
-    connections: ['shell_town', 'syrup_village']
+  'foosha': {
+    name: '🏝️ Foosha Village',
+    description: 'Desa kecil tempat Luffy dibesarkan',
+    level: 1,
+    monsters: ['bandit_weak', 'wild_monkey'],
+    items: ['wooden_sword', 'potion'],
+    quests: ['tutorial_hunt'],
+    connections: ['starter_island', 'syrup_village']
   },
   'syrup_village': {
-    name: '🌾 Syrup Village',
-    description: 'Desa kelahiran Usopp',
-    level: 15,
-    monsters: ['black_cat_pirate', 'sham', 'buchi', 'jango', 'kuro'],
-    items: ['slingshot', 'cat_claw', 'speed_boost'],
-    quests: ['usopp_training_1', 'protect_village'],
-    connections: ['orange_town', 'baratie']
+    name: '🏘️ Syrup Village',
+    description: 'Desa tempat tinggal Usopp',
+    level: 5,
+    monsters: ['wild_monkey', 'black_cat_pirate'],
+    items: ['slingshot', 'potion'],
+    quests: ['usopp_training'],
+    connections: ['foosha', 'baratie']
   },
   'baratie': {
-    name: '🍴 Baratie',
-    description: 'Restoran terapung tempat Sanji bekerja',
-    level: 20,
-    monsters: ['cook_pirate'],
-    items: ['kitchen_knife', 'chef_outfit', 'sanji_special'],
-    quests: ['sanji_training_1', 'baratie_defense'],
-    connections: ['syrup_village']
-  },
-  'loguetown': {
-    name: '🏙️ Loguetown',
-    description: 'Kota terakhir sebelum Grand Line',
-    level: 25,
-    monsters: ['street_thug', 'corrupt_merchant', 'bounty_hunter', 'smoker'],
-    items: ['smoke_jitte', 'justice_coat', 'rumble_ball'],
-    quests: ['final_preparation', 'smoker_challenge'],
-    connections: ['baratie', 'arlong_park']
+    name: '🚢 Baratie',
+    description: 'Restoran terapung milik Zeff',
+    level: 10,
+    monsters: ['cook_pirate', 'fish_man'],
+    items: ['kitchen_knife', 'combat_ration'],
+    quests: ['sanji_training'],
+    connections: ['syrup_village', 'arlong_park']
   },
   'arlong_park': {
     name: '🏰 Arlong Park',
-    description: 'Markas bajak laut manusia ikan',
-    level: 30,
-    monsters: ['fishman_grunt', 'chu', 'kuroobi', 'hatchan', 'arlong'],
-    items: ['shark_sword', 'fishman_suit', 'water_pearl'],
-    quests: ['nami_rescue', 'fishman_duel'],
-    connections: ['loguetown', 'drum_island']
+    description: 'Markas bajak laut Arlong',
+    level: 15,
+    monsters: ['fishman_grunt', 'shark_warrior'],
+    items: ['shark_tooth_sword', 'water_ring'],
+    quests: ['defeat_arlong'],
+    connections: ['baratie', 'loguetown']
+  },
+  'loguetown': {
+    name: '🌆 Loguetown',
+    description: 'Kota terakhir sebelum Grand Line',
+    level: 20,
+    monsters: ['marine_soldier', 'bounty_hunter'],
+    items: ['marine_sword', 'log_pose'],
+    quests: ['smoker_chase'],
+    connections: ['arlong_park', 'drum_island']
   },
   'drum_island': {
     name: '❄️ Drum Island',
-    description: 'Pulau musim dingin dengan dokter terbaik',
-    level: 35,
-    monsters: ['snow_beast', 'lapahn', 'wapol_soldier', 'chess', 'wapol'],
-    items: ['doctor_tony', 'snow_coat', 'rumble_ball'],
-    quests: ['doctor_quest', 'save_drum_kingdom'],
-    connections: ['arlong_park']
+    description: 'Pulau musim dingin tempat Chopper tinggal',
+    level: 25,
+    monsters: ['snow_beast', 'wapol_soldier'],
+    items: ['winter_coat', 'medical_herb'],
+    quests: ['help_chopper'],
+    connections: ['loguetown', 'cocoyashi']
   },
   'cocoyashi': {
-    name: '🌴 Desa Cocoyashi',
-    description: 'Desa kelahiran Nami',
-    level: 28,
-    monsters: ['fishman_patrol', 'corrupt_officer', 'arlong_elite'],
-    items: ['clima_tact', 'map_tools', 'mikan'],
-    quests: ['village_liberation', 'map_making'],
-    connections: ['arlong_park', 'loguetown']
-  },
-  'foosha': {
-    name: '🌊 Desa Foosha',
-    description: 'Desa asal Luffy',
-    level: 1,
-    monsters: ['mountain_bandit', 'sea_king_small'],
-    items: ['party_food', 'training_gear', 'sake'],
-    quests: ['childhood_dreams', 'mountain_bandit_threat'],
-    connections: ['starter_island']
+    name: '🌊 Cocoyashi Village',
+    description: 'Desa tempat tinggal Nami',
+    level: 30,
+    monsters: ['fishman_warrior', 'sea_king'],
+    items: ['navigation_map', 'weather_staff'],
+    quests: ['nami_treasure'],
+    connections: ['drum_island']
   }
 };
 
-// Tambahan: Weather Effects
-export const WEATHER_EFFECTS = {
-  sunny: {
-    name: '☀️ Cerah',
-    description: 'Cuaca normal, sempurna untuk berlayar',
-    effects: {
-      sailingSpeed: 1.0,
-      battleModifier: 1.0,
-      explorationModifier: 1.0,
-      dropRateModifier: 1.0
-    }
-  },
-  rainy: {
-    name: '🌧️ Hujan',
-    description: 'Pergerakan melambat, tapi kesempatan mendapat item meningkat',
-    effects: {
-      sailingSpeed: 0.8,
-      battleModifier: 0.9,
-      explorationModifier: 0.7,
-      dropRateModifier: 1.3
-    }
-  },
-  stormy: {
-    name: '⛈️ Badai',
-    description: 'Sangat berbahaya untuk berlayar, tapi hadiah melimpah',
-    effects: {
-      sailingSpeed: 0.5,
-      battleModifier: 0.7,
-      explorationModifier: 0.4,
-      dropRateModifier: 1.5
-    }
-  },
-  foggy: {
-    name: '🌫️ Berkabut',
-    description: 'Visibilitas rendah, cocok untuk sembunyi',
-    effects: {
-      sailingSpeed: 0.7,
-      battleModifier: 0.8,
-      explorationModifier: 0.8,
-      dropRateModifier: 1.2
-    }
-  },
-  windy: {
-    name: '💨 Berangin',
-    description: 'Angin kencang mempengaruhi pertarungan jarak jauh',
-    effects: {
-      sailingSpeed: 1.2,
-      battleModifier: 0.9,
-      explorationModifier: 0.9,
-      dropRateModifier: 1.0
-    }
-  }
-} as const;
-
-// Tambahan: Special Events
-export const SPECIAL_EVENTS = {
-  marine_invasion: {
-    name: '⚓ Invasi Marinir',
-    description: 'Pasukan marinir melakukan razia besar-besaran',
-    effects: {
-      marineSpawnRate: 2.0,
-      pirateReputation: -50,
-      rewardMultiplier: 1.5
-    }
-  },
-  pirate_festival: {
-    name: '🏴‍☠️ Festival Bajak Laut',
-    description: 'Perayaan besar para bajak laut',
-    effects: {
-      merchantPrices: 0.8,
-      expGain: 1.5,
-      itemDiscovery: 1.3
-    }
-  },
-  grand_line_storm: {
-    name: '🌊 Badai Grand Line',
-    description: 'Badai mematikan khas Grand Line',
-    effects: {
-      sailingSpeed: 0.3,
-      shipDamage: 2.0,
-      rareItemChance: 2.0
-    }
-  }
-} as const;
-
-// Tambahan: Combat Moves
-export const COMBAT_MOVES = {
-  // Luffy's Moves
-  'gomu_punch': {
-    name: '👊 Gomu Gomu no Pistol',
-    damage: 1.2,
-    cooldown: 2,
-    description: 'Pukulan dasar dengan kekuatan karet'
-  },
-  'gomu_bazooka': {
-    name: '💥 Gomu Gomu no Bazooka',
-    damage: 1.5,
-    cooldown: 4,
-    description: 'Serangan ganda dengan kedua tangan'
-  },
-  'gear_second': {
-    name: '⚡ Gear Second',
-    type: 'BUFF',
-    duration: 3,
-    effects: {
-      attack: 2.0,
-      speed: 2.0
-    },
-    cooldown: 10,
-    description: 'Tingkatkan kecepatan dan kekuatan drastis'
-  },
-
-  // Zoro's Moves
-  'oni_giri': {
-    name: '⚔️ Oni Giri',
-    damage: 1.4,
-    cooldown: 3,
-    description: 'Tebasan tiga pedang dasar'
-  },
-  'tatsumaki': {
-    name: '🌪️ Tatsumaki',
-    damage: 1.6,
-    aoe: true,
-    cooldown: 5,
-    description: 'Serangan berputar yang mengenai area luas'
-  },
-  'asura': {
-    name: '👹 Asura',
-    type: 'BUFF',
-    duration: 2,
-    effects: {
-      attack: 2.5
-    },
-    cooldown: 12,
-    description: 'Manifestasi sembilan pedang'
-  },
-
-  // Usopp's Moves
-  'lead_star': {
-    name: '🔫 Lead Star',
-    damage: 1.1,
-    range: 'LONG',
-    cooldown: 2,
-    description: 'Tembakan jarak jauh akurat'
-  },
-  'fire_bird_star': {
-    name: '🔥 Fire Bird Star',
-    damage: 1.3,
-    dot: 0.2,
-    cooldown: 4,
-    description: 'Tembakan api yang membakar musuh'
-  },
-  'impact_dial': {
-    name: '💫 Impact Dial',
-    damage: 'STORED',
-    cooldown: 8,
-    description: 'Mengembalikan damage yang diterima'
-  },
-
-  // Sanji's Moves
-  'collier_shoot': {
-    name: '🦵 Collier Shoot',
-    damage: 1.3,
-    cooldown: 3,
-    description: 'Tendangan kuat ke leher'
-  },
-  'diable_jambe': {
-    name: '🔥 Diable Jambe',
-    type: 'BUFF',
-    duration: 3,
-    effects: {
-      attack: 1.8,
-      dot: 0.3
-    },
-    cooldown: 8,
-    description: 'Tendangan berapi yang membakar'
-  },
-  'party_table': {
-    name: '🍽️ Party Table Kick Course',
-    damage: 1.5,
-    aoe: true,
-    cooldown: 6,
-    description: 'Tendangan berputar yang mengenai area luas'
+// Export quests
+export const QUESTS: Record<string, QuestData> = {
+  'tutorial_hunt': {
+    name: '🗡️ Latihan Berburu',
+    description: 'Kalahkan 3 monster di Foosha Village',
+    reward: 100,
+    requiredLevel: 1,
+    type: 'COMBAT',
+    mentor: undefined
   }
 };
 
-// Tambahan: Combo System
-export const COMBO_SYSTEM = {
-  // Luffy's Combos
-  'rubber_fury': {
-    name: '💫 Rubber Fury',
-    moves: ['gomu_punch', 'gomu_punch', 'gomu_bazooka'],
-    bonus_damage: 1.5,
-    description: 'Kombinasi pukulan karet mematikan'
-  },
-  'storm_rush': {
-    name: '⚡ Storm Rush',
-    moves: ['gear_second', 'gomu_punch', 'gomu_bazooka'],
-    bonus_damage: 2.0,
-    description: 'Serangan beruntun super cepat'
-  },
-
-  // Zoro's Combos
-  'three_sword_fury': {
-    name: '⚔️ Three Sword Fury',
-    moves: ['oni_giri', 'tatsumaki', 'oni_giri'],
-    bonus_damage: 1.8,
-    description: 'Kombinasi tebasan tiga pedang'
-  },
-  'demon_slash': {
-    name: '👹 Demon Slash',
-    moves: ['asura', 'oni_giri', 'tatsumaki'],
-    bonus_damage: 2.2,
-    description: 'Serangan Asura mematikan'
-  },
-
-  // Usopp's Combos
-  'sniper_barrage': {
-    name: '🎯 Sniper Barrage',
-    moves: ['lead_star', 'lead_star', 'fire_bird_star'],
-    bonus_damage: 1.6,
-    description: 'Rentetan tembakan akurat'
-  },
-  'impact_burst': {
-    name: '💥 Impact Burst',
-    moves: ['lead_star', 'fire_bird_star', 'impact_dial'],
-    bonus_damage: 1.9,
-    description: 'Kombinasi tembakan dengan Impact Dial'
-  },
-
-  // Sanji's Combos
-  'cooking_hell': {
-    name: '🔥 Cooking Hell',
-    moves: ['collier_shoot', 'diable_jambe', 'party_table'],
-    bonus_damage: 2.0,
-    description: 'Kombinasi tendangan berapi'
-  },
-  'restaurant_rush': {
-    name: '🍴 Restaurant Rush',
-    moves: ['diable_jambe', 'collier_shoot', 'party_table'],
-    bonus_damage: 1.7,
-    description: 'Serangan beruntun ala koki'
-  }
-};
-
-// Tambahan: Training System
-export const TRAINING_SYSTEM = {
-  // Basic Training
-  'basic': {
-    duration: 300, // 5 minutes
-    exp_gain: 50,
-    stat_gain: {
-      attack: 1,
-      defense: 1
-    }
-  },
-
-  // Mentor-specific Training
-  'YB': {
-    'rubber_mastery': {
-      required_level: 5,
-      duration: 1800, // 30 minutes
-      exp_gain: 200,
-      stat_gain: {
-        attack: 3,
-        speed: 2
-      },
-      unlock: 'gear_second'
-    },
-    'haki_basics': {
-      required_level: 10,
-      duration: 3600, // 1 hour
-      exp_gain: 400,
-      stat_gain: {
-        attack: 5,
-        defense: 3
-      },
-      unlock: 'armament_haki'
-    }
-  },
-
-  'Tierison': {
-    'sword_technique': {
-      required_level: 5,
-      duration: 1800,
-      exp_gain: 200,
-      stat_gain: {
-        attack: 4,
-        defense: 1
-      },
-      unlock: 'oni_giri'
-    },
-    'meditation': {
-      required_level: 10,
-      duration: 3600,
-      exp_gain: 400,
-      stat_gain: {
-        attack: 3,
-        defense: 5
-      },
-      unlock: 'asura'
-    }
-  },
-
-  'LYuka': {
-    'target_practice': {
-      required_level: 5,
-      duration: 1800,
-      exp_gain: 200,
-      stat_gain: {
-        accuracy: 4,
-        speed: 1
-      },
-      unlock: 'fire_bird_star'
-    },
-    'gadget_mastery': {
-      required_level: 10,
-      duration: 3600,
-      exp_gain: 400,
-      stat_gain: {
-        attack: 2,
-        defense: 6
-      },
-      unlock: 'impact_dial'
-    }
-  },
-
-  'GarryAng': {
-    'kick_technique': {
-      required_level: 5,
-      duration: 1800,
-      exp_gain: 200,
-      stat_gain: {
-        attack: 3,
-        speed: 2
-      },
-      unlock: 'diable_jambe'
-    },
-    'cooking_mastery': {
-      required_level: 10,
-      duration: 3600,
-      exp_gain: 400,
-      stat_gain: {
-        healing: 5,
-        defense: 3
-      },
-      unlock: 'recovery_meal'
-    }
-  }
-};
-
-// Tambahan: Achievement System
-export const ACHIEVEMENTS = {
-  // Combat Achievements
-  'first_blood': {
-    name: '🗡️ First Blood',
-    description: 'Menangkan pertarungan pertamamu',
-    reward: {
-      exp: 100,
-      coins: 500,
-      title: 'Rookie Fighter'
-    }
-  },
-  'combo_master': {
-    name: '💫 Combo Master',
-    description: 'Lakukan 10 combo dalam satu pertarungan',
-    reward: {
-      exp: 500,
-      coins: 1000,
-      title: 'Combo King'
-    }
-  },
-
-  // Exploration Achievements
-  'world_traveler': {
-    name: '🗺️ World Traveler',
-    description: 'Kunjungi semua lokasi',
-    reward: {
-      exp: 1000,
-      coins: 2000,
-      title: 'Explorer'
-    }
-  },
-  'treasure_hunter': {
-    name: '💎 Treasure Hunter',
-    description: 'Temukan 100 item langka',
-    reward: {
-      exp: 800,
-      coins: 1500,
-      title: 'Master Collector'
-    }
-  },
-
-  // Training Achievements
-  'training_addict': {
-    name: '💪 Training Addict',
-    description: 'Selesaikan 50 sesi latihan',
-    reward: {
-      exp: 700,
-      coins: 1200,
-      title: 'Dedicated Student'
-    }
-  },
-  'mentor_bond': {
-    name: '🤝 Mentor Bond',
-    description: 'Capai level maksimal dengan mentormu',
-    reward: {
-      exp: 1500,
-      coins: 3000,
-      title: 'Trusted Apprentice'
-    }
-  }
-};
-
-export const WEAPON_UPGRADES = {
+// Export weapon upgrades
+export const WEAPON_UPGRADES: Record<string, WeaponUpgradeData> = {
   'wooden_sword': {
     name: '🗡️ Pedang Kayu',
     maxLevel: 5,
     baseAttack: 5,
     upgradeAttackPerLevel: 2,
     materials: {
-      'wood': 3,
-      'iron_ingot': 1
+      wood: 3,
+      iron_ingot: 1
     },
     coins: 100
   },
@@ -791,8 +901,8 @@ export const WEAPON_UPGRADES = {
     baseAttack: 10,
     upgradeAttackPerLevel: 3,
     materials: {
-      'iron_ingot': 3,
-      'steel_ingot': 1
+      iron_ingot: 3,
+      steel_ingot: 1
     },
     coins: 300
   },
@@ -802,9 +912,9 @@ export const WEAPON_UPGRADES = {
     baseAttack: 25,
     upgradeAttackPerLevel: 5,
     materials: {
-      'steel_ingot': 3,
-      'rare_ore': 1,
-      'magic_crystal': 1
+      steel_ingot: 3,
+      rare_ore: 1,
+      magic_crystal: 1
     },
     coins: 1000
   },
@@ -814,8 +924,8 @@ export const WEAPON_UPGRADES = {
     baseAttack: 8,
     upgradeAttackPerLevel: 2,
     materials: {
-      'iron_ingot': 2,
-      'wood': 1
+      iron_ingot: 2,
+      wood: 1
     },
     coins: 200
   },
@@ -825,43 +935,431 @@ export const WEAPON_UPGRADES = {
     baseAttack: 7,
     upgradeAttackPerLevel: 2,
     materials: {
-      'wood': 2,
-      'leather': 1
+      wood: 2,
+      leather: 1
     },
     coins: 150
   }
 };
 
-// Tambahkan material baru untuk upgrade
-export const MATERIALS = {
+// Export monsters
+export const MONSTERS: Record<string, Monster> = {
+  'sea_beast_small': {
+    name: '🦑 Baby Sea King',
+    level: 1,
+    hp: 50,
+    attack: 5,
+    defense: 3,
+    exp: 20,
+    drops: ['fish_small', 'sea_crystal']
+  },
+  'bandit_weak': {
+    name: '👤 Bandit Lemah',
+    level: 1,
+    hp: 45,
+    attack: 6,
+    defense: 2,
+    exp: 15,
+    drops: ['wooden_sword', 'bandage']
+  },
+  'wild_monkey': {
+    name: '🐒 Monyet Liar',
+    level: 2,
+    hp: 60,
+    attack: 7,
+    defense: 4,
+    exp: 25,
+    drops: ['banana', 'monkey_fur']
+  },
+  'angry_boar': {
+    name: '🐗 Babi Hutan',
+    level: 2,
+    hp: 70,
+    attack: 8,
+    defense: 5,
+    exp: 30,
+    drops: ['meat_raw', 'boar_tusk']
+  },
+  'pirate_rookie': {
+    name: '🏴‍☠️ Bajak Laut Pemula',
+    level: 3,
+    hp: 80,
+    attack: 10,
+    defense: 6,
+    exp: 35,
+    drops: ['pirate_coin', 'rum']
+  },
+  'marine_trainee': {
+    name: '👮 Marinir Pelatih',
+    level: 5,
+    hp: 100,
+    attack: 12,
+    defense: 8,
+    exp: 45,
+    drops: ['marine_badge', 'training_manual']
+  },
+  'axe_hand': {
+    name: '🪓 Tangan Kapak',
+    level: 6,
+    hp: 120,
+    attack: 15,
+    defense: 10,
+    exp: 50,
+    drops: ['steel_axe', 'iron_plate']
+  },
+  'corrupt_marine': {
+    name: '🦹‍♂️ Marinir Korup',
+    level: 7,
+    hp: 130,
+    attack: 16,
+    defense: 12,
+    exp: 55,
+    drops: ['bribe_money', 'corrupt_badge']
+  },
+  'helmeppo': {
+    name: '👑 Helmeppo',
+    level: 8,
+    hp: 150,
+    attack: 18,
+    defense: 15,
+    exp: 70,
+    drops: ['golden_sword', 'fancy_clothes']
+  },
+  'morgan': {
+    name: '💀 Kapten Morgan',
+    level: 10,
+    hp: 200,
+    attack: 25,
+    defense: 20,
+    exp: 100,
+    drops: ['morgan_axe', 'captain_coat']
+  },
+  'buggy_pirate': {
+    name: '🤡 Anak Buah Buggy',
+    level: 10,
+    hp: 160,
+    attack: 20,
+    defense: 15,
+    exp: 75,
+    drops: ['circus_knife', 'red_nose']
+  },
+  'mohji_richie': {
+    name: '🦁 Mohji & Richie',
+    level: 12,
+    hp: 180,
+    attack: 22,
+    defense: 18,
+    exp: 85,
+    drops: ['lion_fang', 'beast_tamer_whip']
+  },
+  'cabaji': {
+    name: '🎪 Cabaji',
+    level: 13,
+    hp: 190,
+    attack: 23,
+    defense: 19,
+    exp: 90,
+    drops: ['acrobat_sword', 'unicycle']
+  },
+  'buggy': {
+    name: '🃏 Buggy si Badut',
+    level: 15,
+    hp: 250,
+    attack: 30,
+    defense: 25,
+    exp: 120,
+    drops: ['bara_bara_fruit', 'buggy_cape']
+  },
+  'black_cat_pirate': {
+    name: '🐱‍👤 Bajak Laut Kucing Hitam',
+    level: 15,
+    hp: 200,
+    attack: 25,
+    defense: 20,
+    exp: 95,
+    drops: ['cat_claw', 'black_flag']
+  },
+  'sham': {
+    name: '😺 Sham',
+    level: 16,
+    hp: 210,
+    attack: 26,
+    defense: 21,
+    exp: 100,
+    drops: ['cat_bell', 'stealth_boots']
+  },
+  'buchi': {
+    name: '😾 Buchi',
+    level: 16,
+    hp: 220,
+    attack: 27,
+    defense: 22,
+    exp: 100,
+    drops: ['heavy_paw', 'cat_armor']
+  },
+  'jango': {
+    name: '🎩 Jango',
+    level: 17,
+    hp: 230,
+    attack: 28,
+    defense: 23,
+    exp: 110,
+    drops: ['hypno_ring', 'chakram']
+  },
+  'kuro': {
+    name: '👓 Kuro',
+    level: 20,
+    hp: 300,
+    attack: 35,
+    defense: 30,
+    exp: 150,
+    drops: ['cat_claws', 'kuro_glasses']
+  },
+  'cook_pirate': {
+    name: '👨‍🍳 Bajak Laut Koki',
+    level: 20,
+    hp: 250,
+    attack: 30,
+    defense: 25,
+    exp: 120,
+    drops: ['kitchen_knife', 'spice_set']
+  },
+  'street_thug': {
+    name: '🦹 Preman Jalanan',
+    level: 25,
+    hp: 280,
+    attack: 32,
+    defense: 28,
+    exp: 130,
+    drops: ['brass_knuckles', 'leather_jacket']
+  },
+  'corrupt_merchant': {
+    name: '🤑 Pedagang Licik',
+    level: 26,
+    hp: 290,
+    attack: 33,
+    defense: 29,
+    exp: 135,
+    drops: ['fake_berry', 'merchant_list']
+  },
+  'bounty_hunter': {
+    name: '🎯 Pemburu Hadiah',
+    level: 27,
+    hp: 300,
+    attack: 35,
+    defense: 30,
+    exp: 140,
+    drops: ['wanted_poster', 'hunter_badge']
+  },
+  'smoker': {
+    name: '💨 Kapten Smoker',
+    level: 30,
+    hp: 400,
+    attack: 45,
+    defense: 40,
+    exp: 200,
+    drops: ['smoke_fruit', 'justice_coat']
+  },
+  'fishman_grunt': {
+    name: '🐟 Anak Buah Arlong',
+    level: 30,
+    hp: 350,
+    attack: 40,
+    defense: 35,
+    exp: 160,
+    drops: ['fish_scale', 'water_pearl']
+  },
+  'chu': {
+    name: '💦 Chu',
+    level: 31,
+    hp: 360,
+    attack: 42,
+    defense: 36,
+    exp: 165,
+    drops: ['water_gun', 'fish_teeth']
+  },
+  'kuroobi': {
+    name: '🥋 Kuroobi',
+    level: 32,
+    hp: 370,
+    attack: 44,
+    defense: 38,
+    exp: 170,
+    drops: ['karate_gi', 'ray_fin']
+  },
+  'hatchan': {
+    name: '🐙 Hatchan',
+    level: 33,
+    hp: 380,
+    attack: 46,
+    defense: 40,
+    exp: 175,
+    drops: ['six_swords', 'takoyaki']
+  },
+  'arlong': {
+    name: '🦈 Arlong',
+    level: 35,
+    hp: 500,
+    attack: 55,
+    defense: 50,
+    exp: 250,
+    drops: ['saw_nose', 'shark_tooth']
+  },
+  'snow_beast': {
+    name: '❄️ Binatang Salju',
+    level: 35,
+    hp: 400,
+    attack: 48,
+    defense: 42,
+    exp: 180,
+    drops: ['winter_fur', 'ice_crystal']
+  },
+  'lapahn': {
+    name: '🐰 Lapahn',
+    level: 36,
+    hp: 410,
+    attack: 50,
+    defense: 44,
+    exp: 185,
+    drops: ['rabbit_meat', 'snow_boots']
+  },
+  'wapol_soldier': {
+    name: '🤖 Tentara Wapol',
+    level: 37,
+    hp: 420,
+    attack: 52,
+    defense: 46,
+    exp: 190,
+    drops: ['metal_piece', 'tin_plate']
+  },
+  'chess': {
+    name: '♟️ Chess',
+    level: 38,
+    hp: 430,
+    attack: 54,
+    defense: 48,
+    exp: 195,
+    drops: ['chess_piece', 'strategy_book']
+  },
+  'wapol': {
+    name: '🤴 Wapol',
+    level: 40,
+    hp: 600,
+    attack: 65,
+    defense: 60,
+    exp: 300,
+    drops: ['munch_fruit', 'crown']
+  }
+};
+
+// Export materials
+export const MATERIALS: Record<string, MaterialData> = {
   'wood': { 
     name: '🪵 Kayu',
     description: 'Material dasar untuk upgrade senjata',
-    dropFrom: ['wild_monkey', 'angry_boar']
+    dropFrom: ['wild_monkey', 'angry_boar'],
+    rarity: 'COMMON',
+    stackLimit: 100
   },
   'iron_ingot': {
     name: '⚔️ Besi',
     description: 'Material untuk upgrade senjata tingkat menengah',
-    dropFrom: ['marine_trainee', 'axe_hand']
+    dropFrom: ['pirate_rookie', 'marine_trainee'],
+    rarity: 'COMMON',
+    stackLimit: 50
   },
   'steel_ingot': {
-    name: '🗡️ Baja',
-    description: 'Material untuk upgrade senjata tingkat tinggi',
-    dropFrom: ['corrupt_marine', 'helmeppo']
+    name: '🛡️ Baja',
+    description: 'Material berkualitas untuk senjata kuat',
+    dropFrom: ['axe_hand', 'corrupt_marine'],
+    rarity: 'UNCOMMON',
+    stackLimit: 30
   },
   'rare_ore': {
     name: '💎 Bijih Langka',
-    description: 'Material langka untuk upgrade senjata legendaris',
-    dropFrom: ['morgan', 'buggy']
+    description: 'Material langka untuk senjata tingkat tinggi',
+    dropFrom: ['morgan', 'buggy'],
+    rarity: 'RARE',
+    stackLimit: 20
   },
   'magic_crystal': {
     name: '✨ Kristal Sihir',
-    description: 'Material mistis untuk upgrade senjata legendaris',
-    dropFrom: ['buggy', 'kuro']
+    description: 'Kristal dengan kekuatan magis untuk senjata legendaris',
+    dropFrom: ['kuro', 'arlong'],
+    rarity: 'EPIC',
+    stackLimit: 10
   },
   'leather': {
     name: '🥋 Kulit',
-    description: 'Material untuk upgrade senjata dan armor',
-    dropFrom: ['angry_boar', 'wild_monkey']
+    description: 'Material dasar untuk armor dan aksesoris',
+    dropFrom: ['wild_monkey', 'angry_boar'],
+    rarity: 'COMMON',
+    stackLimit: 50
+  },
+  'sea_crystal': {
+    name: '💎 Kristal Laut',
+    description: 'Kristal indah dari dasar laut',
+    dropFrom: ['sea_beast_small'],
+    rarity: 'UNCOMMON',
+    stackLimit: 50
+  },
+  'monkey_fur': {
+    name: '🦊 Bulu Monyet',
+    description: 'Bulu halus untuk crafting',
+    dropFrom: ['wild_monkey'],
+    rarity: 'COMMON',
+    stackLimit: 99
+  },
+  'meat_raw': {
+    name: '🥩 Daging Mentah',
+    description: 'Bisa dimasak menjadi makanan',
+    dropFrom: ['angry_boar'],
+    rarity: 'COMMON',
+    stackLimit: 50
+  },
+  'boar_tusk': {
+    name: '🦷 Taring Babi Hutan',
+    description: 'Material untuk crafting senjata',
+    dropFrom: ['angry_boar'],
+    rarity: 'UNCOMMON',
+    stackLimit: 50
+  },
+  'pirate_coin': {
+    name: '🪙 Koin Bajak Laut',
+    description: 'Koin langka dari bajak laut',
+    dropFrom: ['pirate_rookie'],
+    rarity: 'UNCOMMON',
+    stackLimit: 999
+  },
+  'marine_badge': {
+    name: '📛 Lencana Marine',
+    description: 'Bukti mengalahkan marinir',
+    dropFrom: ['marine_trainee'],
+    rarity: 'UNCOMMON',
+    stackLimit: 100
+  },
+  'iron_plate': {
+    name: '🛡️ Plat Besi',
+    description: 'Material untuk armor',
+    dropFrom: ['axe_hand'],
+    rarity: 'UNCOMMON',
+    stackLimit: 50
   }
-}; 
+};
+
+// Export constants
+export const RARITY_COLORS: Record<Rarity, string> = {
+  'COMMON': '#FFFFFF',
+  'UNCOMMON': '#1EFF00',
+  'RARE': '#0070DD',
+  'EPIC': '#A335EE',
+  'LEGENDARY': '#FF8000'
+} as const;
+
+export const ITEM_TYPE_EMOJIS: Record<ItemType, string> = {
+  'WEAPON': '⚔️',
+  'ARMOR': '🛡️',
+  'ACCESSORY': '💍',
+  'CONSUMABLE': '🧪',
+  'MATERIAL': '📦'
+} as const; 

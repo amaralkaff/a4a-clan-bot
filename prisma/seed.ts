@@ -1,9 +1,64 @@
 // prisma/seed.ts
 import { PrismaClient } from '@prisma/client';
-import { LOCATIONS, QUESTS, ITEMS } from '../src/config/gameData';
+import { 
+  ITEMS, 
+  LOCATIONS, 
+  WEAPON_UPGRADES, 
+  MATERIALS,
+  MaterialData
+} from '../src/config/gameData';
 import { QuestType, ItemType, Rarity, QuestStatus } from '../src/types/game';
 
 const prisma = new PrismaClient();
+
+// Add starter items to inventory
+const starterItems = [
+  { 
+    itemId: 'wooden_sword', 
+    quantity: 1,
+    durability: 100,
+    maxDurability: 100,
+    stats: JSON.stringify({
+      attack: 5,
+      defense: 0
+    }),
+    effect: JSON.stringify({
+      type: 'EQUIP',
+      stats: { attack: 5 }
+    }),
+    level: 1,
+    upgrades: 0
+  },
+  { 
+    itemId: 'training_gi', 
+    quantity: 1,
+    durability: 100,
+    maxDurability: 100,
+    stats: JSON.stringify({
+      attack: 0,
+      defense: 5
+    }),
+    effect: JSON.stringify({
+      type: 'EQUIP',
+      stats: { defense: 5 }
+    }),
+    level: 1,
+    upgrades: 0
+  },
+  { 
+    itemId: 'potion', 
+    quantity: 5,
+    effect: JSON.stringify({
+      type: 'HEAL',
+      health: 50
+    }),
+    stats: JSON.stringify({}),
+    durability: null,
+    maxDurability: null,
+    level: 1,
+    upgrades: 0
+  }
+];
 
 // Definisikan tipe untuk quest template
 interface QuestTemplateData {
@@ -34,93 +89,106 @@ interface ItemTemplateData {
   rarity: Rarity;
 }
 
-// Definisikan item templates
-const itemTemplates: ItemTemplateData[] = [
+// Seed items
+const itemTemplates = [
+  // Weapons - Common
+  {
+    id: 'wooden_sword',
+    name: '🗡️ Wooden Sword',
+    type: 'WEAPON',
+    description: '⚔️ Pedang kayu untuk pemula',
+    value: 100,
+    effect: JSON.stringify({
+      type: 'EQUIP',
+      stats: { attack: 5 }
+    }),
+    baseStats: JSON.stringify({
+      attack: 5,
+      defense: 0
+    }),
+    upgradeStats: JSON.stringify({
+      attack: 2,
+      defense: 1
+    }),
+    maxDurability: 100,
+    maxLevel: 5,
+    rarity: 'COMMON'
+  },
+  // Armor - Common
+  {
+    id: 'training_gi',
+    name: '🥋 Training Gi',
+    type: 'ARMOR',
+    description: '🛡️ Baju latihan dasar',
+    value: 100,
+    effect: JSON.stringify({
+      type: 'EQUIP',
+      stats: { defense: 5 }
+    }),
+    baseStats: JSON.stringify({
+      attack: 0,
+      defense: 5
+    }),
+    upgradeStats: JSON.stringify({
+      attack: 0,
+      defense: 2
+    }),
+    maxDurability: 100,
+    maxLevel: 5,
+    rarity: 'COMMON'
+  },
   // Consumables
   {
     id: 'potion',
     name: '🧪 Health Potion',
-    description: 'Memulihkan 50 HP',
-    type: ItemType.CONSUMABLE,
+    type: 'CONSUMABLE',
+    description: '❤️ Memulihkan 50 HP',
     value: 50,
     effect: JSON.stringify({ 
       type: 'HEAL',
-      health: 50 
+      value: 50 
     }),
-    stackLimit: 99,
-    rarity: Rarity.COMMON
+    rarity: 'COMMON'
   },
   {
-    id: 'attack_buff',
+    id: 'attack_boost',
     name: '⚔️ Attack Boost',
-    description: 'ATK +5 selama pertarungan',
-    type: ItemType.CONSUMABLE,
-    value: 100,
+    type: 'CONSUMABLE',
+    description: '💪 ATK +10 selama 30 menit',
+    value: 200,
     effect: JSON.stringify({ 
       type: 'BUFF',
-      stats: { attack: 5 },
-      duration: 3 
+      stats: { attack: 10 },
+      duration: 1800 
     }),
-    stackLimit: 99,
-    rarity: Rarity.RARE
+    rarity: 'UNCOMMON'
   },
   {
-    id: 'defense_buff',
+    id: 'defense_boost',
     name: '🛡️ Defense Boost',
-    description: 'DEF +5 selama pertarungan',
-    type: ItemType.CONSUMABLE,
-    value: 100,
+    type: 'CONSUMABLE',
+    description: '🛡️ DEF +10 selama 30 menit',
+    value: 200,
     effect: JSON.stringify({ 
       type: 'BUFF',
-      stats: { defense: 5 },
-      duration: 3 
+      stats: { defense: 10 },
+      duration: 1800 
     }),
-    stackLimit: 99,
-    rarity: Rarity.RARE
+    rarity: 'UNCOMMON'
   },
   {
     id: 'combat_ration',
     name: '🍖 Combat Ration',
-    description: 'HP +100, ATK/DEF +3',
-    type: ItemType.CONSUMABLE,
-    value: 75,
+    type: 'CONSUMABLE',
+    description: '❤️ HP +100, ATK/DEF +5 selama 1 jam',
+    value: 500,
     effect: JSON.stringify({ 
       type: 'HEAL_AND_BUFF',
       health: 100,
-      stats: { attack: 3, defense: 3 },
-      duration: 1800 
+      stats: { attack: 5, defense: 5 },
+      duration: 3600 
     }),
-    stackLimit: 99,
-    rarity: Rarity.COMMON
-  },
-  // Starter Equipment
-  {
-    id: 'starter_sword',
-    name: '🗡️ Wooden Sword',
-    description: 'Pedang kayu untuk pemula',
-    type: ItemType.WEAPON,
-    value: 50,
-    effect: JSON.stringify({ 
-      type: 'EQUIP',
-      stats: { attack: 5 }
-    }),
-    maxDurability: 100,
-    stackLimit: 1,
-    rarity: Rarity.COMMON
-  },
-  {
-    id: 'starter_armor',
-    name: '🥋 Training Gi',
-    description: 'Baju latihan dasar',
-    type: ItemType.ARMOR,
-    value: 50,
-    effect: JSON.stringify({ 
-      type: 'EQUIP',
-      stats: { defense: 5 }
-    }),
-    maxDurability: 100,
-    stackLimit: 1,
-    rarity: Rarity.COMMON
+    rarity: 'RARE'
   }
 ];
 
@@ -213,115 +281,203 @@ const questTemplates: QuestTemplateData[] = [
   }
 ];
 
-async function main() {
-  console.log('Starting seeding...');
+// Fungsi untuk memproses dan menyimpan data game
+async function seedGameData() {
+  console.log('Starting game data seeding...');
 
   try {
-    // Clean existing data dengan urutan yang benar
-    console.log('Cleaning existing data...');
-    
-    // 1. Hapus inventory (bergantung pada character dan item)
-    await prisma.inventory.deleteMany();
-    
-    // 2. Hapus quest (bergantung pada character)
-    await prisma.quest.deleteMany();
-    
-    // 3. Hapus transaction (jika ada, bergantung pada character)
-    await prisma.transaction?.deleteMany().catch(() => null);
-    
-    // 4. Hapus battle (jika ada, bergantung pada character)
-    await prisma.battle?.deleteMany().catch(() => null);
-    
-    // 5. Hapus character (bergantung pada user dan location)
-    await prisma.character.deleteMany();
-    
-    // 6. Hapus user
-    await prisma.user.deleteMany();
-    
-    // 7. Hapus item
-    await prisma.item.deleteMany();
-    
-    // 8. Hapus location
-    await prisma.location.deleteMany();
-
-    // Mulai seeding data baru
+    // Seed locations first
     console.log('Seeding locations...');
-    for (const [id, location] of Object.entries(LOCATIONS)) {
-      await prisma.location.create({
-        data: {
-          id,
-          name: location.name,
-          description: location.description,
-          level: location.level,
-          weather: 'sunny',
-          lastWeatherUpdate: new Date()
-        }
+    for (const [locationId, locationData] of Object.entries(LOCATIONS)) {
+      console.log('Processing location:', locationId, locationData);
+      const existingLocation = await prisma.location.findUnique({
+        where: { id: locationId }
       });
+
+      if (!existingLocation) {
+        await prisma.location.create({
+          data: {
+            id: locationId,
+            name: locationData.name,
+            description: locationData.description,
+            level: locationData.level,
+            weather: 'sunny',
+            lastWeatherUpdate: new Date()
+          }
+        });
+        console.log(`Created location: ${locationData.name}`);
+      }
     }
 
-    // Create template user and character
-    console.log('Creating template user and character...');
-    const templateUser = await prisma.user.create({
-      data: {
-        id: 'template',
-        discordId: 'template',
-      }
-    });
-
-    const templateCharacter = await prisma.character.create({
-      data: {
-        id: 'template',
-        name: 'Template Character',
-        userId: templateUser.id,
-        currentIsland: 'foosha',
-        statusEffects: '{"effects":[]}',
-        activeBuffs: '{"buffs":[]}',
-        level: 1,
-        experience: 0,
-        health: 100,
-        maxHealth: 100,
-        attack: 10,
-        defense: 10,
-        coins: 0,
-        bank: 0,
-        combo: 0,
-        questPoints: 0,
-        explorationPoints: 0,
-        wins: 0,
-        losses: 0,
-        winStreak: 0,
-        highestStreak: 0,
-        totalGambled: 0,
-        totalWon: 0
-      }
-    });
-
-    // Seed items
+    // Then seed items
     console.log('Seeding items...');
-    await prisma.item.createMany({
-      data: itemTemplates
-    });
+    for (const [itemId, itemData] of Object.entries(ITEMS)) {
+      console.log('Processing item:', itemId, itemData);
+      const existingItem = await prisma.item.findUnique({
+        where: { id: itemId }
+      });
 
-    // Seed quest templates
-    console.log('Seeding quest templates...');
-    for (const template of questTemplates) {
-      await prisma.quest.create({
-        data: {
-          id: template.id,
-          templateId: template.id,
-          name: template.name,
-          description: template.description,
-          type: template.type,
-          objectives: template.objectives,
-          rewards: template.rewards,
-          progress: '{"current": 0, "required": 1}',
-          status: QuestStatus.TEMPLATE,
-          characterId: templateCharacter.id
+      if (!existingItem) {
+        await prisma.item.create({
+          data: {
+            id: itemId,
+            name: itemData.name,
+            description: itemData.description,
+            type: itemData.type,
+            value: itemData.price,
+            effect: JSON.stringify(itemData.effect || {}),
+            baseStats: JSON.stringify(itemData.baseStats || {}),
+            upgradeStats: JSON.stringify(itemData.upgradeStats || {}),
+            maxDurability: itemData.maxDurability,
+            stackLimit: itemData.stackLimit || 999,
+            rarity: itemData.rarity,
+            maxLevel: itemData.maxLevel || 1
+          }
+        });
+        console.log(`Created item: ${itemData.name}`);
+      }
+    }
+
+    // Then seed weapon upgrades
+    console.log('Seeding weapon upgrades...');
+    for (const [weaponId, weaponData] of Object.entries(WEAPON_UPGRADES)) {
+      console.log('Processing weapon upgrade:', weaponId, weaponData);
+      // Weapon upgrade data will be used in the upgrade system
+      console.log(`Added weapon upgrade config: ${weaponData.name}`);
+    }
+
+    // Then seed materials
+    console.log('Seeding materials...');
+    for (const [materialId, materialData] of Object.entries(MATERIALS) as [string, MaterialData][]) {
+      console.log('Processing material:', materialId, materialData);
+      const existingMaterial = await prisma.item.findUnique({
+        where: { id: materialId }
+      });
+
+      if (!existingMaterial) {
+        await prisma.item.create({
+          data: {
+            id: materialId,
+            name: materialData.name,
+            description: materialData.description,
+            type: 'MATERIAL',
+            value: 0, // Materials don't have direct value
+            rarity: materialData.rarity,
+            stackLimit: materialData.stackLimit,
+            effect: '{}',
+            baseStats: '{}',
+            upgradeStats: '{}'
+          }
+        });
+        console.log(`Created material: ${materialData.name}`);
+      }
+    }
+
+    // Finally create template character if no users exist
+    const userCount = await prisma.user.count();
+    
+    if (userCount === 0) {
+      console.log('No users found, creating template user and character...');
+      
+      await prisma.$transaction(async (tx) => {
+        // Check if starter_island exists
+        const starterIsland = await tx.location.findUnique({
+          where: { id: 'starter_island' }
+        });
+
+        if (!starterIsland) {
+          throw new Error('Starter island not found! Make sure locations are seeded first.');
+        }
+
+        // Create user
+        const user = await tx.user.create({
+          data: {
+            id: 'template',
+            discordId: 'template'
+          }
+        });
+        console.log('Created template user');
+
+        // Create character
+        const character = await tx.character.create({
+          data: {
+            id: 'template',
+            name: 'Template Character',
+            userId: user.id,
+            currentIsland: 'starter_island',
+            statusEffects: JSON.stringify({ effects: [] }),
+            activeBuffs: JSON.stringify({ buffs: [] }),
+            level: 1,
+            experience: 0,
+            health: 100,
+            maxHealth: 100,
+            attack: 10,
+            defense: 10,
+            coins: 0,
+            bank: 0,
+            combo: 0,
+            questPoints: 0,
+            explorationPoints: 0,
+            wins: 0,
+            losses: 0,
+            winStreak: 0,
+            highestStreak: 0,
+            totalGambled: 0,
+            totalWon: 0
+          }
+        });
+        console.log('Created template character');
+
+        // Add starter items
+        console.log('Adding starter items...');
+        for (const item of starterItems) {
+          // Verify item exists in database
+          const itemExists = await tx.item.findUnique({
+            where: { id: item.itemId }
+          });
+
+          if (!itemExists) {
+            console.log(`Creating item ${item.itemId} in database first...`);
+            await tx.item.create({
+              data: {
+                id: item.itemId,
+                name: ITEMS[item.itemId].name,
+                description: ITEMS[item.itemId].description,
+                type: ITEMS[item.itemId].type,
+                value: ITEMS[item.itemId].price,
+                effect: JSON.stringify(ITEMS[item.itemId].effect || {}),
+                baseStats: JSON.stringify(ITEMS[item.itemId].baseStats || {}),
+                upgradeStats: JSON.stringify(ITEMS[item.itemId].upgradeStats || {}),
+                maxDurability: ITEMS[item.itemId].maxDurability,
+                stackLimit: ITEMS[item.itemId].stackLimit || 999,
+                rarity: ITEMS[item.itemId].rarity,
+                maxLevel: ITEMS[item.itemId].maxLevel || 1
+              }
+            });
+          }
+
+          // Now add to inventory
+          await tx.inventory.create({
+            data: {
+              characterId: character.id,
+              ...item
+            }
+          });
+          console.log(`Added ${item.itemId} to inventory`);
         }
       });
     }
 
-    console.log('Seeding completed successfully.');
+    console.log('Game data seeding completed successfully.');
+  } catch (error) {
+    console.error('Error during game data seeding:', error);
+    throw error;
+  }
+}
+
+async function main() {
+  try {
+    await seedGameData();
   } catch (error) {
     console.error('Error during seeding:', error);
     throw error;

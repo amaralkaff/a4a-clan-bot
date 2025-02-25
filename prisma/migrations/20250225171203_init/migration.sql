@@ -30,6 +30,9 @@ CREATE TABLE "Character" (
     "losses" INTEGER NOT NULL DEFAULT 0,
     "winStreak" INTEGER NOT NULL DEFAULT 0,
     "highestStreak" INTEGER NOT NULL DEFAULT 0,
+    "huntStreak" INTEGER NOT NULL DEFAULT 0,
+    "highestHuntStreak" INTEGER NOT NULL DEFAULT 0,
+    "lastHuntTime" DATETIME,
     "questPoints" INTEGER NOT NULL DEFAULT 0,
     "explorationPoints" INTEGER NOT NULL DEFAULT 0,
     "statusEffects" TEXT NOT NULL DEFAULT '{"effects":[]}',
@@ -73,10 +76,15 @@ CREATE TABLE "Inventory" (
     "isEquipped" BOOLEAN NOT NULL DEFAULT false,
     "slot" TEXT,
     "expiresAt" DATETIME,
+    "effect" TEXT DEFAULT '{}',
+    "stats" TEXT DEFAULT '{}',
+    "level" INTEGER,
+    "upgrades" INTEGER DEFAULT 0,
+    "maxDurability" INTEGER,
     "characterId" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "Inventory_characterId_fkey" FOREIGN KEY ("characterId") REFERENCES "Character" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "Inventory_characterId_fkey" FOREIGN KEY ("characterId") REFERENCES "Character" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "Inventory_itemId_fkey" FOREIGN KEY ("itemId") REFERENCES "Item" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
@@ -91,6 +99,9 @@ CREATE TABLE "Item" (
     "maxDurability" INTEGER,
     "stackLimit" INTEGER NOT NULL DEFAULT 999,
     "rarity" TEXT NOT NULL DEFAULT 'COMMON',
+    "baseStats" TEXT DEFAULT '{}',
+    "upgradeStats" TEXT DEFAULT '{}',
+    "maxLevel" INTEGER,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );
@@ -169,6 +180,9 @@ CREATE INDEX "Character_mentor_idx" ON "Character"("mentor");
 
 -- CreateIndex
 CREATE INDEX "Character_lastDailyReset_idx" ON "Character"("lastDailyReset");
+
+-- CreateIndex
+CREATE INDEX "Character_huntStreak_highestHuntStreak_idx" ON "Character"("huntStreak", "highestHuntStreak");
 
 -- CreateIndex
 CREATE INDEX "Battle_characterId_status_idx" ON "Battle"("characterId", "status");

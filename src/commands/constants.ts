@@ -22,7 +22,8 @@ export const COMMAND_DESCRIPTIONS = {
   
   // Basic features
   'inventory': '🎒 Lihat dan gunakan item',
-  'shop': '🛍️ Beli item dan equipment',
+  'shop': '🛍️ Beli item dan equipment dengan harga murah',
+  'buy': '💰 Beli item dari shop (contoh: a buy potion 5)',
   'quest': '📜 Lihat dan ambil quest',
   
   // Mentor interaction

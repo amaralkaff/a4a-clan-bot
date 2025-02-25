@@ -7,6 +7,8 @@ import { BattleService } from './BattleService';
 import { ShopService } from './ShopService';
 import { LocationService } from './LocationService';
 import { MentorService } from './MentorService';
+import { WeaponService } from './WeaponService';
+import { EquipmentService } from './EquipmentService';
 import { logger } from '@/utils/logger';
 
 export interface ServiceContainer {
@@ -17,6 +19,8 @@ export interface ServiceContainer {
   shop: ShopService;
   location: LocationService;
   mentor: MentorService;
+  weapon: WeaponService;
+  equipment: EquipmentService;
   logger: typeof logger;
 }
 
@@ -31,6 +35,8 @@ export function createServices(prisma: PrismaClient): ServiceContainer {
   const shop = new ShopService(prisma, character);
   const location = new LocationService(prisma, character);
   const mentor = new MentorService(prisma, character);
+  const weaponService = new WeaponService(prisma);
+  const equipmentService = new EquipmentService(prisma);
 
   return {
     character,
@@ -40,6 +46,8 @@ export function createServices(prisma: PrismaClient): ServiceContainer {
     shop,
     location,
     mentor,
+    weapon: weaponService,
+    equipment: equipmentService,
     logger
   };
 }

@@ -1,7 +1,8 @@
 import { 
   SlashCommandBuilder, 
   ChatInputCommandInteraction,
-  EmbedBuilder
+  EmbedBuilder,
+  MessageFlags
 } from 'discord.js';
 import { CommandHandler } from '@/types/commands';
 import { createEphemeralReply } from '@/utils/helpers';
@@ -29,9 +30,10 @@ export const battleCommands: CommandHandler = {
       const character = await services.character.getCharacterByDiscordId(interaction.user.id);
 
       if (!character) {
-        return interaction.reply(createEphemeralReply({
-          content: '❌ Kamu harus membuat karakter terlebih dahulu dengan command `/create`'
-        }));
+        return interaction.reply({
+          content: '❌ Kamu harus membuat karakter terlebih dahulu dengan command `/create`',
+          flags: MessageFlags.Ephemeral
+        });
       }
 
       const subcommand = interaction.options.getSubcommand();
@@ -41,56 +43,60 @@ export const battleCommands: CommandHandler = {
         
         // Check if enemy level is too high
         if (enemyLevel > character.level + 3) {
-          return interaction.reply(createEphemeralReply({
-            content: `❌ Level musuh terlalu tinggi! Max: ${character.level + 3}`
-          }));
+          return interaction.reply({
+            content: `❌ Level musuh terlalu tinggi! Max: ${character.level + 3}`,
+            flags: MessageFlags.Ephemeral
+          });
         }
 
         try {
           // Start battle
           await interaction.deferReply({ ephemeral: true });
-          const battleResult = await services.battle.processBattle(character.id, enemyLevel);
+          const result = await services.battle.processBattle(character.id, enemyLevel);
 
-          // Send battle log messages one by one
-          for (let i = 0; i < battleResult.battleLog.length; i++) {
-            const log = battleResult.battleLog[i];
-            if (i === 0) {
-              // First message uses editReply
-              await interaction.editReply(log);
-            } else {
-              // Subsequent messages use followUp
-              await interaction.followUp({
-                ...log,
-                ephemeral: true
-              });
-            }
-          }
+          // Create battle result embed
+          const embed = new EmbedBuilder()
+            .setTitle(result.won ? '🎉 Victory!' : '💀 Defeat!')
+            .setColor(result.won ? '#00ff00' : '#ff0000')
+            .setDescription(result.battleLog.join('\n\n'))
+            .addFields(
+              { name: '✨ Experience', value: `${result.exp} EXP`, inline: true },
+              { name: '🎁 Drops', value: result.drops.length > 0 ? result.drops.join(', ') : 'No drops', inline: true }
+            );
 
-          // Update quest progress if won
-          if (battleResult.won) {
-            await services.quest.updateQuestProgress(character.id, 'COMBAT', 1);
-          }
+          // Send battle result
+          return interaction.editReply({ embeds: [embed] });
         } catch (error) {
-          // If there's an error during battle, send error message
-          if (!interaction.replied && !interaction.deferred) {
-            await interaction.reply(createEphemeralReply({
-              content: `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`
-            }));
-          } else {
-            await interaction.followUp(createEphemeralReply({
-              content: `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`
-            }));
-          }
           services.logger.error('Error in battle:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          
+          if (interaction.deferred) {
+            return interaction.editReply({
+              content: `❌ Error: ${errorMessage}`,
+              embeds: []
+            });
+          } else {
+            return interaction.reply({
+              content: `❌ Error: ${errorMessage}`,
+              flags: MessageFlags.Ephemeral
+            });
+          }
         }
       }
     } catch (error) {
-      // Handle any other errors
       services.logger.error('Error in battle command:', error);
-      if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply(createEphemeralReply({
-          content: `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`
-        }));
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      if (interaction.deferred) {
+        return interaction.editReply({
+          content: `❌ Error: ${errorMessage}`,
+          embeds: []
+        });
+      } else {
+        return interaction.reply({
+          content: `❌ Error: ${errorMessage}`,
+          flags: MessageFlags.Ephemeral
+        });
       }
     }
   }

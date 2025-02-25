@@ -29,7 +29,7 @@ model Character {
   maxHealth     Int       @default(100)
   attack        Int       @default(10)
   defense       Int       @default(10)
-  currentIsland String    @default("foosha")
+  currentIsland String    @default("starter_island")
   mentor        String?   
   
   // Progress tracking
@@ -49,6 +49,11 @@ model Character {
   losses        Int       @default(0)
   winStreak     Int       @default(0)
   highestStreak Int       @default(0)
+  
+  // Hunt streak system
+  huntStreak        Int       @default(0)
+  highestHuntStreak Int       @default(0)
+  lastHuntTime      DateTime?
   
   // Points system
   questPoints   Int       @default(0)
@@ -86,6 +91,7 @@ model Character {
   @@index([level, currentIsland])
   @@index([mentor])
   @@index([lastDailyReset])
+  @@index([huntStreak, highestHuntStreak])
 }
 
 model Battle {
@@ -113,8 +119,12 @@ model Inventory {
   slot        String?   
   expiresAt   DateTime?
   effect      String?   @default("{}")
+  stats       String?   @default("{}")  // Untuk menyimpan stats equipment
+  level       Int?      // Level equipment
+  upgrades    Int?      @default(0)  // Jumlah upgrade yang sudah dilakukan
+  maxDurability Int?    // Maximum durability
   characterId String
-  character   Character @relation(fields: [characterId], references: [id])
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
   item        Item      @relation(fields: [itemId], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -133,6 +143,9 @@ model Item {
   maxDurability Int?    
   stackLimit    Int       @default(999)
   rarity        String    @default("COMMON")
+  baseStats     String?   @default("{}")  // Stats dasar item
+  upgradeStats  String?   @default("{}")  // Stats per level upgrade
+  maxLevel      Int?      // Maximum level untuk upgrade
   inventory     Inventory[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

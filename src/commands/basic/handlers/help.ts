@@ -13,7 +13,10 @@ export async function createHelpEmbed() {
     { cmd: 'a t', desc: '⚔️ Training (5m cd)' },
     { cmd: 'a m', desc: '🗺️ Map' },
     { cmd: 'a s', desc: '🛍️ Shop' },
-    { cmd: 'a lb', desc: '👑 Leaderboard' }
+    { cmd: 'a buy [nama_item] [jumlah]', desc: '💰 Beli item dari shop' },
+    { cmd: 'a lb', desc: '👑 Leaderboard' },
+    { cmd: 'a equip [nama_item]', desc: '🎽 Equip senjata/armor' },
+    { cmd: 'a unequip [weapon/armor]', desc: '🔄 Lepas equipment' }
   ];
 
   return new EmbedBuilder()
@@ -28,6 +31,15 @@ export async function createHelpEmbed() {
       {
         name: '💡 Perbedaan Hunt Command',
         value: '• `/a h` - Dengan battle log animasi\n• `a h` - Langsung hasil akhir'
+      },
+      {
+        name: '🛍️ Shop System',
+        value: '• `a s` - Lihat daftar item di shop\n• `a buy [nama_item] [jumlah]` - Beli item\nContoh: `a buy potion 5` untuk membeli 5 potion'
+      },
+      {
+        name: '🎽 Equipment System',
+        value: '• `a equip [nama_item]` - Equip senjata/armor\n• `a unequip [weapon/armor]` - Lepas equipment\nContoh: `a equip wooden sword` untuk menggunakan pedang kayu',
+        inline: false
       },
       {
         name: '📊 Leaderboard',

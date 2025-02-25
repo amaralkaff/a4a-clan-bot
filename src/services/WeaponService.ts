@@ -1,7 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 import { BaseService } from './BaseService';
-import { WEAPON_UPGRADES, MATERIALS } from '../config/gameData';
+import { WEAPON_UPGRADES, MATERIALS, WeaponUpgradeData, MaterialData } from '../config/gameData';
 import { EmbedBuilder } from 'discord.js';
+
+interface WeaponMaterials {
+  [key: string]: number;
+}
 
 export class WeaponService extends BaseService {
   constructor(prisma: PrismaClient) {
@@ -75,16 +79,18 @@ export class WeaponService extends BaseService {
       }
 
       // Check materials
-      for (const [materialId, amount] of Object.entries(weaponConfig.materials)) {
+      const materials = weaponConfig.materials;
+      for (const [materialId, requiredAmount] of Object.entries(materials)) {
         const material = character.inventory.find(
-          item => item.itemId === materialId && item.quantity >= amount
+          item => item.itemId === materialId && item.quantity >= requiredAmount
         );
 
         if (!material) {
-          const materialName = MATERIALS[materialId as keyof typeof MATERIALS].name;
+          const materialData = MATERIALS[materialId as keyof typeof MATERIALS];
+          const materialName = materialData?.name || materialId;
           return {
             success: false,
-            message: `❌ Kamu butuh ${amount}x ${materialName} untuk upgrade!`
+            message: `❌ Kamu butuh ${requiredAmount}x ${materialName} untuk upgrade!`
           };
         }
       }
@@ -92,7 +98,7 @@ export class WeaponService extends BaseService {
       // Process upgrade
       await this.prisma.$transaction(async (tx) => {
         // Deduct materials
-        for (const [materialId, amount] of Object.entries(weaponConfig.materials)) {
+        for (const [materialId, requiredAmount] of Object.entries(materials)) {
           await tx.inventory.update({
             where: {
               characterId_itemId: {
@@ -102,7 +108,7 @@ export class WeaponService extends BaseService {
             },
             data: {
               quantity: {
-                decrement: amount
+                decrement: requiredAmount
               }
             }
           });
@@ -212,7 +218,7 @@ export class WeaponService extends BaseService {
         const materials = Object.entries(weaponConfig.materials)
           .map(([id, amount]) => {
             const material = MATERIALS[id as keyof typeof MATERIALS];
-            return `${material.name} x${amount}`;
+            return material ? `${material.name} x${amount}` : `${id} x${amount}`;
           })
           .join('\n');
 
