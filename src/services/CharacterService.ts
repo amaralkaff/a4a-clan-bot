@@ -28,10 +28,22 @@ export interface ICharacterService {
   // ... other methods ...
 }
 
-// Tambahkan interface untuk buff
+// Update BuffType interface
 interface BuffType {
   type: string;
-  value: number;
+  stats?: {
+    attack?: number;
+    defense?: number;
+    speed?: number;
+    [key: string]: number | undefined;
+  };
+  multipliers?: {
+    damage?: number;
+    defense?: number;
+    exp?: number;
+    drops?: number;
+    healing?: number;
+  };
   expiresAt: number;
 }
 
@@ -154,29 +166,40 @@ export class CharacterService extends BaseService implements ICharacterService {
             level: 1,
             upgrades: 0
           },
-          { itemId: 'potion', quantity: 5 },
-          { itemId: 'attack_boost', quantity: 3 },
-          { itemId: 'defense_boost', quantity: 3 },
+          { itemId: 'health_potion', quantity: 5 },
+          { itemId: 'strength_potion', quantity: 3 },
+          { itemId: 'defense_potion', quantity: 3 },
           { itemId: 'combat_ration', quantity: 3 }
         ];
 
         // Verify items exist before creating inventory
-        for (const item of starterItems) {
-          const itemExists = await tx.item.findUnique({
-            where: { id: item.itemId }
-          });
-
-          if (!itemExists) {
-            this.logger.error(`Item ${item.itemId} not found in database`);
-            continue;
-          }
-
-          await tx.inventory.create({
-            data: {
-              characterId: character.id,
-              ...item
+        const existingItems = await tx.item.findMany({
+          where: {
+            id: {
+              in: starterItems.map(item => item.itemId)
             }
+          }
+        });
+
+        const existingItemIds = new Set(existingItems.map(item => item.id));
+        const missingItems = starterItems.filter(item => !existingItemIds.has(item.itemId));
+
+        if (missingItems.length > 0) {
+          this.logger.warn('Some starter items are missing:', {
+            missingItems: missingItems.map(item => item.itemId)
           });
+        }
+
+        // Only add items that exist in the database
+        for (const item of starterItems) {
+          if (existingItemIds.has(item.itemId)) {
+            await tx.inventory.create({
+              data: {
+                characterId: character.id,
+                ...item
+              }
+            });
+          }
         }
 
         return character;
@@ -321,6 +344,62 @@ export class CharacterService extends BaseService implements ICharacterService {
     return level * 1000;
   }
 
+  private calculateStatGains(currentLevel: number, levelsGained: number): {
+    attack: number;
+    defense: number;
+    maxHealth: number;
+  } {
+    // Base stats per level
+    const baseAttack = 2;  // Base attack gain per level
+    const baseDefense = 2; // Base defense gain per level
+    const baseHealth = 10; // Base health gain per level
+
+    // Bonus multiplier based on current level tier
+    const getTierMultiplier = (level: number) => {
+      if (level >= 50) return 2.0;     // Level 50+ gets 2x bonus
+      if (level >= 30) return 1.5;     // Level 30-49 gets 1.5x bonus
+      if (level >= 15) return 1.25;    // Level 15-29 gets 1.25x bonus
+      return 1.0;                      // Level 1-14 gets base stats
+    };
+
+    // Calculate total gains for all levels gained
+    let totalAttack = 0;
+    let totalDefense = 0;
+    let totalHealth = 0;
+
+    for (let i = 0; i < levelsGained; i++) {
+      const level = currentLevel + i;
+      const multiplier = getTierMultiplier(level);
+      
+      // Add randomness for more excitement (±20% variation)
+      const randomFactor = 0.8 + (Math.random() * 0.4); // 0.8 to 1.2
+
+      totalAttack += Math.ceil(baseAttack * multiplier * randomFactor);
+      totalDefense += Math.ceil(baseDefense * multiplier * randomFactor);
+      totalHealth += Math.ceil(baseHealth * multiplier * randomFactor);
+
+      // Bonus stats every 5 levels
+      if ((level + 1) % 5 === 0) {
+        totalAttack += 3;
+        totalDefense += 3;
+        totalHealth += 15;
+      }
+
+      // Special milestone bonuses
+      if ((level + 1) % 10 === 0) {
+        totalAttack += 5;
+        totalDefense += 5;
+        totalHealth += 25;
+      }
+    }
+
+    return {
+      attack: totalAttack,
+      defense: totalDefense,
+      maxHealth: totalHealth
+    };
+  }
+
   async addExperience(characterId: string, amount: number): Promise<{
     leveledUp: boolean;
     newLevel?: number;
@@ -332,73 +411,60 @@ export class CharacterService extends BaseService implements ICharacterService {
       maxHealth: number;
     }
   }> {
-    try {
-      const character = await this.prisma.character.findUnique({
-        where: { id: characterId }
-      });
+    const character = await this.prisma.character.findUnique({
+      where: { id: characterId }
+    });
 
-      if (!character) throw new Error('Character not found');
-
-      let currentExp = character.experience;
-      let currentLevel = character.level;
-      let totalExp = currentExp + amount;
-      let levelsGained = 0;
-      let attackGained = 0;
-      let defenseGained = 0;
-      let newMaxHealth = character.maxHealth;
-
-      // Handle multiple level ups
-      while (totalExp >= this.calculateExpNeeded(currentLevel)) {
-        totalExp -= this.calculateExpNeeded(currentLevel);
-        currentLevel++;
-        levelsGained++;
-        attackGained += 2;
-        defenseGained += 2;
-        newMaxHealth = this.calculateMaxHealth(currentLevel);
-      }
-
-      if (levelsGained > 0) {
-        // Level up occurred
-        await this.prisma.character.update({
-          where: { id: characterId },
-          data: {
-            level: currentLevel,
-            experience: totalExp,
-            health: newMaxHealth,
-            maxHealth: newMaxHealth,
-            attack: { increment: attackGained },
-            defense: { increment: defenseGained }
-          }
-        });
-
-        return {
-          leveledUp: true,
-          newLevel: currentLevel,
-          newExp: totalExp,
-          levelsGained,
-          statsGained: {
-            attack: attackGained,
-            defense: defenseGained,
-            maxHealth: newMaxHealth - character.maxHealth
-          }
-        };
-      } else {
-        // Just update experience
-        await this.prisma.character.update({
-          where: { id: characterId },
-          data: {
-            experience: totalExp
-          }
-        });
-
-        return {
-          leveledUp: false,
-          newExp: totalExp
-        };
-      }
-    } catch (error) {
-      return this.handleError(error, 'AddExperience');
+    if (!character) {
+      throw new Error('Character not found');
     }
+
+    let { level, experience } = character;
+    const oldLevel = level;
+    let newExp = experience + amount;
+    let levelsGained = 0;
+
+    // Keep leveling up while we have enough exp
+    while (newExp >= this.calculateExpNeeded(level)) {
+      newExp -= this.calculateExpNeeded(level);
+      level++;
+      levelsGained++;
+    }
+
+    // If we leveled up, calculate and apply stat gains
+    let statsGained;
+    if (levelsGained > 0) {
+      statsGained = this.calculateStatGains(oldLevel, levelsGained);
+      
+      // Update character with new stats and heal to new max health
+      await this.prisma.character.update({
+        where: { id: characterId },
+        data: {
+          level,
+          experience: newExp,
+          attack: { increment: statsGained.attack },
+          defense: { increment: statsGained.defense },
+          maxHealth: { increment: statsGained.maxHealth },
+          health: character.maxHealth + statsGained.maxHealth // Heal to new max health on level up
+        }
+      });
+    } else {
+      // Just update experience if no level up
+      await this.prisma.character.update({
+        where: { id: characterId },
+        data: {
+          experience: newExp
+        }
+      });
+    }
+
+    return {
+      leveledUp: levelsGained > 0,
+      newLevel: levelsGained > 0 ? level : undefined,
+      newExp,
+      levelsGained: levelsGained > 0 ? levelsGained : undefined,
+      statsGained: levelsGained > 0 ? statsGained : undefined
+    };
   }
 
   async healWithSanji(characterId: string): Promise<{
@@ -517,9 +583,19 @@ export class CharacterService extends BaseService implements ICharacterService {
         if (!['ATTACK', 'DEFENSE', 'SPEED', 'ALL'].includes(buff.type)) {
           throw new Error(`Tipe buff tidak valid: ${buff.type}`);
         }
-        if (typeof buff.value !== 'number' || buff.value < 0) {
-          throw new Error('Value buff harus berupa angka positif');
+        
+        // Validate stats object
+        if (buff.stats) {
+          for (const [stat, value] of Object.entries(buff.stats)) {
+            if (!['attack', 'defense', 'speed'].includes(stat)) {
+              throw new Error(`Stat type tidak valid: ${stat}`);
+            }
+            if (value !== undefined && typeof value !== 'number') {
+              throw new Error(`Value stat ${stat} harus berupa angka`);
+            }
+          }
         }
+
         if (typeof buff.expiresAt !== 'number' || buff.expiresAt < Date.now()) {
           throw new Error('ExpiresAt buff harus berupa timestamp valid');
         }
@@ -659,7 +735,7 @@ export class CharacterService extends BaseService implements ICharacterService {
 
       // Delete all related data in a transaction
       await this.prisma.$transaction(async (tx) => {
-        // Delete inventory items
+        // Delete inventory items first
         await tx.inventory.deleteMany({
           where: { characterId: user.character!.id }
         });
@@ -679,12 +755,22 @@ export class CharacterService extends BaseService implements ICharacterService {
           where: { characterId: user.character!.id }
         });
 
-        // Delete character
+        // Delete duels
+        await tx.duel.deleteMany({
+          where: {
+            OR: [
+              { challengerId: user.character!.id },
+              { challengedId: user.character!.id }
+            ]
+          }
+        });
+
+        // Delete character first since it references user
         await tx.character.delete({
           where: { id: user.character!.id }
         });
 
-        // Delete user
+        // Finally delete user
         await tx.user.delete({
           where: { id: user.id }
         });
@@ -1036,7 +1122,37 @@ export class CharacterService extends BaseService implements ICharacterService {
         const duration = Math.ceil((buff.expiresAt - Date.now()) / 1000 / 60); // minutes
         const buffName = this.getBuffName(buff.type);
         const emoji = this.getBuffEmoji(buff.type);
-        return `${emoji} ${buffName}: +${buff.value} (${duration}m)`;
+        
+        // Format stats and multipliers
+        const parts = [];
+        
+        // Handle base stats
+        if (buff.stats) {
+          const validStats = Object.entries(buff.stats)
+            .filter(([_, value]) => value !== undefined && value !== null)
+            .map(([stat, value]) => `${stat.toUpperCase()}: +${value}`)
+            .join(', ');
+          if (validStats) {
+            parts.push(validStats);
+          }
+        }
+        
+        // Handle multipliers
+        if (buff.multipliers) {
+          const validMultipliers = Object.entries(buff.multipliers)
+            .filter(([_, value]) => value !== undefined && value !== null)
+            .map(([stat, value]) => {
+              const percent = ((value - 1) * 100).toFixed(0);
+              return `${stat.toUpperCase()}: +${percent}%`;
+            })
+            .join(', ');
+          if (validMultipliers) {
+            parts.push(validMultipliers);
+          }
+        }
+        
+        const statsText = parts.length > 0 ? ` (${parts.join(' | ')})` : '';
+        return `${emoji} ${buffName}${statsText} (${duration}m)`;
       }).join('\n');
 
       embed.addFields({
@@ -1214,7 +1330,7 @@ export class CharacterService extends BaseService implements ICharacterService {
       
       // Defer reply for longer operation
       if (source instanceof ChatInputCommandInteraction) {
-        await source.deferReply({ ephemeral: true });
+        await source.deferReply({ flags: MessageFlags.Ephemeral });
       }
 
       // Process battle with animation
@@ -1266,7 +1382,7 @@ export class CharacterService extends BaseService implements ICharacterService {
           } else {
             await source.followUp({
               ...log,
-              ephemeral: true
+              flags: MessageFlags.Ephemeral
             });
           }
           
@@ -1291,7 +1407,7 @@ export class CharacterService extends BaseService implements ICharacterService {
 
         await source.followUp({
           embeds: [rewardsEmbed],
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
       } else {
         // For message commands, send everything in one message
@@ -1630,6 +1746,57 @@ export class CharacterService extends BaseService implements ICharacterService {
       } else {
         return source.reply(`❌ Error: ${errorMessage}`);
       }
+    }
+  }
+
+  async handleGiveCoins(source: Message | ChatInputCommandInteraction, targetId: string, amount: number): Promise<unknown> {
+    try {
+      // Get sender's character
+      const sender = await this.getCharacterByDiscordId(source instanceof Message ? source.author.id : source.user.id);
+      if (!sender) {
+        return source.reply('❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.');
+      }
+
+      // Validate amount
+      if (amount <= 0) {
+        return source.reply('❌ Jumlah coins harus lebih dari 0!');
+      }
+
+      // Get sender's balance
+      const senderBalance = await this.getBalance(sender.id);
+      if (senderBalance.coins < amount) {
+        return source.reply(`❌ Uang tidak cukup! Kamu butuh ${amount} coins.`);
+      }
+
+      // Get receiver's character
+      const receiver = await this.getCharacterByDiscordId(targetId);
+      if (!receiver) {
+        return source.reply('❌ Player yang dituju belum memiliki karakter!');
+      }
+
+      // Don't allow sending to self
+      if (sender.id === receiver.id) {
+        return source.reply('❌ Kamu tidak bisa mengirim coins ke dirimu sendiri!');
+      }
+
+      // Process transfer
+      await this.transferCoins(sender.id, receiver.id, amount);
+
+      // Create success embed
+      const embed = new EmbedBuilder()
+        .setTitle('💰 Transfer Berhasil!')
+        .setColor('#00ff00')
+        .setDescription(`Berhasil mengirim ${amount} coins ke ${receiver.name}!`)
+        .addFields([
+          { name: '👤 Pengirim', value: sender.name, inline: true },
+          { name: '👥 Penerima', value: receiver.name, inline: true },
+          { name: '💰 Jumlah', value: `${amount} coins`, inline: true }
+        ]);
+
+      return source.reply({ embeds: [embed] });
+    } catch (error) {
+      this.logger.error('Error in handleGiveCoins:', error);
+      return source.reply('❌ Terjadi kesalahan saat mengirim coins.');
     }
   }
 }

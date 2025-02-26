@@ -33,6 +33,11 @@ export class EquipmentService extends BaseService {
     super(prisma);
   }
 
+  private ensureStringifiedStats(stats: any): string | null {
+    if (!stats) return null;
+    return typeof stats === 'string' ? stats : JSON.stringify(stats);
+  }
+
   async equipItem(characterId: string, itemId: string): Promise<{
     success: boolean;
     message: string;
@@ -96,7 +101,8 @@ export class EquipmentService extends BaseService {
             where: { id: currentEquipped.id },
             data: { 
               isEquipped: false,
-              slot: null
+              slot: null,
+              stats: null  // Clear stats when unequipping
             }
           });
 
@@ -117,12 +123,16 @@ export class EquipmentService extends BaseService {
           }
         }
 
+        // Parse effect once and reuse
+        const newEffect = JSON.parse(inventoryItem.item.effect);
+        
         // Equip new item
         await tx.inventory.update({
           where: { id: inventoryItem.id },
           data: {
             isEquipped: true,
-            slot: inventoryItem.item.type
+            slot: inventoryItem.item.type,
+            stats: this.ensureStringifiedStats(newEffect.stats)  // Store stats properly
           }
         });
 
@@ -149,7 +159,6 @@ export class EquipmentService extends BaseService {
         }
 
         // Add stats from new item
-        const newEffect = JSON.parse(inventoryItem.item.effect);
         if (newEffect.stats) {
           await tx.character.update({
             where: { id: characterId },
@@ -237,7 +246,8 @@ export class EquipmentService extends BaseService {
           where: { id: equippedItem.id },
           data: {
             isEquipped: false,
-            slot: null
+            slot: null,
+            stats: null  // Clear stats when unequipping
           }
         });
 
@@ -420,13 +430,20 @@ export class EquipmentService extends BaseService {
         if (cleanItemName === cleanSearchName) {
           return true;
         }
+
+        // Convert spaces to underscores for item ID matching
+        const searchWithUnderscore = cleanSearchName.replace(/\s+/g, '_');
+        if (itemIdLower === searchWithUnderscore) {
+          return true;
+        }
         
-        // Try partial match with name or id
-        const searchWithUnderscore = searchNameLower.replace(/\s+/g, '_');
-        if (cleanItemName.includes(cleanSearchName) || 
-            cleanSearchName.includes(cleanItemName) ||
-            itemIdLower.includes(searchWithUnderscore) ||
-            searchWithUnderscore.includes(itemIdLower)) {
+        // Try partial match with name
+        if (cleanItemName.includes(cleanSearchName) || cleanSearchName.includes(cleanItemName)) {
+          return true;
+        }
+
+        // Try partial match with item ID
+        if (itemIdLower.includes(searchWithUnderscore) || searchWithUnderscore.includes(itemIdLower)) {
           return true;
         }
         
