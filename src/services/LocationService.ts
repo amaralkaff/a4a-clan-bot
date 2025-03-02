@@ -3,7 +3,7 @@ import { BaseService } from './BaseService';
 import { LocationId } from '@/types/game';
 import { Message, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
 import { createEphemeralReply } from '@/utils/helpers';
-import { LOCATIONS } from '@/config/gameData';
+import { LOCATIONS, Location } from '@/config/gameData';
 import { getTierEmoji } from '@/commands/basic/handlers/utils';
 import { CharacterService } from './CharacterService';
 
@@ -160,7 +160,7 @@ export class LocationService extends BaseService {
       ]);
 
     // Group locations by level requirement
-    const groupedLocations = Object.entries(LOCATIONS).reduce((acc, [id, loc]) => {
+    const groupedLocations = Object.entries(LOCATIONS).reduce<Record<string, Array<{id: string} & Location>>>((acc, [id, loc]) => {
       const tier = loc.level <= 5 ? 'STARTER' :
                   loc.level <= 15 ? 'INTERMEDIATE' :
                   'ADVANCED';
@@ -169,7 +169,7 @@ export class LocationService extends BaseService {
       }
       acc[tier].push({ id, ...loc });
       return acc;
-    }, {} as Record<string, Array<{id: string; name: string; description: string; level: number}>>);
+    }, {});
 
     // Add fields for each tier
     for (const [tier, locations] of Object.entries(groupedLocations)) {

@@ -1,0 +1,282 @@
+{
+  "celestial_crown": {
+    "name": "👑 Celestial Crown",
+    "type": "ACCESSORY",
+    "description": "🌟 Mahkota surgawi yang memancarkan kekuatan ilahi",
+    "price": 100000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 1000,
+        "defense": 1000,
+        "speed": 500
+      }
+    },
+    "baseStats": {
+      "attack": 1000,
+      "defense": 1000,
+      "speed": 500
+    },
+    "upgradeStats": {
+      "attack": 200,
+      "defense": 200,
+      "speed": 100
+    },
+    "maxLevel": 100,
+    "rarity": "PRIMORDIAL",
+    "stackLimit": 1,
+    "maxDurability": 10000
+  },
+  "void_emperor_necklace": {
+    "name": "🌌 Void Emperor Necklace",
+    "type": "ACCESSORY",
+    "description": "🌟 Kalung legendaris penguasa kekosongan",
+    "price": 150000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 1500,
+        "defense": 1500,
+        "speed": 750
+      }
+    },
+    "baseStats": {
+      "attack": 1500,
+      "defense": 1500,
+      "speed": 750
+    },
+    "upgradeStats": {
+      "attack": 300,
+      "defense": 300,
+      "speed": 150
+    },
+    "maxLevel": 100,
+    "rarity": "PRIMORDIAL",
+    "stackLimit": 1,
+    "maxDurability": 15000
+  },
+  "chaos_sovereign_ring": {
+    "name": "💫 Chaos Sovereign Ring",
+    "type": "ACCESSORY",
+    "description": "🌟 Cincin kekacauan yang melampaui batas kekuatan",
+    "price": 200000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 2000,
+        "defense": 2000,
+        "speed": 1000
+      }
+    },
+    "baseStats": {
+      "attack": 2000,
+      "defense": 2000,
+      "speed": 1000
+    },
+    "upgradeStats": {
+      "attack": 400,
+      "defense": 400,
+      "speed": 200
+    },
+    "maxLevel": 100,
+    "rarity": "PRIMORDIAL",
+    "stackLimit": 1,
+    "maxDurability": 20000
+  },
+  "eternal_god_bracelet": {
+    "name": "⚜️ Eternal God Bracelet",
+    "type": "ACCESSORY",
+    "description": "🌟 Gelang dewa yang memberi kekuatan abadi",
+    "price": 250000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 2500,
+        "defense": 2500,
+        "speed": 1250
+      }
+    },
+    "baseStats": {
+      "attack": 2500,
+      "defense": 2500,
+      "speed": 1250
+    },
+    "upgradeStats": {
+      "attack": 500,
+      "defense": 500,
+      "speed": 250
+    },
+    "maxLevel": 100,
+    "rarity": "PRIMORDIAL",
+    "stackLimit": 1,
+    "maxDurability": 25000
+  },
+  "infinity_origin_earring": {
+    "name": "♾️ Infinity Origin Earring",
+    "type": "ACCESSORY",
+    "description": "🌟 Anting-anting dengan kekuatan tak terbatas",
+    "price": 300000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 3000,
+        "defense": 3000,
+        "speed": 1500
+      }
+    },
+    "baseStats": {
+      "attack": 3000,
+      "defense": 3000,
+      "speed": 1500
+    },
+    "upgradeStats": {
+      "attack": 600,
+      "defense": 600,
+      "speed": 300
+    },
+    "maxLevel": 100,
+    "rarity": "PRIMORDIAL",
+    "stackLimit": 1,
+    "maxDurability": 30000
+  },
+  "divine_genesis_amulet": {
+    "name": "🎭 Divine Genesis Amulet",
+    "type": "ACCESSORY",
+    "description": "🌟 Jimat suci dari awal penciptaan",
+    "price": 350000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 3500,
+        "defense": 3500,
+        "speed": 1750
+      }
+    },
+    "baseStats": {
+      "attack": 3500,
+      "defense": 3500,
+      "speed": 1750
+    },
+    "upgradeStats": {
+      "attack": 700,
+      "defense": 700,
+      "speed": 350
+    },
+    "maxLevel": 100,
+    "rarity": "PRIMORDIAL",
+    "stackLimit": 1,
+    "maxDurability": 35000
+  },
+  "supreme_origin_talisman": {
+    "name": "🌟 Supreme Origin Talisman",
+    "type": "ACCESSORY",
+    "description": "🌟 Jimat dari asal mula kekuatan tertinggi",
+    "price": 400000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 4000,
+        "defense": 4000,
+        "speed": 2000
+      }
+    },
+    "baseStats": {
+      "attack": 4000,
+      "defense": 4000,
+      "speed": 2000
+    },
+    "upgradeStats": {
+      "attack": 800,
+      "defense": 800,
+      "speed": 400
+    },
+    "maxLevel": 100,
+    "rarity": "PRIMORDIAL",
+    "stackLimit": 1,
+    "maxDurability": 40000
+  },
+  "omnipotent_god_emblem": {
+    "name": "🎆 Omnipotent God Emblem",
+    "type": "ACCESSORY",
+    "description": "🌟 Emblem kemahakuasaan para dewa",
+    "price": 450000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 4500,
+        "defense": 4500,
+        "speed": 2250
+      }
+    },
+    "baseStats": {
+      "attack": 4500,
+      "defense": 4500,
+      "speed": 2250
+    },
+    "upgradeStats": {
+      "attack": 900,
+      "defense": 900,
+      "speed": 450
+    },
+    "maxLevel": 100,
+    "rarity": "PRIMORDIAL",
+    "stackLimit": 1,
+    "maxDurability": 45000
+  },
+  "transcendent_soul_pendant": {
+    "name": "💫 Transcendent Soul Pendant",
+    "type": "ACCESSORY",
+    "description": "🌟 Liontin jiwa yang melampaui batas eksistensi",
+    "price": 475000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 4750,
+        "defense": 4750,
+        "speed": 2375
+      }
+    },
+    "baseStats": {
+      "attack": 4750,
+      "defense": 4750,
+      "speed": 2375
+    },
+    "upgradeStats": {
+      "attack": 950,
+      "defense": 950,
+      "speed": 475
+    },
+    "maxLevel": 100,
+    "rarity": "PRIMORDIAL",
+    "stackLimit": 1,
+    "maxDurability": 47500
+  },
+  "ultimate_origin_crown": {
+    "name": "🌌 Ultimate Origin Crown",
+    "type": "ACCESSORY",
+    "description": "🌟 Mahkota dari asal mula segala eksistensi",
+    "price": 500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 5000,
+        "defense": 5000,
+        "speed": 2500
+      }
+    },
+    "baseStats": {
+      "attack": 5000,
+      "defense": 5000,
+      "speed": 2500
+    },
+    "upgradeStats": {
+      "attack": 1000,
+      "defense": 1000,
+      "speed": 500
+    },
+    "maxLevel": 100,
+    "rarity": "PRIMORDIAL",
+    "stackLimit": 1,
+    "maxDurability": 50000
+  }
+}

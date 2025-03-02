@@ -1,4 +1,5 @@
 // src/index.ts
+import 'reflect-metadata';
 import { Client, GatewayIntentBits, Partials } from 'discord.js';
 import { CONFIG } from './config/config';
 import { loadCommands } from './utils/commandLoader';

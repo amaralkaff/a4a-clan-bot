@@ -224,4 +224,44 @@ export class MentorService extends BaseService {
     };
     return messages[mentor];
   }
+
+  async updateMentorProgress(characterId: string, mentorType: MentorType, amount: number) {
+    try {
+      const progressField = this.getMentorProgressField(mentorType);
+      await this.prisma.character.update({
+        where: { id: characterId },
+        data: {
+          [progressField]: { increment: amount }
+        }
+      });
+    } catch (error) {
+      return this.handleError(error, 'UpdateMentorProgress');
+    }
+  }
+
+  getMentorProgress(stats: any): string {
+    const mentorProgress = [];
+    if (stats.luffyProgress > 0) mentorProgress.push(`YB: ${stats.luffyProgress}`);
+    if (stats.zoroProgress > 0) mentorProgress.push(`Tierison: ${stats.zoroProgress}`);
+    if (stats.usoppProgress > 0) mentorProgress.push(`LYuka: ${stats.usoppProgress}`);
+    if (stats.sanjiProgress > 0) mentorProgress.push(`GarryAng: ${stats.sanjiProgress}`);
+    return mentorProgress.length > 0 ? mentorProgress.join('\n') : 'Tidak ada progress';
+  }
+
+  validateMentor(mentor: string): asserts mentor is MentorType {
+    const validMentors = ['YB', 'Tierison', 'LYuka', 'GarryAng'];
+    if (!validMentors.includes(mentor)) {
+      throw new Error('Invalid mentor type');
+    }
+  }
+
+  getMentorEmoji(mentor: string): string {
+    const emojiMap: { [key: string]: string } = {
+      'YB': '🥊',
+      'Tierison': '⚔️',
+      'LYuka': '🎯',
+      'GarryAng': '🦵'
+    };
+    return emojiMap[mentor] || '❓';
+  }
 } 

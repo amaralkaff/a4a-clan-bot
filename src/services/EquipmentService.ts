@@ -12,6 +12,7 @@ interface EquipmentSlot {
 interface EquipmentStats {
   attack: number;
   defense: number;
+  speed: number;
 }
 
 interface EquipmentEffect {
@@ -72,6 +73,17 @@ export class EquipmentService extends BaseService {
         };
       }
 
+      // Check item durability if it has maxDurability
+      if (inventoryItem.item.maxDurability !== null) {
+        const currentDurability = inventoryItem.durability ?? inventoryItem.item.maxDurability;
+        if (currentDurability <= 0) {
+          return {
+            success: false,
+            message: '❌ Item ini sudah rusak dan perlu diperbaiki terlebih dahulu!'
+          };
+        }
+      }
+
       // Get slot based on item type
       const slot = {
         'WEAPON': 'equippedWeapon',
@@ -117,6 +129,9 @@ export class EquipmentService extends BaseService {
                 },
                 defense: { 
                   decrement: currentEffect.stats.defense || 0 
+                },
+                speed: {
+                  decrement: currentEffect.stats.speed || 0
                 }
               }
             });
@@ -168,6 +183,9 @@ export class EquipmentService extends BaseService {
               },
               defense: { 
                 increment: newEffect.stats.defense || 0 
+              },
+              speed: {
+                increment: newEffect.stats.speed || 0
               }
             }
           });
@@ -194,6 +212,14 @@ export class EquipmentService extends BaseService {
           value: Object.entries(effect.stats)
             .map(([stat, value]) => `${stat.toUpperCase()}: +${value}`)
             .join('\n')
+        });
+      }
+
+      if (inventoryItem.item.maxDurability !== null) {
+        const currentDurability = inventoryItem.durability ?? inventoryItem.item.maxDurability;
+        embed.addFields({
+          name: '⚒️ Durability',
+          value: `${currentDurability}/${inventoryItem.item.maxDurability}`
         });
       }
 
@@ -239,56 +265,67 @@ export class EquipmentService extends BaseService {
         };
       }
 
-      // Process unequip in transaction
-      await this.prisma.$transaction(async (tx) => {
-        // Unequip item
-        await tx.inventory.update({
-          where: { id: equippedItem.id },
-          data: {
-            isEquipped: false,
-            slot: null,
-            stats: null  // Clear stats when unequipping
-          }
-        });
-
-        // Update character equipment slot
-        switch (slot) {
-          case 'WEAPON':
-            await tx.character.update({
-              where: { id: characterId },
-              data: { equippedWeapon: null }
-            });
-            break;
-          case 'ARMOR':
-            await tx.character.update({
-              where: { id: characterId },
-              data: { equippedArmor: null }
-            });
-            break;
-          case 'ACCESSORY':
-            await tx.character.update({
-              where: { id: characterId },
-              data: { equippedAccessory: null }
-            });
-            break;
-        }
-
-        // Remove stats from item
-        const effect = JSON.parse(equippedItem.item.effect);
-        if (effect.stats) {
-          await tx.character.update({
-            where: { id: characterId },
+      try {
+        // Process unequip in transaction
+        await this.prisma.$transaction(async (tx) => {
+          // Unequip item
+          await tx.inventory.update({
+            where: { id: equippedItem.id },
             data: {
-              attack: { 
-                decrement: effect.stats.attack || 0 
-              },
-              defense: { 
-                decrement: effect.stats.defense || 0 
-              }
+              isEquipped: false,
+              slot: null,
+              stats: null  // Clear stats when unequipping
             }
           });
-        }
-      });
+
+          // Update character equipment slot
+          switch (slot) {
+            case 'WEAPON':
+              await tx.character.update({
+                where: { id: characterId },
+                data: { equippedWeapon: null }
+              });
+              break;
+            case 'ARMOR':
+              await tx.character.update({
+                where: { id: characterId },
+                data: { equippedArmor: null }
+              });
+              break;
+            case 'ACCESSORY':
+              await tx.character.update({
+                where: { id: characterId },
+                data: { equippedAccessory: null }
+              });
+              break;
+          }
+
+          // Remove stats from item
+          const effect = JSON.parse(equippedItem.item.effect);
+          if (effect.stats) {
+            await tx.character.update({
+              where: { id: characterId },
+              data: {
+                attack: { 
+                  decrement: effect.stats.attack || 0 
+                },
+                defense: { 
+                  decrement: effect.stats.defense || 0 
+                },
+                speed: {
+                  decrement: effect.stats.speed || 0
+                }
+              }
+            });
+          }
+        });
+      } catch (txError) {
+        this.logger.error('Transaction error in unequipItem:', txError);
+        return {
+          success: false,
+          message: '❌ Terjadi kesalahan saat unequip item!'
+        };
+      }
 
       // Create success embed
       const embed = new EmbedBuilder()
@@ -303,6 +340,14 @@ export class EquipmentService extends BaseService {
           value: Object.entries(effect.stats)
             .map(([stat, value]) => `${stat.toUpperCase()}: -${value}`)
             .join('\n')
+        });
+      }
+
+      if (equippedItem.item.maxDurability !== null) {
+        const currentDurability = equippedItem.durability ?? equippedItem.item.maxDurability;
+        embed.addFields({
+          name: '⚒️ Durability',
+          value: `${currentDurability}/${equippedItem.item.maxDurability}`
         });
       }
 
@@ -390,12 +435,16 @@ export class EquipmentService extends BaseService {
         characterId: character.id
       });
 
-      // Get all unequipped items from inventory
+      // Get all unequipped items from inventory that can be equipped
       const inventoryItems = await this.prisma.inventory.findMany({
         where: {
           characterId: character.id,
-          // Remove isEquipped: false to get all items including equipped ones
-          quantity: { gt: 0 }
+          quantity: { gt: 0 },
+          item: {
+            type: {
+              in: ['WEAPON', 'ARMOR', 'ACCESSORY']
+            }
+          }
         },
         include: {
           item: true
@@ -412,42 +461,17 @@ export class EquipmentService extends BaseService {
         }))
       });
 
-      // Find item case-insensitive with multiple matching methods
+      // Find item using fuzzy search
       const inventoryItem = inventoryItems.find(inv => {
-        const itemNameLower = inv.item.name.toLowerCase();
-        const itemIdLower = inv.itemId.toLowerCase();
-        const searchNameLower = searchName.toLowerCase();
-        
-        // Try exact match with name or id
-        if (itemNameLower === searchNameLower || itemIdLower === searchNameLower) {
-          return true;
-        }
-        
-        // Remove emojis and try exact match
-        const cleanItemName = itemNameLower.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
-        const cleanSearchName = searchNameLower.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
-        
-        if (cleanItemName === cleanSearchName) {
-          return true;
-        }
-
-        // Convert spaces to underscores for item ID matching
+        const itemName = inv.item.name.toLowerCase().replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
+        const itemId = inv.itemId.toLowerCase();
+        const cleanSearchName = searchName.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
         const searchWithUnderscore = cleanSearchName.replace(/\s+/g, '_');
-        if (itemIdLower === searchWithUnderscore) {
-          return true;
-        }
         
-        // Try partial match with name
-        if (cleanItemName.includes(cleanSearchName) || cleanSearchName.includes(cleanItemName)) {
-          return true;
-        }
-
-        // Try partial match with item ID
-        if (itemIdLower.includes(searchWithUnderscore) || searchWithUnderscore.includes(itemIdLower)) {
-          return true;
-        }
-        
-        return false;
+        return itemName === cleanSearchName || 
+               itemId === searchWithUnderscore || 
+               itemName.includes(cleanSearchName) || 
+               cleanSearchName.includes(itemName);
       });
 
       if (!inventoryItem) {
@@ -459,20 +483,6 @@ export class EquipmentService extends BaseService {
           }))
         });
         const errorMsg = `❌ Item "${searchName}" tidak ditemukan di inventory!`;
-        return source instanceof Message 
-          ? source.reply(errorMsg)
-          : source.reply({ content: errorMsg, flags: MessageFlags.Ephemeral });
-      }
-
-      this.logger.debug('Found item to equip:', {
-        itemId: inventoryItem.itemId,
-        itemName: inventoryItem.item.name,
-        type: inventoryItem.item.type
-      });
-
-      // Check if item is equipment type
-      if (!['WEAPON', 'ARMOR', 'ACCESSORY'].includes(inventoryItem.item.type)) {
-        const errorMsg = '❌ Item ini tidak bisa diequip!';
         return source instanceof Message 
           ? source.reply(errorMsg)
           : source.reply({ content: errorMsg, flags: MessageFlags.Ephemeral });

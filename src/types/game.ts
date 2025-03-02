@@ -3,21 +3,38 @@
 import { EmbedBuilder } from 'discord.js';
 
 // Basic Types
-export type EffectType = 'EQUIP' | 'BUFF' | 'HEAL' | 'HEAL_AND_BUFF';
+export type EffectType = 'EQUIP' | 'HEAL' | 'BUFF' | 'HEAL_AND_BUFF';
 
 export interface Stats {
   attack?: number;
   defense?: number;
-  speed?: number;
   health?: number;
-  accuracy?: number;
-  healing?: number;
-  exp_gain?: number;
-  charisma?: number;
-  luck?: number;
-  cold_resist?: number;
-  regeneration?: number;
 }
+
+export interface EquipmentEffect {
+  type: 'EQUIP';
+  stats: Stats;
+}
+
+export interface HealEffect {
+  type: 'HEAL';
+  health: number;
+}
+
+export interface BuffEffect {
+  type: 'BUFF';
+  stats: Stats;
+  duration: number;
+}
+
+export interface HealAndBuffEffect {
+  type: 'HEAL_AND_BUFF';
+  health: number;
+  stats: Stats;
+  duration: number;
+}
+
+export type Effect = EffectData | string;
 
 export interface EffectData {
   type: EffectType;
@@ -26,11 +43,35 @@ export interface EffectData {
   duration?: number;
 }
 
-export type Effect = EffectData | string;
-
 export type ItemType = 'WEAPON' | 'ARMOR' | 'ACCESSORY' | 'CONSUMABLE' | 'MATERIAL';
 
 export type Rarity = 'COMMON' | 'UNCOMMON' | 'RARE' | 'EPIC' | 'LEGENDARY';
+
+export interface GameItem {
+  name: string;
+  type: ItemType;
+  description: string;
+  price: number;
+  effect: Effect;
+  baseStats?: Stats;
+  upgradeStats?: Stats;
+  maxLevel?: number;
+  rarity: Rarity;
+  stackLimit: number;
+  maxDurability?: number;
+}
+
+export interface InventoryItem {
+  id: string;
+  itemId: string;
+  characterId: string;
+  quantity: number;
+  durability: number | null;
+  isEquipped: boolean;
+  slot: ItemType | null;
+  stats: string | null;
+  item: GameItem;
+}
 
 // Character
 export interface CreateCharacterDto {
@@ -89,25 +130,16 @@ export interface CreateCharacterDto {
   }
 
   export interface ActiveBuff {
-    type: 'ATTACK' | 'DEFENSE' | 'SPEED' | 'ALL';
+    type: 'ATTACK' | 'DEFENSE' | 'SPEED' | 'ALL' | 'HEAL' | 'HEAL_OVER_TIME' | 'BURN' | 'POISON' |
+          'STUN' | 'DAMAGE' | 'EXP' | 'DROPS' | 'HEALING' | 'RUMBLE_BALL' | 'SUPER_MEAT' | 'CRITICAL' |
+          'COMBO' | 'GEAR_SECOND' | 'TRAINING' | 'MENTOR' | 'FOOD' | 'EXPLORATION' | 'QUEST' | 'BATTLE';
     value: number;
     duration: number;
     expiresAt: number;
     source: string;
   }
 
-  export enum QuestType {
-    COMBAT = 'COMBAT',
-    GATHERING = 'GATHERING',
-    EXPLORATION = 'EXPLORATION',
-    CRAFTING = 'CRAFTING',
-    HELP = 'HELP',
-    DAILY = 'DAILY',
-    CRITICAL_HIT = 'CRITICAL_HIT',
-    COMBO = 'COMBO',
-    NAVIGATION = 'NAVIGATION',
-    SECRET_DISCOVERY = 'SECRET_DISCOVERY'
-  }
+  export type QuestType = 'COMBAT' | 'GATHER' | 'CRAFT' | 'HELP' | 'EXPLORE';
 
   export interface StatusEffects {
     effects: StatusEffect[];
@@ -124,6 +156,7 @@ export interface CreateCharacterDto {
     maxHealth: number;
     attack: number;
     defense: number;
+    speed: number;
     location: LocationId;
     mentor?: MentorType;
     luffyProgress: number;
@@ -282,11 +315,13 @@ export type TransactionType =
   | 'QUEST_REWARD' 
   | 'BATTLE_REWARD'
   | 'SHOP_PURCHASE'
+  | 'SHOP_SELL'
   | 'GAMBLE_BET'
   | 'GAMBLE_WIN'
   | 'TRANSFER'
   | 'BANK_DEPOSIT'
   | 'BANK_WITHDRAW'
+  | 'LEVEL_UP'
   | 'DAILY';
 
 export interface ShopItem {
@@ -315,4 +350,35 @@ export enum QuestStatus {
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
   EXPIRED = 'EXPIRED'
+}
+
+export interface QuestReward {
+  exp: number;
+  coins: number;
+  items?: string[];
+}
+
+export interface Quest {
+  id: string;
+  name: string;
+  description: string;
+  type: QuestType;
+  requiredLevel: number;
+  rewards: {
+    exp: number;
+    coins: number;
+    items: string[];
+  };
+  objectives: {
+    [key: string]: number;
+  };
+  progress?: { [key: string]: number };
+  characterId?: string;
+  templateId?: string;
+  status?: QuestStatus;
+  startedAt?: Date;
+  completedAt?: Date;
+  expiresAt?: Date;
+  mentor?: string;
+  isDaily?: boolean;
 }

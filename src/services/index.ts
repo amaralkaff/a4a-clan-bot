@@ -9,6 +9,8 @@ import { LocationService } from './LocationService';
 import { MentorService } from './MentorService';
 import { WeaponService } from './WeaponService';
 import { EquipmentService } from './EquipmentService';
+import { GamblingService } from './GamblingService';
+import { DuelService } from './DuelService';
 import { logger } from '@/utils/logger';
 
 export interface ServiceContainer {
@@ -21,6 +23,8 @@ export interface ServiceContainer {
   mentor: MentorService;
   weapon: WeaponService;
   equipment: EquipmentService;
+  gambling: GamblingService;
+  duel: DuelService;
   logger: typeof logger;
 }
 
@@ -37,6 +41,9 @@ export function createServices(prisma: PrismaClient): ServiceContainer {
   const mentor = new MentorService(prisma, character);
   const weaponService = new WeaponService(prisma);
   const equipmentService = new EquipmentService(prisma);
+  const gambling = new GamblingService(prisma, character);
+  const duel = new DuelService(prisma);
+  duel.setBattleService(battle);
 
   return {
     character,
@@ -48,6 +55,8 @@ export function createServices(prisma: PrismaClient): ServiceContainer {
     mentor,
     weapon: weaponService,
     equipment: equipmentService,
+    gambling,
+    duel,
     logger
   };
 }

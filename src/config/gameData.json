@@ -248,18 +248,90 @@
       "level": 33,
       "hp": 380,
       "attack": 46,
-      "defense": 40,
+      "defense": 39,
       "exp": 175,
-      "drops": ["six_swords", "takoyaki"]
+      "drops": ["six_swords", "takoyaki_set"]
     },
     "arlong": {
       "name": "🦈 Arlong",
       "level": 35,
-      "hp": 500,
-      "attack": 55,
-      "defense": 50,
+      "hp": 450,
+      "attack": 52,
+      "defense": 45,
       "exp": 250,
       "drops": ["saw_nose", "shark_tooth"]
+    },
+    "mohji": {
+      "name": "🦁 Mohji",
+      "level": 28,
+      "hp": 320,
+      "attack": 38,
+      "defense": 32,
+      "exp": 145,
+      "drops": ["beast_whip", "lion_mane"]
+    },
+    "alvida": {
+      "name": "👸 Alvida",
+      "level": 25,
+      "hp": 300,
+      "attack": 35,
+      "defense": 40,
+      "exp": 130,
+      "drops": ["iron_mace", "slip_fruit"]
+    },
+    "pearl": {
+      "name": "🛡️ Pearl",
+      "level": 34,
+      "hp": 400,
+      "attack": 43,
+      "defense": 50,
+      "exp": 180,
+      "drops": ["pearl_shield", "fire_pearl"]
+    },
+    "gin": {
+      "name": "😈 Gin",
+      "level": 35,
+      "hp": 420,
+      "attack": 48,
+      "defense": 42,
+      "exp": 190,
+      "drops": ["tonfa", "battle_commander_coat"]
+    },
+    "don_krieg": {
+      "name": "🎭 Don Krieg",
+      "level": 37,
+      "hp": 480,
+      "attack": 54,
+      "defense": 48,
+      "exp": 260,
+      "drops": ["poison_gas", "wootz_steel_armor"]
+    },
+    "johnny": {
+      "name": "🗡️ Johnny",
+      "level": 28,
+      "hp": 310,
+      "attack": 36,
+      "defense": 31,
+      "exp": 140,
+      "drops": ["sunglasses", "bounty_book"]
+    },
+    "yosaku": {
+      "name": "⚔️ Yosaku",
+      "level": 28,
+      "hp": 310,
+      "attack": 36,
+      "defense": 31,
+      "exp": 140,
+      "drops": ["bandana", "hunting_sword"]
+    },
+    "nezumi": {
+      "name": "🐀 Nezumi",
+      "level": 29,
+      "hp": 320,
+      "attack": 35,
+      "defense": 33,
+      "exp": 145,
+      "drops": ["marine_coat", "bribe_money"]
     },
     "snow_beast": {
       "name": "❄️ Binatang Salju",
@@ -305,6 +377,1640 @@
       "defense": 60,
       "exp": 300,
       "drops": ["munch_fruit", "crown"]
+    },
+    "sky_warrior": {
+      "name": "⚔️ Prajurit Langit",
+      "level": 25,
+      "hp": 300,
+      "attack": 35,
+      "defense": 30,
+      "exp": 150,
+      "drops": ["cloud_cotton", "sky_stone"]
+    },
+    "thunder_beast": {
+      "name": "⚡ Monster Petir",
+      "level": 30,
+      "hp": 350,
+      "attack": 40,
+      "defense": 35,
+      "exp": 180,
+      "drops": ["thunder_crystal", "storm_crystal"]
+    },
+    "sky_sheep": {
+      "name": "🐑 Domba Langit",
+      "level": 15,
+      "hp": 200,
+      "attack": 20,
+      "defense": 25,
+      "exp": 100,
+      "drops": ["cloud_wool", "sky_bell"]
+    },
+    "tashigi": {
+      "name": "⚔️ Tashigi",
+      "level": 38,
+      "hp": 440,
+      "attack": 50,
+      "defense": 45,
+      "exp": 200,
+      "drops": ["shigure", "marine_glasses"]
+    },
+    "miss_monday": {
+      "name": "💪 Miss Monday",
+      "level": 39,
+      "hp": 450,
+      "attack": 52,
+      "defense": 47,
+      "exp": 210,
+      "drops": ["brass_knuckles_plus", "strength_drink"]
+    },
+    "mr_9": {
+      "name": "🤴 Mr. 9",
+      "level": 39,
+      "hp": 445,
+      "attack": 51,
+      "defense": 46,
+      "exp": 205,
+      "drops": ["metal_bat", "crown_weapon"]
+    },
+    "miss_wednesday": {
+      "name": "👸 Miss Wednesday",
+      "level": 39,
+      "hp": 440,
+      "attack": 50,
+      "defense": 45,
+      "exp": 205,
+      "drops": ["peacock_slasher", "perfume"]
+    },
+    "mr_8": {
+      "name": "🎷 Mr. 8",
+      "level": 40,
+      "hp": 460,
+      "attack": 53,
+      "defense": 48,
+      "exp": 215,
+      "drops": ["saxophone_gun", "curly_hair"]
+    },
+    "miss_valentine": {
+      "name": "☂️ Miss Valentine",
+      "level": 41,
+      "hp": 470,
+      "attack": 54,
+      "defense": 49,
+      "exp": 220,
+      "drops": ["kilo_fruit", "yellow_umbrella"]
+    },
+    "mr_5": {
+      "name": "💥 Mr. 5",
+      "level": 42,
+      "hp": 480,
+      "attack": 56,
+      "defense": 50,
+      "exp": 225,
+      "drops": ["bomb_fruit", "flick_gun"]
+    },
+    "dorry": {
+      "name": "🗡️ Dorry",
+      "level": 45,
+      "hp": 600,
+      "attack": 65,
+      "defense": 60,
+      "exp": 300,
+      "drops": ["giant_sword", "warrior_helmet"]
+    },
+    "brogy": {
+      "name": "🪓 Brogy",
+      "level": 45,
+      "hp": 600,
+      "attack": 65,
+      "defense": 60,
+      "exp": 300,
+      "drops": ["giant_axe", "viking_shield"]
+    },
+    "mr_3": {
+      "name": "🕯️ Mr. 3",
+      "level": 43,
+      "hp": 490,
+      "attack": 57,
+      "defense": 52,
+      "exp": 230,
+      "drops": ["wax_fruit", "candle_set"]
+    },
+    "miss_goldenweek": {
+      "name": "🎨 Miss Goldenweek",
+      "level": 41,
+      "hp": 450,
+      "attack": 51,
+      "defense": 48,
+      "exp": 220,
+      "drops": ["color_palette", "paint_brush"]
+    },
+    "kuromarimo": {
+      "name": "🎱 Kuromarimo",
+      "level": 39,
+      "hp": 440,
+      "attack": 53,
+      "defense": 47,
+      "exp": 200,
+      "drops": ["afro_ball", "static_glove"]
+    },
+    "dalton": {
+      "name": "🐃 Dalton",
+      "level": 42,
+      "hp": 520,
+      "attack": 58,
+      "defense": 54,
+      "exp": 240,
+      "drops": ["bison_fruit", "guard_spade"]
+    },
+    "robson": {
+      "name": "🏃 Robson",
+      "level": 38,
+      "hp": 430,
+      "attack": 49,
+      "defense": 45,
+      "exp": 195,
+      "drops": ["running_shoes", "delivery_bag"]
+    },
+    "dragon_small": {
+      "name": "🐲 Naga Kecil",
+      "level": 35,
+      "hp": 400,
+      "attack": 45,
+      "defense": 40,
+      "exp": 200,
+      "drops": ["dragon_bone", "dragon_scale"]
+    },
+    "devil_beast": {
+      "name": "😈 Monster Iblis",
+      "level": 40,
+      "hp": 450,
+      "attack": 50,
+      "defense": 45,
+      "exp": 250,
+      "drops": ["devil_ore", "cursed_metal"]
+    },
+    "mermaid_guard": {
+      "name": "🧜‍♀️ Penjaga Duyung",
+      "level": 28,
+      "hp": 320,
+      "attack": 38,
+      "defense": 32,
+      "exp": 160,
+      "drops": ["mermaid_scale", "coral_crystal"]
+    },
+    "sky_knight": {
+      "name": "🛡️ Ksatria Langit",
+      "level": 32,
+      "hp": 380,
+      "attack": 42,
+      "defense": 38,
+      "exp": 190,
+      "drops": ["sky_stone", "celestial_gold"]
+    },
+    "cursed_pirate": {
+      "name": "☠️ Bajak Laut Terkutuk",
+      "level": 38,
+      "hp": 420,
+      "attack": 48,
+      "defense": 42,
+      "exp": 220,
+      "drops": ["cursed_metal", "shadow_essence"]
+    },
+    "fire_bird": {
+      "name": "🔥 Burung Api",
+      "level": 45,
+      "hp": 480,
+      "attack": 55,
+      "defense": 48,
+      "exp": 280,
+      "drops": ["phoenix_feather", "storm_crystal"]
+    },
+    "sky_fish": {
+      "name": "🐠 Ikan Langit",
+      "level": 20,
+      "hp": 250,
+      "attack": 28,
+      "defense": 25,
+      "exp": 120,
+      "drops": ["sea_cloud", "fish_scale"]
+    },
+    "forest_guardian": {
+      "name": "🌳 Penjaga Hutan",
+      "level": 36,
+      "hp": 400,
+      "attack": 44,
+      "defense": 40,
+      "exp": 210,
+      "drops": ["ancient_wood", "sacred_vine"]
+    },
+    "coral_fish": {
+      "name": "🐟 Ikan Karang",
+      "level": 22,
+      "hp": 280,
+      "attack": 30,
+      "defense": 28,
+      "exp": 130,
+      "drops": ["coral_crystal", "fish_scale"]
+    },
+    "void_walker": {
+      "name": "🌌 Penjelajah Void",
+      "level": 50,
+      "hp": 550,
+      "attack": 60,
+      "defense": 55,
+      "exp": 300,
+      "drops": ["void_matter", "astral_dust"]
+    },
+    "sky_noble": {
+      "name": "👑 Bangsawan Langit",
+      "level": 42,
+      "hp": 460,
+      "attack": 52,
+      "defense": 46,
+      "exp": 260,
+      "drops": ["celestial_gold", "sky_stone"]
+    },
+    "shadow_beast": {
+      "name": "👻 Monster Bayangan",
+      "level": 48,
+      "hp": 520,
+      "attack": 58,
+      "defense": 52,
+      "exp": 290,
+      "drops": ["shadow_essence", "void_matter"]
+    },
+    "sea_king": {
+      "name": "👑 Raja Laut",
+      "level": 55,
+      "hp": 600,
+      "attack": 65,
+      "defense": 60,
+      "exp": 350,
+      "drops": ["sea_emperor_bone", "sea_king_scale"]
+    },
+    "storm_bird": {
+      "name": "🌪️ Burung Badai",
+      "level": 46,
+      "hp": 500,
+      "attack": 56,
+      "defense": 50,
+      "exp": 270,
+      "drops": ["storm_crystal", "phoenix_feather"]
+    },
+    "forest_spirit": {
+      "name": "🌿 Roh Hutan",
+      "level": 34,
+      "hp": 360,
+      "attack": 40,
+      "defense": 36,
+      "exp": 180,
+      "drops": ["sacred_vine", "ancient_wood"]
+    },
+    "young_dragon": {
+      "name": "🐉 Naga Muda",
+      "level": 52,
+      "hp": 580,
+      "attack": 62,
+      "defense": 58,
+      "exp": 320,
+      "drops": ["dragon_scale", "dragon_bone"]
+    },
+    "star_beast": {
+      "name": "⭐ Monster Bintang",
+      "level": 58,
+      "hp": 650,
+      "attack": 70,
+      "defense": 65,
+      "exp": 380,
+      "drops": ["astral_dust", "celestial_gold"]
+    },
+    "marine_captain_tashigi": {
+      "name": "⚔️ Kapten Tashigi",
+      "level": 35,
+      "hp": 420,
+      "attack": 48,
+      "defense": 42,
+      "exp": 180,
+      "drops": ["shigure_sword", "marine_glasses"]
+    },
+    "vice_admiral_momonga": {
+      "name": "🗡️ Wakil Laksamana Momonga",
+      "level": 45,
+      "hp": 550,
+      "attack": 65,
+      "defense": 58,
+      "exp": 250,
+      "drops": ["marine_sword", "justice_badge"]
+    },
+    "vice_admiral_doberman": {
+      "name": "⚔️ Wakil Laksamana Doberman",
+      "level": 46,
+      "hp": 560,
+      "attack": 67,
+      "defense": 60,
+      "exp": 260,
+      "drops": ["marine_coat", "justice_sword"]
+    },
+    "vice_admiral_onigumo": {
+      "name": "🕷️ Wakil Laksamana Onigumo",
+      "level": 47,
+      "hp": 570,
+      "attack": 69,
+      "defense": 62,
+      "exp": 270,
+      "drops": ["spider_blade", "marine_cape"]
+    },
+    "vice_admiral_strawberry": {
+      "name": "🗡️ Wakil Laksamana Strawberry",
+      "level": 48,
+      "hp": 580,
+      "attack": 71,
+      "defense": 64,
+      "exp": 280,
+      "drops": ["dual_sword", "marine_medal"]
+    },
+    "admiral_fujitora": {
+      "name": "👁️ Laksamana Fujitora",
+      "level": 70,
+      "hp": 1200,
+      "attack": 120,
+      "defense": 100,
+      "exp": 600,
+      "drops": ["gravity_sword", "admiral_coat"]
+    },
+    "admiral_ryokugyu": {
+      "name": "🌿 Laksamana Ryokugyu",
+      "level": 70,
+      "hp": 1200,
+      "attack": 120,
+      "defense": 100,
+      "exp": 600,
+      "drops": ["forest_blade", "admiral_ring"]
+    },
+    "admiral_kizaru": {
+      "name": "✨ Laksamana Kizaru",
+      "level": 75,
+      "hp": 1300,
+      "attack": 130,
+      "defense": 110,
+      "exp": 650,
+      "drops": ["light_sword", "yellow_suit"]},
+    "fleet_admiral_akainu": {
+      "name": "🌋 Laksamana Armada Akainu",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["magma_gauntlet", "fleet_coat"]
+    },
+    "admiral_aokiji": {
+      "name": "❄️ Laksamana Aokiji",
+      "level": 75,
+      "hp": 1300,
+      "attack": 130,
+      "defense": 110,
+      "exp": 650,
+      "drops": ["ice_blade", "ice_bike"]
+    },
+    "kaido": {
+      "name": "👑 Kaido",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["kaido_sword", "kaido_coat"]
+    },
+    "titan_eren": {
+      "name": "🔥 Attack Titan",
+      "level": 75,
+      "hp": 1400,
+      "attack": 140,
+      "defense": 120,
+      "exp": 700,
+      "drops": ["titan_crystal", "freedom_wings"]
+    },
+    "demon_muzan": {
+      "name": "🌙 Muzan Kibutsuji",
+      "level": 78,
+      "hp": 1450,
+      "attack": 145,
+      "defense": 125,
+      "exp": 750,
+      "drops": ["blood_art_scroll", "demon_robe"]
+    },
+    "dragon_acnologia": {
+      "name": "🐉 Acnologia",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["dragon_scale", "chaos_wing"]
+    },
+    "madara_uchiha": {
+      "name": "👁️ Madara Uchiha",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["sharingan_scroll", "uchiha_armor"]
+    },
+    "all_might": {
+      "name": "💪 All Might",
+      "level": 79,
+      "hp": 1480,
+      "attack": 148,
+      "defense": 128,
+      "exp": 780,
+      "drops": ["hero_cape", "plus_ultra_gloves"]
+    },
+    "meruem": {
+      "name": "♟️ Meruem",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["royal_crown", "chimera_wings"]
+    },
+    "escanor": {
+      "name": "☀️ Escanor",
+      "level": 78,
+      "hp": 1450,
+      "attack": 145,
+      "defense": 125,
+      "exp": 750,
+      "drops": ["divine_axe", "lion_pride"]
+    },
+    "yami_sukehiro": {
+      "name": "⚔️ Yami Sukehiro",
+      "level": 76,
+      "hp": 1420,
+      "attack": 142,
+      "defense": 122,
+      "exp": 720,
+      "drops": ["dark_katana", "bull_cape"]
+    },
+    "anos_voldigoad": {
+      "name": "👿 Anos Voldigoad",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["demon_sword", "tyranny_crown"]
+    },
+    "rimuru_tempest": {
+      "name": "🌀 Rimuru Tempest",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["slime_core", "storm_cloak"]
+    },
+    "saitama": {
+      "name": "👨‍🦲 Saitama",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["hero_gloves", "casual_cape"]
+    },
+    "gojo_satoru": {
+      "name": "👁️ Gojo Satoru",
+      "level": 79,
+      "hp": 1480,
+      "attack": 148,
+      "defense": 128,
+      "exp": 780,
+      "drops": ["infinity_blindfold", "cursed_robe"]
+    },
+    "sukuna": {
+      "name": "👹 Ryomen Sukuna",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["cursed_fingers", "demon_tattoo"]
+    },
+    "zeno_zoldyck": {
+      "name": "⚡ Zeno Zoldyck",
+      "level": 77,
+      "hp": 1440,
+      "attack": 144,
+      "defense": 124,
+      "exp": 740,
+      "drops": ["dragon_crest", "assassin_robe"]
+    },
+    "netero": {
+      "name": "🙏 Isaac Netero",
+      "level": 78,
+      "hp": 1460,
+      "attack": 146,
+      "defense": 126,
+      "exp": 760,
+      "drops": ["buddha_staff", "chairman_robe"]
+    },
+    "yhwach": {
+      "name": "👑 Yhwach",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["almighty_crown", "quincy_cloak"]
+    },
+    "aizen": {
+      "name": "🦋 Sosuke Aizen",
+      "level": 79,
+      "hp": 1480,
+      "attack": 148,
+      "defense": 128,
+      "exp": 780,
+      "drops": ["hogyoku", "arrancar_robe"]
+    },
+    "pain": {
+      "name": "👁️ Pain",
+      "level": 77,
+      "hp": 1440,
+      "attack": 144,
+      "defense": 124,
+      "exp": 740,
+      "drops": ["rinnegan_scroll", "akatsuki_cloak"]
+    },
+    "kaguya": {
+      "name": "🌙 Kaguya Otsutsuki",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["rinne_sharingan", "celestial_robe"]
+    },
+    "yoriichi": {
+      "name": "☀️ Yoriichi Tsugikuni",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["sun_katana", "breath_earrings"]
+    },
+    "toji_fushiguro": {
+      "name": "🗡️ Toji Fushiguro",
+      "level": 76,
+      "hp": 1420,
+      "attack": 142,
+      "defense": 122,
+      "exp": 720,
+      "drops": ["cursed_spear", "assassin_suit"]
+    },
+    "feitan": {
+      "name": "⚔️ Feitan",
+      "level": 75,
+      "hp": 1400,
+      "attack": 140,
+      "defense": 120,
+      "exp": 700,
+      "drops": ["pain_umbrella", "spider_coat"]
+    },
+    "ichigo_kurosaki": {
+      "name": "⚔️ Ichigo Kurosaki",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["zangetsu", "bankai_robe"]
+    },
+    "naruto_sage": {
+      "name": "🦊 Sage Naruto",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["sage_scroll", "kyuubi_cloak"]
+    },
+    "sasuke_uchiha": {
+      "name": "⚡ Sasuke Uchiha",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["kusanagi", "rinnegan_eye"]
+    },
+    "tatsumaki": {
+      "name": "🌪️ Tatsumaki",
+      "level": 78,
+      "hp": 1450,
+      "attack": 145,
+      "defense": 125,
+      "exp": 750,
+      "drops": ["psychic_orb", "esper_dress"]
+    },
+    "garou": {
+      "name": "👹 Cosmic Garou",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["cosmic_fist", "monster_core"]
+    },
+    "yuno": {
+      "name": "🌟 Yuno",
+      "level": 77,
+      "hp": 1440,
+      "attack": 144,
+      "defense": 124,
+      "exp": 740,
+      "drops": ["sylph_grimoire", "spade_crown"]
+    },
+    "asta": {
+      "name": "⚔️ Asta",
+      "level": 77,
+      "hp": 1440,
+      "attack": 144,
+      "defense": 124,
+      "exp": 740,
+      "drops": ["anti_magic_sword", "black_bull_robe"]
+    },
+    "julius_novachrono": {
+      "name": "⌛ Julius Novachrono",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["time_grimoire", "wizard_cape"]
+    },
+    "zenon": {
+      "name": "💀 Zenon Zogratis",
+      "level": 78,
+      "hp": 1450,
+      "attack": 145,
+      "defense": 125,
+      "exp": 750,
+      "drops": ["bone_sword", "devil_heart"]
+    },
+    "itadori_yuji": {
+      "name": "👊 Yuji Itadori",
+      "level": 76,
+      "hp": 1420,
+      "attack": 142,
+      "defense": 122,
+      "exp": 720,
+      "drops": ["cursed_band", "jujutsu_uniform"]
+    },
+    "megumi_fushiguro": {
+      "name": "🐺 Megumi Fushiguro",
+      "level": 76,
+      "hp": 1420,
+      "attack": 142,
+      "defense": 122,
+      "exp": 720,
+      "drops": ["divine_dogs", "shadow_orb"]
+    },
+    "yamamoto": {
+      "name": "🔥 Genryusai Yamamoto",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["ryujin_jakka", "captain_haori"]
+    },
+    "ulquiorra": {
+      "name": "🦇 Ulquiorra Cifer",
+      "level": 78,
+      "hp": 1450,
+      "attack": 145,
+      "defense": 125,
+      "exp": 750,
+      "drops": ["murcielago", "espada_uniform"]
+    },
+    "hashirama": {
+      "name": "🌳 Hashirama Senju",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["wood_staff", "hokage_necklace"]
+    },
+    "tobirama": {
+      "name": "💧 Tobirama Senju",
+      "level": 79,
+      "hp": 1480,
+      "attack": 148,
+      "defense": 128,
+      "exp": 780,
+      "drops": ["water_blade", "hokage_armor"]
+    },
+    "minato": {
+      "name": "⚡ Minato Namikaze",
+      "level": 79,
+      "hp": 1480,
+      "attack": 148,
+      "defense": 128,
+      "exp": 780,
+      "drops": ["flying_kunai", "hokage_cloak"]
+    },
+    "kokushibo": {
+      "name": "🌙 Kokushibo",
+      "level": 79,
+      "hp": 1480,
+      "attack": 148,
+      "defense": 128,
+      "exp": 780,
+      "drops": ["moon_sword", "upper_uniform"]
+    },
+    "doflamingo": {
+      "name": "🕶️ Doflamingo",
+      "level": 77,
+      "hp": 1440,
+      "attack": 144,
+      "defense": 124,
+      "exp": 740,
+      "drops": ["string_coat", "king_crown"]
+    },
+    "whitebeard": {
+      "name": "👊 Whitebeard",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["gura_blade", "captain_coat"]
+    },
+    "zeno": {
+      "name": "👑 Zeno",
+      "level": 95,
+      "hp": 2500,
+      "attack": 280,
+      "defense": 250,
+      "exp": 1500,
+      "drops": ["dragon_king_crown", "omni_orb"]
+    },
+    "grand_priest": {
+      "name": "😇 Grand Priest",
+      "level": 98,
+      "hp": 2800,
+      "attack": 300,
+      "defense": 280,
+      "exp": 1800,
+      "drops": ["angel_staff", "divine_robe"]
+    },
+    "ultra_instinct_goku": {
+      "name": "⚡ Ultra Instinct Goku",
+      "level": 95,
+      "hp": 2600,
+      "attack": 290,
+      "defense": 260,
+      "exp": 1600,
+      "drops": ["ultra_gi", "divine_essence"]
+    },
+    "cosmic_armor_superman": {
+      "name": "🦸‍♂️ Cosmic Armor Superman",
+      "level": 99,
+      "hp": 3000,
+      "attack": 320,
+      "defense": 300,
+      "exp": 2000,
+      "drops": ["cosmic_armor", "plot_manipulator"]
+    },
+    "anti_spiral": {
+      "name": "🌌 Anti-Spiral",
+      "level": 96,
+      "hp": 2700,
+      "attack": 285,
+      "defense": 270,
+      "exp": 1700,
+      "drops": ["spiral_nemesis", "probability_manipulator"]
+    },
+    "featherine": {
+      "name": "📚 Featherine Augustus Aurora",
+      "level": 100,
+      "hp": 3500,
+      "attack": 350,
+      "defense": 330,
+      "exp": 2500,
+      "drops": ["creator_quill", "meta_crown"]
+    },
+    "rimuru_eos": {
+      "name": "⭐ True Dragon Rimuru",
+      "level": 97,
+      "hp": 2900,
+      "attack": 310,
+      "defense": 290,
+      "exp": 1900,
+      "drops": ["void_god_sword", "turn_null_core"]
+    },
+    "anos_voldigoad_full": {
+      "name": "👿 True Demon King Anos",
+      "level": 96,
+      "hp": 2800,
+      "attack": 300,
+      "defense": 280,
+      "exp": 1800,
+      "drops": ["venuzdonoa", "silver_sea_core"]
+    },
+    "yogiri": {
+      "name": "💀 Yogiri Takatou",
+      "level": 99,
+      "hp": 3200,
+      "attack": 330,
+      "defense": 310,
+      "exp": 2200,
+      "drops": ["instant_death", "concept_eraser"]
+    },
+    "hajun": {
+      "name": "🌑 Hajun",
+      "level": 98,
+      "hp": 3000,
+      "attack": 320,
+      "defense": 300,
+      "exp": 2000,
+      "drops": ["mandala_blade", "demon_crown"]
+    },
+    "kami_tenchi": {
+      "name": "🌟 Kami Tenchi",
+      "level": 100,
+      "hp": 3500,
+      "attack": 350,
+      "defense": 330,
+      "exp": 2500,
+      "drops": ["creation_orb", "choushin_crown"]
+    },
+    "mercurius": {
+      "name": "⚜️ Mercurius",
+      "level": 97,
+      "hp": 2900,
+      "attack": 310,
+      "defense": 290,
+      "exp": 1900,
+      "drops": ["mercury_throne", "divine_spear"]
+    },
+    "elder_god_demonbane": {
+      "name": "🤖 Elder God Demonbane",
+      "level": 98,
+      "hp": 3100,
+      "attack": 325,
+      "defense": 305,
+      "exp": 2100,
+      "drops": ["elder_sign", "chaos_blade"]
+    },
+    "lambda_experience": {
+      "name": "🎲 Lambda Experience",
+      "level": 96,
+      "hp": 2800,
+      "attack": 300,
+      "defense": 280,
+      "exp": 1800,
+      "drops": ["certainty_dice", "miracle_crown"]
+    },
+    "kakashi_hatake": {
+      "name": "👑 Kakashi Hatake",
+      "level": 95,
+      "hp": 2600,
+      "attack": 290,
+      "defense": 260,
+      "exp": 1600,
+      "drops": ["shadow_clone", "kakashi_robe"]
+    },
+    "sea_stone_armor": {
+      "name": "💠 Sea Stone Armor",
+      "type": "ARMOR",
+      "description": "🌟 Armor dari batu laut",
+      "price": 900000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 100,
+          "attack": 20
+        }
+      },
+      "baseStats": {
+        "defense": 100,
+        "attack": 20
+      },
+      "upgradeStats": {
+        "defense": 20,
+        "attack": 5
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "zangetsu": {
+      "name": "⚔️ Zangetsu",
+      "type": "WEAPON",
+      "description": "🌟 Zanpakuto legendaris milik Ichigo Kurosaki",
+      "price": 850000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 180,
+          "defense": 40
+        }
+      },
+      "baseStats": {
+        "attack": 180,
+        "defense": 40
+      },
+      "upgradeStats": {
+        "attack": 35,
+        "defense": 8
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1,
+      "maxDurability": 1000
+    },
+    "excalibur": {
+      "name": "🗡️ Excalibur",
+      "type": "WEAPON",
+      "description": "🌟 Pedang suci dari Soul Eater",
+      "price": 800000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 160,
+          "defense": 50
+        }
+      },
+      "baseStats": {
+        "attack": 160,
+        "defense": 50
+      },
+      "upgradeStats": {
+        "attack": 30,
+        "defense": 10
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1,
+      "maxDurability": 950
+    },
+    "dominator": {
+      "name": "🔫 Dominator",
+      "type": "WEAPON",
+      "description": "🌟 Senjata penegak hukum dari Psycho-Pass",
+      "price": 780000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 200,
+          "defense": 20
+        }
+      },
+      "baseStats": {
+        "attack": 200,
+        "defense": 20
+      },
+      "upgradeStats": {
+        "attack": 40,
+        "defense": 5
+      },
+      "maxLevel": 8,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1,
+      "maxDurability": 800
+    },
+    "dark_repulser": {
+      "name": "⚔️ Dark Repulser",
+      "type": "WEAPON",
+      "description": "🌟 Pedang kristal dari Sword Art Online",
+      "price": 700000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 150,
+          "defense": 45
+        }
+      },
+      "baseStats": {
+        "attack": 150,
+        "defense": 45
+      },
+      "upgradeStats": {
+        "attack": 30,
+        "defense": 9
+      },
+      "maxLevel": 9,
+      "rarity": "EPIC",
+      "stackLimit": 1,
+      "maxDurability": 900
+    },
+    "berserker_armor": {
+      "name": "🛡️ Berserker Armor",
+      "type": "ARMOR",
+      "description": "🌟 Armor terkutuk dari Berserk",
+      "price": 950000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 200,
+          "attack": 100
+        }
+      },
+      "baseStats": {
+        "defense": 200,
+        "attack": 100
+      },
+      "upgradeStats": {
+        "defense": 40,
+        "attack": 20
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1,
+      "maxDurability": 1000
+    },
+    "eva_unit_01": {
+      "name": "🤖 EVA Unit-01 Armor",
+      "type": "ARMOR",
+      "description": "🌟 Armor bio-mecha dari Evangelion",
+      "price": 900000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 180,
+          "attack": 90
+        }
+      },
+      "baseStats": {
+        "defense": 180,
+        "attack": 90
+      },
+      "upgradeStats": {
+        "defense": 35,
+        "attack": 18
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1,
+      "maxDurability": 950
+    },
+    "sacred_treasure": {
+      "name": "✨ Sacred Treasure",
+      "type": "ARMOR",
+      "description": "🌟 Armor suci dari Seven Deadly Sins",
+      "price": 850000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 160,
+          "attack": 80
+        }
+      },
+      "baseStats": {
+        "defense": 160,
+        "attack": 80
+      },
+      "upgradeStats": {
+        "defense": 32,
+        "attack": 16
+      },
+      "maxLevel": 9,
+      "rarity": "EPIC",
+      "stackLimit": 1,
+      "maxDurability": 900
+    },
+    "kamui": {
+      "name": "👘 Kamui Senketsu",
+      "type": "ARMOR",
+      "description": "🌟 Seragam tempur dari Kill la Kill",
+      "price": 800000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 150,
+          "attack": 75
+        }
+      },
+      "baseStats": {
+        "defense": 150,
+        "attack": 75
+      },
+      "upgradeStats": {
+        "defense": 30,
+        "attack": 15
+      },
+      "maxLevel": 8,
+      "rarity": "EPIC",
+      "stackLimit": 1,
+      "maxDurability": 850
+    },
+    "behelit": {
+      "name": "📿 Behelit",
+      "type": "ACCESSORY",
+      "description": "🌟 Artefak kutukan dari Berserk",
+      "price": 700000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 100,
+          "defense": 100
+        }
+      },
+      "baseStats": {
+        "attack": 100,
+        "defense": 100
+      },
+      "upgradeStats": {
+        "attack": 20,
+        "defense": 20
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "philosophers_stone": {
+      "name": "💎 Philosopher's Stone",
+      "type": "ACCESSORY",
+      "description": "🌟 Batu bertuah dari Fullmetal Alchemist",
+      "price": 650000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 90,
+          "defense": 90
+        }
+      },
+      "baseStats": {
+        "attack": 90,
+        "defense": 90
+      },
+      "upgradeStats": {
+        "attack": 18,
+        "defense": 18
+      },
+      "maxLevel": 9,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "dragon_balls": {
+      "name": "🔮 Dragon Balls",
+      "type": "ACCESSORY",
+      "description": "🌟 7 bola naga pengabul permintaan",
+      "price": 1000000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 120,
+          "defense": 120
+        }
+      },
+      "baseStats": {
+        "attack": 120,
+        "defense": 120
+      },
+      "upgradeStats": {
+        "attack": 24,
+        "defense": 24
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "sharingan": {
+      "name": "👁️ Sharingan",
+      "type": "ACCESSORY",
+      "description": "🌟 Mata legendaris klan Uchiha",
+      "price": 800000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 110,
+          "defense": 80
+        }
+      },
+      "baseStats": {
+        "attack": 110,
+        "defense": 80
+      },
+      "upgradeStats": {
+        "attack": 22,
+        "defense": 16
+      },
+      "maxLevel": 9,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "phoenix_down": {
+      "name": "🪶 Phoenix Down",
+      "type": "CONSUMABLE",
+      "description": "🌟 Bulu phoenix pembangkit dari Final Fantasy",
+      "price": 200000,
+      "effect": {
+        "type": "HEAL_AND_BUFF",
+        "health": -1,
+        "stats": {
+          "attack": 30,
+          "defense": 30
+        },
+        "duration": 2
+      },
+      "rarity": "LEGENDARY",
+      "stackLimit": 5
+    },
+    "astral_orb": {
+      "name": "🔮 Orb Astral",
+      "type": "ACCESSORY",
+      "description": "Orb dengan kekuatan bintang",
+      "price": 650000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 55,
+          "defense": 40
+        }
+      },
+      "baseStats": {
+        "attack": 55,
+        "defense": 40
+      },
+      "upgradeStats": {
+        "attack": 11,
+        "defense": 8
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "demon_blade": {
+      "name": "👿 Demon Blade",
+      "type": "WEAPON",
+      "description": "🌟 Pedang iblis legendaris dari neraka",
+      "price": 850000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 175,
+          "defense": 35
+        }
+      },
+      "baseStats": {
+        "attack": 175,
+        "defense": 35
+      },
+      "upgradeStats": {
+        "attack": 35,
+        "defense": 7
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1,
+      "maxDurability": 1000
+    },
+    "celestial_blade": {
+      "name": "🌟 Celestial Blade",
+      "type": "WEAPON",
+      "description": "🌟 Pedang suci dari surga",
+      "price": 900000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 165,
+          "defense": 45
+        }
+      },
+      "baseStats": {
+        "attack": 165,
+        "defense": 45
+      },
+      "upgradeStats": {
+        "attack": 33,
+        "defense": 9
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1,
+      "maxDurability": 950
+    },
+    "dragon_slayer": {
+      "name": "🐉 Dragon Slayer",
+      "type": "WEAPON",
+      "description": "🌟 Pedang pembunuh naga",
+      "price": 880000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 170,
+          "defense": 40
+        }
+      },
+      "baseStats": {
+        "attack": 170,
+        "defense": 40
+      },
+      "upgradeStats": {
+        "attack": 34,
+        "defense": 8
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1,
+      "maxDurability": 900
+    },
+    "void_sword": {
+      "name": "🌌 Void Sword",
+      "type": "WEAPON",
+      "description": "🌟 Pedang dari dimensi kekosongan",
+      "price": 920000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 180,
+          "defense": 30
+        }
+      },
+      "baseStats": {
+        "attack": 180,
+        "defense": 30
+      },
+      "upgradeStats": {
+        "attack": 36,
+        "defense": 6
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1,
+      "maxDurability": 1000
+    },
+    "thunder_blade": {
+      "name": "⚡ Thunder Blade",
+      "type": "WEAPON",
+      "description": "🌟 Pedang dengan kekuatan petir",
+      "price": 870000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 160,
+          "defense": 50
+        }
+      },
+      "baseStats": {
+        "attack": 160,
+        "defense": 50
+      },
+      "upgradeStats": {
+        "attack": 32,
+        "defense": 10
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1,
+      "maxDurability": 950
+    },
+    "divine_plate": {
+      "name": "✨ Divine Plate",
+      "type": "ARMOR",
+      "description": "🌟 Armor suci dari dewa",
+      "price": 950000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 190,
+          "attack": 40
+        }
+      },
+      "baseStats": {
+        "defense": 190,
+        "attack": 40
+      },
+      "upgradeStats": {
+        "defense": 38,
+        "attack": 8
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "shadow_mail": {
+      "name": "👻 Shadow Mail",
+      "type": "ARMOR",
+      "description": "🌟 Armor dari bayangan kegelapan",
+      "price": 900000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 170,
+          "attack": 60
+        }
+      },
+      "baseStats": {
+        "defense": 170,
+        "attack": 60
+      },
+      "upgradeStats": {
+        "defense": 34,
+        "attack": 12
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "crystal_armor": {
+      "name": "💎 Crystal Armor",
+      "type": "ARMOR",
+      "description": "🌟 Armor dari kristal abadi",
+      "price": 920000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 180,
+          "attack": 50
+        }
+      },
+      "baseStats": {
+        "defense": 180,
+        "attack": 50
+      },
+      "upgradeStats": {
+        "defense": 36,
+        "attack": 10
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "phoenix_mail": {
+      "name": "🔥 Phoenix Mail",
+      "type": "ARMOR",
+      "description": "🌟 Armor dari bulu phoenix",
+      "price": 930000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 175,
+          "attack": 55
+        }
+      },
+      "baseStats": {
+        "defense": 175,
+        "attack": 55
+      },
+      "upgradeStats": {
+        "defense": 35,
+        "attack": 11
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "dragon_scale_mail": {
+      "name": "🐲 Dragon Scale Mail",
+      "type": "ARMOR",
+      "description": "🌟 Armor dari sisik naga kuno",
+      "price": 940000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 185,
+          "attack": 45
+        }
+      },
+      "baseStats": {
+        "defense": 185,
+        "attack": 45
+      },
+      "upgradeStats": {
+        "defense": 37,
+        "attack": 9
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "celestial_crown": {
+      "name": "👑 Celestial Crown",
+      "type": "ACCESSORY",
+      "description": "🌟 Mahkota dari surga",
+      "price": 800000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 70,
+          "defense": 70
+        }
+      },
+      "baseStats": {
+        "attack": 70,
+        "defense": 70
+      },
+      "upgradeStats": {
+        "attack": 14,
+        "defense": 14
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "demon_heart": {
+      "name": "❤️ Demon Heart",
+      "type": "ACCESSORY",
+      "description": "🌟 Jantung iblis yang berdenyut",
+      "price": 850000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 80,
+          "defense": 60
+        }
+      },
+      "baseStats": {
+        "attack": 80,
+        "defense": 60
+      },
+      "upgradeStats": {
+        "attack": 16,
+        "defense": 12
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "void_crystal": {
+      "name": "🌌 Void Crystal",
+      "type": "ACCESSORY",
+      "description": "🌟 Kristal dari dimensi void",
+      "price": 820000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 75,
+          "defense": 65
+        }
+      },
+      "baseStats": {
+        "attack": 75,
+        "defense": 65
+      },
+      "upgradeStats": {
+        "attack": 15,
+        "defense": 13
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "dragon_eye": {
+      "name": "👁️ Dragon Eye",
+      "type": "ACCESSORY",
+      "description": "🌟 Mata naga yang memberikan kekuatan",
+      "price": 880000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 85,
+          "defense": 55
+        }
+      },
+      "baseStats": {
+        "attack": 85,
+        "defense": 55
+      },
+      "upgradeStats": {
+        "attack": 17,
+        "defense": 11
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "phoenix_feather": {
+      "name": "🪶 Phoenix Feather",
+      "type": "ACCESSORY",
+      "description": "🌟 Bulu phoenix yang memberi kekuatan",
+      "price": 830000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 65,
+          "defense": 75
+        }
+      },
+      "baseStats": {
+        "attack": 65,
+        "defense": 75
+      },
+      "upgradeStats": {
+        "attack": 13,
+        "defense": 15
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
     }
   },
   "ITEMS": {
@@ -431,31 +2137,6 @@
       "stackLimit": 1,
       "maxDurability": 500
     },
-    "sea_stone_armor": {
-      "name": "💠 Sea Stone Armor",
-      "type": "ARMOR",
-      "description": "🌟 Armor dari batu laut",
-      "price": 900000,
-      "effect": {
-        "type": "EQUIP",
-        "stats": {
-          "defense": 100,
-          "attack": 20
-        }
-      },
-      "baseStats": {
-        "defense": 100,
-        "attack": 20
-      },
-      "upgradeStats": {
-        "defense": 20,
-        "attack": 5
-      },
-      "maxLevel": 10,
-      "rarity": "LEGENDARY",
-      "stackLimit": 1,
-      "maxDurability": 1000
-    },
     "marine_admiral_coat": {
       "name": "🧥 Marine Admiral Coat",
       "type": "ARMOR",
@@ -523,9 +2204,9 @@
         "defense": 50
       },
       "upgradeStats": {
-        "attack": 10,
-        "defense": 10
-      },
+          "attack": 10,
+          "defense": 10
+        },
       "maxLevel": 10,
       "rarity": "LEGENDARY",
       "stackLimit": 1
@@ -553,39 +2234,6 @@
       "maxLevel": 8,
       "rarity": "EPIC",
       "stackLimit": 1
-    },
-    "rumble_ball": {
-      "name": "💊 Rumble Ball",
-      "type": "CONSUMABLE",
-      "description": "⚡ Meningkatkan kekuatan 2x lipat selama 1 jam",
-      "price": 1000,
-      "effect": {
-        "type": "BUFF",
-        "stats": {
-          "attack": 50,
-          "defense": 50
-        },
-        "duration": 3600
-      },
-      "rarity": "EPIC",
-      "stackLimit": 5
-    },
-    "meat": {
-      "name": "🍖 Daging Super",
-      "type": "CONSUMABLE",
-      "description": "❤️ Memulihkan 1000 HP dan memberikan buff",
-      "price": 800,
-      "effect": {
-        "type": "HEAL_AND_BUFF",
-        "health": 1000,
-        "stats": {
-          "attack": 20,
-          "defense": 20
-        },
-        "duration": 1800
-      },
-      "rarity": "RARE",
-      "stackLimit": 10
     },
     "sea_stone": {
       "name": "💠 Batu Laut",
@@ -634,6 +2282,1988 @@
       "rarity": "COMMON",
       "stackLimit": 1,
       "maxDurability": 100
+    },
+    "training_gi": {
+      "name": "🥋 Training Gi",
+      "type": "ARMOR",
+      "description": "🛡️ Baju latihan dasar",
+      "price": 100,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 5
+        }
+      },
+      "baseStats": {
+        "defense": 5
+      },
+      "upgradeStats": {
+        "defense": 2
+      },
+      "maxLevel": 5,
+      "rarity": "COMMON",
+      "stackLimit": 1,
+      "maxDurability": 100
+    },
+    "fancy_clothes": {
+      "name": "👔 Baju Mewah",
+      "type": "ARMOR",
+      "description": "Baju berkelas tinggi",
+      "price": 15000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 15,
+          "attack": 0
+        }
+      },
+      "baseStats": {
+        "defense": 15,
+        "attack": 0
+      },
+      "upgradeStats": {
+        "defense": 3,
+        "attack": 0
+      },
+      "maxLevel": 5,
+      "rarity": "RARE",
+      "stackLimit": 1,
+      "maxDurability": 200
+    },
+    "captain_coat": {
+      "name": "🧥 Jubah Kapten",
+      "type": "ARMOR", 
+      "description": "Jubah resmi Kapten Marine",
+      "price": 80000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 30,
+          "attack": 5
+        }
+      },
+      "baseStats": {
+        "defense": 30,
+        "attack": 5
+      },
+      "upgradeStats": {
+        "defense": 6,
+        "attack": 1
+      },
+      "maxLevel": 8,
+      "rarity": "EPIC",
+      "stackLimit": 1,
+      "maxDurability": 400
+    },
+    "circus_knife": {
+      "name": "🔪 Pisau Sirkus",
+      "type": "WEAPON",
+      "description": "Pisau lempar akrobatik",
+      "price": 8000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 20,
+          "defense": 0
+        }
+      },
+      "baseStats": {
+        "attack": 20,
+        "defense": 0
+      },
+      "upgradeStats": {
+        "attack": 4,
+        "defense": 0
+      },
+      "maxLevel": 6,
+      "rarity": "RARE",
+      "stackLimit": 1,
+      "maxDurability": 250
+    },
+    "red_nose": {
+      "name": "👃 Hidung Merah",
+      "type": "ACCESSORY",
+      "description": "Hidung badut ajaib",
+      "price": 5000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 5,
+          "defense": 5
+        }
+      },
+      "baseStats": {
+        "attack": 5,
+        "defense": 5
+      },
+      "upgradeStats": {
+        "attack": 1,
+        "defense": 1
+      },
+      "maxLevel": 5,
+      "rarity": "RARE",
+      "stackLimit": 1
+    },
+    "winter_coat": {
+      "name": "🧥 Mantel Musim Dingin",
+      "type": "ARMOR",
+      "description": "Melindungi dari cuaca dingin",
+      "price": 30000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 25,
+          "attack": 0
+        }
+      },
+      "baseStats": {
+        "defense": 25,
+        "attack": 0
+      },
+      "upgradeStats": {
+        "defense": 5,
+        "attack": 0
+      },
+      "maxLevel": 7,
+      "rarity": "RARE",
+      "stackLimit": 1,
+      "maxDurability": 300
+    },
+    "sky_sword": {
+      "name": "⚔️ Pedang Langit",
+      "type": "WEAPON",
+      "description": "Pedang legendaris dari Pulau Langit",
+      "price": 800000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 90,
+          "defense": 40
+        }
+      },
+      "baseStats": {
+        "attack": 90,
+        "defense": 40
+      },
+      "upgradeStats": {
+        "attack": 18,
+        "defense": 8
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "thunder_staff": {
+      "name": "⚡ Tongkat Petir",
+      "type": "WEAPON",
+      "description": "Tongkat dengan kekuatan petir",
+      "price": 600000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 85,
+          "defense": 30
+        }
+      },
+      "baseStats": {
+        "attack": 85,
+        "defense": 30
+      },
+      "upgradeStats": {
+        "attack": 17,
+        "defense": 6
+      },
+      "maxLevel": 8,
+      "rarity": "EPIC",
+      "stackLimit": 1
+    },
+    "dragon_armor": {
+      "name": "🐲 Armor Naga",
+      "type": "ARMOR",
+      "description": "Armor dari sisik naga legendaris",
+      "price": 1000000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 120,
+          "attack": 30
+        }
+      },
+      "baseStats": {
+        "defense": 120,
+        "attack": 30
+      },
+      "upgradeStats": {
+        "defense": 24,
+        "attack": 6
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "mermaid_pearl": {
+      "name": "🌊 Mutiara Duyung",
+      "type": "ACCESSORY",
+      "description": "Mutiara ajaib dari kerajaan duyung",
+      "price": 500000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 40,
+          "attack": 40
+        }
+      },
+      "baseStats": {
+        "defense": 40,
+        "attack": 40
+      },
+      "upgradeStats": {
+        "defense": 8,
+        "attack": 8
+      },
+      "maxLevel": 8,
+      "rarity": "EPIC",
+      "stackLimit": 1
+    },
+    "phoenix_wing": {
+      "name": "🔥 Sayap Phoenix",
+      "type": "ACCESSORY",
+      "description": "Sayap dari burung legendaris",
+      "price": 700000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 60,
+          "defense": 30
+        }
+      },
+      "baseStats": {
+        "attack": 60,
+        "defense": 30
+      },
+      "upgradeStats": {
+        "attack": 12,
+        "defense": 6
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "void_blade": {
+      "name": "🌌 Pedang Void",
+      "type": "WEAPON",
+      "description": "Pedang dari dimensi lain",
+      "price": 900000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 95,
+          "defense": 35
+        }
+      },
+      "baseStats": {
+        "attack": 95,
+        "defense": 35
+      },
+      "upgradeStats": {
+        "attack": 19,
+        "defense": 7
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "celestial_robe": {
+      "name": "✨ Jubah Surgawi",
+      "type": "ARMOR",
+      "description": "Jubah suci dari Pulau Langit",
+      "price": 800000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 100,
+          "attack": 25
+        }
+      },
+      "baseStats": {
+        "defense": 100,
+        "attack": 25
+      },
+      "upgradeStats": {
+        "defense": 20,
+        "attack": 5
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "shadow_dagger": {
+      "name": "🗡️ Belati Bayangan",
+      "type": "WEAPON",
+      "description": "Belati dengan kekuatan bayangan",
+      "price": 400000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 70,
+          "defense": 20
+        }
+      },
+      "baseStats": {
+        "attack": 70,
+        "defense": 20
+      },
+      "upgradeStats": {
+        "attack": 14,
+        "defense": 4
+      },
+      "maxLevel": 8,
+      "rarity": "EPIC",
+      "stackLimit": 1
+    },
+    "storm_bow": {
+      "name": "🏹 Busur Badai",
+      "type": "WEAPON",
+      "description": "Busur dengan kekuatan badai",
+      "price": 550000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 80,
+          "defense": 25
+        }
+      },
+      "baseStats": {
+        "attack": 80,
+        "defense": 25
+      },
+      "upgradeStats": {
+        "attack": 16,
+        "defense": 5
+      },
+      "maxLevel": 8,
+      "rarity": "EPIC",
+      "stackLimit": 1
+    },
+    "sacred_staff": {
+      "name": "🌟 Tongkat Suci",
+      "type": "WEAPON",
+      "description": "Tongkat dengan kekuatan suci",
+      "price": 650000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+      "attack": 75,
+          "defense": 35
+        }
+      },
+      "baseStats": {
+        "attack": 75,
+        "defense": 35
+      },
+      "upgradeStats": {
+        "attack": 15,
+        "defense": 7
+      },
+      "maxLevel": 8,
+      "rarity": "EPIC",
+      "stackLimit": 1
+    },
+    "astral_crown": {
+      "name": "👑 Mahkota Astral",
+      "type": "ACCESSORY",
+      "description": "Mahkota dari bintang-bintang",
+      "price": 750000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 45,
+          "defense": 45
+        }
+      },
+      "baseStats": {
+        "attack": 45,
+        "defense": 45
+      },
+      "upgradeStats": {
+        "attack": 9,
+        "defense": 9
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "sea_king_armor": {
+      "name": "🌊 Armor Raja Laut",
+      "type": "ARMOR",
+      "description": "Armor dari sisik Raja Laut",
+      "price": 850000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 110,
+          "attack": 28
+        }
+      },
+      "baseStats": {
+        "defense": 110,
+        "attack": 28
+      },
+      "upgradeStats": {
+        "defense": 22,
+        "attack": 6
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "forest_bow": {
+      "name": "🎯 Busur Hutan",
+      "type": "WEAPON",
+      "description": "Busur dari kayu pohon kuno",
+      "price": 350000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 65,
+          "defense": 18
+        }
+      },
+      "baseStats": {
+        "attack": 65,
+        "defense": 18
+      },
+      "upgradeStats": {
+        "attack": 13,
+        "defense": 4
+      },
+      "maxLevel": 8,
+      "rarity": "EPIC",
+      "stackLimit": 1
+    },
+    "void_armor": {
+      "name": "🌌 Armor Void",
+      "type": "ARMOR",
+      "description": "Armor dari materi void",
+      "price": 950000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 115,
+          "attack": 32
+        }
+      },
+      "baseStats": {
+        "defense": 115,
+        "attack": 32
+      },
+      "upgradeStats": {
+        "defense": 23,
+        "attack": 6
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "storm_shield": {
+      "name": "🛡️ Perisai Badai",
+      "type": "ARMOR",
+      "description": "Perisai dengan kekuatan badai",
+      "price": 450000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 75,
+          "attack": 15
+        }
+      },
+      "baseStats": {
+        "defense": 75,
+        "attack": 15
+      },
+      "upgradeStats": {
+        "defense": 15,
+        "attack": 3
+      },
+      "maxLevel": 8,
+      "rarity": "EPIC",
+      "stackLimit": 1
+    },
+    "dragon_necklace": {
+      "name": "🐲 Kalung Naga",
+      "type": "ACCESSORY",
+      "description": "Kalung dengan kekuatan naga",
+      "price": 600000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 50,
+          "defense": 35
+        }
+      },
+      "baseStats": {
+        "attack": 50,
+        "defense": 35
+      },
+      "upgradeStats": {
+        "attack": 10,
+        "defense": 7
+      },
+      "maxLevel": 8,
+      "rarity": "EPIC",
+      "stackLimit": 1
+    },
+    "celestial_staff": {
+      "name": "🌟 Tongkat Surgawi",
+      "type": "WEAPON",
+      "description": "Tongkat dengan kekuatan surgawi",
+      "price": 700000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 85,
+          "defense": 38
+        }
+      },
+      "baseStats": {
+        "attack": 85,
+        "defense": 38
+      },
+      "upgradeStats": {
+        "attack": 17,
+        "defense": 8
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "shadow_cloak": {
+      "name": "👻 Jubah Bayangan",
+      "type": "ARMOR",
+      "description": "Jubah dengan kekuatan bayangan",
+      "price": 500000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 80,
+          "attack": 20
+        }
+      },
+      "baseStats": {
+        "defense": 80,
+        "attack": 20
+      },
+      "upgradeStats": {
+        "defense": 16,
+        "attack": 4
+      },
+      "maxLevel": 8,
+      "rarity": "EPIC",
+      "stackLimit": 1
+    },
+    "astral_orb": {
+      "name": "🔮 Orb Astral",
+      "type": "ACCESSORY",
+      "description": "Orb dengan kekuatan bintang",
+      "price": 650000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 55,
+          "defense": 40
+        }
+      },
+      "baseStats": {
+        "attack": 55,
+        "defense": 40
+      },
+      "upgradeStats": {
+        "attack": 11,
+        "defense": 8
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "sacred_shield": {
+      "name": "🛡️ Perisai Suci",
+      "type": "ARMOR",
+      "description": "Perisai dengan kekuatan suci",
+      "price": 550000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "defense": 90,
+          "attack": 22
+        }
+      },
+      "baseStats": {
+        "defense": 90,
+        "attack": 22
+      },
+      "upgradeStats": {
+        "defense": 18,
+        "attack": 4
+      },
+      "maxLevel": 8,
+      "rarity": "EPIC",
+      "stackLimit": 1
+    },
+    "gomu_gomu_weapon": {
+      "name": "🍎 Gomu Gomu no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang memberikan kekuatan karet kepada penggunanya",
+      "price": 500000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 100,
+          "defense": 50,
+          "speed": 30
+        }
+      },
+      "baseStats": {
+        "attack": 100,
+        "defense": 50,
+        "speed": 30
+      },
+      "upgradeStats": {
+        "attack": 20,
+        "defense": 10,
+        "speed": 5
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "bara_bara_weapon": {
+      "name": "✂️ Bara Bara no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang memberikan kemampuan membelah tubuh",
+      "price": 400000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 85,
+          "defense": 60,
+          "speed": 25
+        }
+      },
+      "baseStats": {
+        "attack": 85,
+        "defense": 60,
+        "speed": 25
+      },
+      "upgradeStats": {
+        "attack": 15,
+        "defense": 12,
+        "speed": 5
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "sube_sube_weapon": {
+      "name": "✨ Sube Sube no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang membuat tubuh licin dan kebal serangan fisik",
+      "price": 350000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 70,
+          "defense": 90,
+          "speed": 35
+        }
+      },
+      "baseStats": {
+        "attack": 70,
+        "defense": 90,
+        "speed": 35
+      },
+      "upgradeStats": {
+        "attack": 10,
+        "defense": 18,
+        "speed": 7
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+   
+    "bomu_bomu_weapon": {
+      "name": "💣 Bomu Bomu no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang membuat tubuh menjadi bom",
+      "price": 450000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 95,
+          "defense": 45,
+          "speed": 30
+        }
+      },
+      "baseStats": {
+        "attack": 95,
+        "defense": 45,
+        "speed": 30
+      },
+      "upgradeStats": {
+        "attack": 19,
+        "defense": 9,
+        "speed": 6
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "hana_hana_weapon": {
+      "name": "🌸 Hana Hana no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat menumbuhkan anggota tubuh",
+      "price": 420000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 80,
+          "defense": 75,
+          "speed": 35
+        }
+      },
+      "baseStats": {
+        "attack": 80,
+        "defense": 75,
+        "speed": 35
+      },
+      "upgradeStats": {
+        "attack": 16,
+        "defense": 15,
+        "speed": 7
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "doru_doru_weapon": {
+      "name": "🕯️ Doru Doru no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat menghasilkan dan memanipulasi lilin",
+      "price": 380000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 75,
+          "defense": 80,
+          "speed": 25
+        }
+      },
+      "baseStats": {
+        "attack": 75,
+        "defense": 80,
+        "speed": 25
+      },
+      "upgradeStats": {
+        "attack": 15,
+        "defense": 16,
+        "speed": 5
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "baku_baku_weapon": {
+      "name": "🍽️ Baku Baku no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat memakan dan menggabungkan apa saja",
+      "price": 400000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 85,
+          "defense": 70,
+          "speed": 30
+        }
+      },
+      "baseStats": {
+        "attack": 85,
+        "defense": 70,
+        "speed": 30
+      },
+      "upgradeStats": {
+        "attack": 17,
+        "defense": 14,
+        "speed": 6
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "mane_mane_weapon": {
+      "name": "🎭 Mane Mane no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat meniru wajah dan tubuh orang lain",
+      "price": 390000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 70,
+          "defense": 70,
+          "speed": 45
+        }
+      },
+      "baseStats": {
+        "attack": 70,
+        "defense": 70,
+        "speed": 45
+      },
+      "upgradeStats": {
+        "attack": 14,
+        "defense": 14,
+        "speed": 9
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "supa_supa_weapon": {
+      "name": "✂️ Supa Supa no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat mengubah tubuh menjadi pisau",
+      "price": 410000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 90,
+          "defense": 65,
+          "speed": 30
+        }
+      },
+      "baseStats": {
+        "attack": 90,
+        "defense": 65,
+        "speed": 30
+      },
+      "upgradeStats": {
+        "attack": 18,
+        "defense": 13,
+        "speed": 6
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "tori_tori_weapon": {
+      "name": "🦅 Tori Tori no Mi: Model Phoenix",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang memberikan kekuatan phoenix legendaris",
+      "price": 600000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 110,
+          "defense": 85,
+          "speed": 50
+        }
+      },
+      "baseStats": {
+        "attack": 110,
+        "defense": 85,
+        "speed": 50
+      },
+      "upgradeStats": {
+        "attack": 22,
+        "defense": 17,
+        "speed": 10
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "ushi_ushi_weapon": {
+      "name": "🐮 Ushi Ushi no Mi: Model Giraffe",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang memberikan kekuatan jerapah",
+      "price": 420000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 85,
+          "defense": 75,
+          "speed": 35
+        }
+      },
+      "baseStats": {
+        "attack": 85,
+        "defense": 75,
+        "speed": 35
+      },
+      "upgradeStats": {
+        "attack": 17,
+        "defense": 15,
+        "speed": 7
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "neko_neko_weapon": {
+      "name": "🐆 Neko Neko no Mi: Model Leopard",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang memberikan kekuatan macan tutul",
+      "price": 480000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 95,
+          "defense": 70,
+          "speed": 55
+        }
+      },
+      "baseStats": {
+        "attack": 95,
+        "defense": 70,
+        "speed": 55
+      },
+      "upgradeStats": {
+        "attack": 19,
+        "defense": 14,
+        "speed": 11
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "zou_zou_weapon": {
+      "name": "🐘 Zou Zou no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang memberikan kekuatan gajah",
+      "price": 450000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 90,
+          "defense": 90,
+          "speed": 25
+        }
+      },
+      "baseStats": {
+        "attack": 90,
+        "defense": 90,
+        "speed": 25
+      },
+      "upgradeStats": {
+        "attack": 18,
+        "defense": 18,
+        "speed": 5
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "awa_awa_weapon": {
+      "name": "🫧 Awa Awa no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat menghasilkan dan mengendalikan gelembung",
+      "price": 380000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 75,
+          "defense": 85,
+          "speed": 35
+        }
+      },
+      "baseStats": {
+        "attack": 75,
+        "defense": 85,
+        "speed": 35
+      },
+      "upgradeStats": {
+        "attack": 15,
+        "defense": 17,
+        "speed": 7
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "ori_ori_weapon": {
+      "name": "🔒 Ori Ori no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat membuat borgol dan mengekang musuh",
+      "price": 400000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 80,
+          "defense": 80,
+          "speed": 35
+        }
+      },
+      "baseStats": {
+        "attack": 80,
+        "defense": 80,
+        "speed": 35
+      },
+      "upgradeStats": {
+        "attack": 16,
+        "defense": 16,
+        "speed": 7
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "bane_bane_weapon": {
+      "name": "🦘 Bane Bane no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang membuat tubuh menjadi pegas",
+      "price": 390000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 75,
+          "defense": 70,
+          "speed": 60
+        }
+      },
+      "baseStats": {
+        "attack": 75,
+        "defense": 70,
+        "speed": 60
+      },
+      "upgradeStats": {
+        "attack": 15,
+        "defense": 14,
+        "speed": 12
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "ito_ito_weapon": {
+      "name": "🧵 Ito Ito no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat menghasilkan dan mengendalikan benang",
+      "price": 550000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 100,
+          "defense": 80,
+          "speed": 40
+        }
+      },
+      "baseStats": {
+        "attack": 100,
+        "defense": 80,
+        "speed": 40
+      },
+      "upgradeStats": {
+        "attack": 20,
+        "defense": 16,
+        "speed": 8
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "hobi_hobi_weapon": {
+      "name": "🎎 Hobi Hobi no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat mengubah orang menjadi mainan",
+      "price": 500000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 95,
+          "defense": 75,
+          "speed": 40
+        }
+      },
+      "baseStats": {
+        "attack": 95,
+        "defense": 75,
+        "speed": 40
+      },
+      "upgradeStats": {
+        "attack": 19,
+        "defense": 15,
+        "speed": 8
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "gura_gura_weapon": {
+      "name": "🌊 Gura Gura no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis terkuat yang dapat menghancurkan dunia",
+      "price": 1000000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+      "attack": 150,
+          "defense": 100,
+          "speed": 40
+        }
+      },
+      "baseStats": {
+      "attack": 150,
+        "defense": 100,
+        "speed": 40
+      },
+      "upgradeStats": {
+        "attack": 30,
+        "defense": 20,
+        "speed": 8
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "yami_yami_weapon": {
+      "name": "🌑 Yami Yami no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis kegelapan yang dapat menyerap kekuatan lain",
+      "price": 950000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 140,
+          "defense": 90,
+          "speed": 35
+        }
+      },
+      "baseStats": {
+        "attack": 140,
+        "defense": 90,
+        "speed": 35
+      },
+      "upgradeStats": {
+        "attack": 28,
+        "defense": 18,
+        "speed": 7
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "pika_pika_weapon": {
+      "name": "✨ Pika Pika no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis cahaya dengan kecepatan setara cahaya",
+      "price": 900000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 130,
+          "defense": 80,
+          "speed": 100
+        }
+      },
+      "baseStats": {
+        "attack": 130,
+        "defense": 80,
+        "speed": 100
+      },
+      "upgradeStats": {
+        "attack": 26,
+        "defense": 16,
+        "speed": 20
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "magu_magu_weapon": {
+      "name": "🌋 Magu Magu no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis magma dengan kekuatan destruktif",
+      "price": 900000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+      "attack": 145,
+          "defense": 85,
+          "speed": 30
+        }
+      },
+      "baseStats": {
+        "attack": 145,
+        "defense": 85,
+        "speed": 30
+      },
+      "upgradeStats": {
+        "attack": 29,
+        "defense": 17,
+        "speed": 6
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "hie_hie_weapon": {
+      "name": "❄️ Hie Hie no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis es dengan kemampuan membekukan",
+      "price": 850000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 125,
+          "defense": 95,
+          "speed": 40
+        }
+      },
+      "baseStats": {
+        "attack": 125,
+        "defense": 95,
+        "speed": 40
+      },
+      "upgradeStats": {
+        "attack": 25,
+        "defense": 19,
+        "speed": 8
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "goro_goro_weapon": {
+      "name": "⚡ Goro Goro no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis petir dengan kekuatan listrik",
+      "price": 900000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 135,
+          "defense": 75,
+          "speed": 90
+        }
+      },
+      "baseStats": {
+        "attack": 135,
+        "defense": 75,
+        "speed": 90
+      },
+      "upgradeStats": {
+        "attack": 27,
+        "defense": 15,
+        "speed": 18
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "mera_mera_weapon": {
+      "name": "🔥 Mera Mera no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis api yang memberi kekuatan api",
+      "price": 850000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 130,
+          "defense": 70,
+          "speed": 45
+        }
+      },
+      "baseStats": {
+        "attack": 130,
+        "defense": 70,
+        "speed": 45
+      },
+      "upgradeStats": {
+        "attack": 26,
+        "defense": 14,
+        "speed": 9
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "suna_suna_weapon": {
+      "name": "🏜️ Suna Suna no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis pasir yang dapat memanipulasi pasir",
+      "price": 800000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 120,
+          "defense": 100,
+          "speed": 35
+        }
+      },
+      "baseStats": {
+        "attack": 120,
+        "defense": 100,
+        "speed": 35
+      },
+      "upgradeStats": {
+        "attack": 24,
+        "defense": 20,
+        "speed": 7
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "ope_ope_weapon": {
+      "name": "💉 Ope Ope no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis operasi yang dapat memanipulasi ruang",
+      "price": 900000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 120,
+          "defense": 85,
+          "speed": 45
+        }
+      },
+      "baseStats": {
+        "attack": 120,
+        "defense": 85,
+        "speed": 45
+      },
+      "upgradeStats": {
+        "attack": 24,
+        "defense": 17,
+        "speed": 9
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "nikyu_nikyu_weapon": {
+      "name": "🐾 Nikyu Nikyu no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang memberikan kekuatan mendorong apapun",
+      "price": 850000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 125,
+          "defense": 90,
+          "speed": 40
+        }
+      },
+      "baseStats": {
+        "attack": 125,
+        "defense": 90,
+        "speed": 40
+      },
+      "upgradeStats": {
+        "attack": 25,
+        "defense": 18,
+        "speed": 8
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "kage_kage_weapon": {
+      "name": "👥 Kage Kage no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat memanipulasi bayangan",
+      "price": 800000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 115,
+          "defense": 80,
+          "speed": 45
+        }
+      },
+      "baseStats": {
+        "attack": 115,
+        "defense": 80,
+        "speed": 45
+      },
+      "upgradeStats": {
+        "attack": 23,
+        "defense": 16,
+        "speed": 9
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "doku_doku_weapon": {
+      "name": "☠️ Doku Doku no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat menghasilkan dan mengendalikan racun",
+      "price": 850000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 125,
+          "defense": 75,
+          "speed": 35
+        }
+      },
+      "baseStats": {
+        "attack": 125,
+        "defense": 75,
+        "speed": 35
+      },
+      "upgradeStats": {
+        "attack": 25,
+        "defense": 15,
+        "speed": 7
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "moku_moku_weapon": {
+      "name": "💨 Moku Moku no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat mengubah tubuh menjadi asap",
+      "price": 800000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 110,
+          "defense": 90,
+          "speed": 50
+        }
+      },
+      "baseStats": {
+        "attack": 110,
+        "defense": 90,
+        "speed": 50
+      },
+      "upgradeStats": {
+        "attack": 22,
+        "defense": 18,
+        "speed": 10
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "zushi_zushi_weapon": {
+      "name": "🌍 Zushi Zushi no Mi",
+      "type": "WEAPON", 
+      "description": "🌟 Buah iblis yang dapat mengendalikan gravitasi",
+      "price": 880000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 130,
+          "defense": 85,
+          "speed": 35
+        }
+      },
+      "baseStats": {
+        "attack": 130,
+        "defense": 85,
+        "speed": 35
+      },
+      "upgradeStats": {
+        "attack": 26,
+        "defense": 17,
+        "speed": 7
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "jiki_jiki_weapon": {
+      "name": "🧲 Jiki Jiki no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat mengendalikan magnetisme",
+      "price": 850000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 120,
+          "defense": 80,
+          "speed": 45
+        }
+      },
+      "baseStats": {
+        "attack": 120,
+        "defense": 80,
+        "speed": 45
+      },
+      "upgradeStats": {
+        "attack": 24,
+        "defense": 16,
+        "speed": 9
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "gasu_gasu_weapon": {
+      "name": "☁️ Gasu Gasu no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat mengubah tubuh menjadi gas beracun",
+      "price": 870000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 135,
+          "defense": 70,
+          "speed": 45
+        }
+      },
+      "baseStats": {
+        "attack": 135,
+        "defense": 70,
+        "speed": 45
+      },
+      "upgradeStats": {
+        "attack": 27,
+        "defense": 14,
+        "speed": 9
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "yuki_yuki_weapon": {
+      "name": "❄️ Yuki Yuki no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat mengubah tubuh menjadi salju",
+      "price": 800000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 115,
+          "defense": 85,
+          "speed": 40
+        }
+      },
+      "baseStats": {
+        "attack": 115,
+        "defense": 85,
+        "speed": 40
+      },
+      "upgradeStats": {
+        "attack": 23,
+        "defense": 17,
+        "speed": 8
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "beta_beta_weapon": {
+      "name": "💧 Beta Beta no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat menghasilkan dan mengendalikan lendir",
+      "price": 750000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 105,
+          "defense": 95,
+          "speed": 30
+        }
+      },
+      "baseStats": {
+        "attack": 105,
+        "defense": 95,
+        "speed": 30
+      },
+      "upgradeStats": {
+        "attack": 21,
+        "defense": 19,
+        "speed": 6
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "numa_numa_weapon": {
+      "name": "💫 Numa Numa no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat mengubah area menjadi rawa",
+      "price": 780000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 110,
+          "defense": 90,
+          "speed": 35
+        }
+      },
+      "baseStats": {
+        "attack": 110,
+        "defense": 90,
+        "speed": 35
+      },
+      "upgradeStats": {
+        "attack": 22,
+        "defense": 18,
+        "speed": 7
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "kilo_kilo_weapon": {
+      "name": "⚖️ Kilo Kilo no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat mengubah berat tubuh",
+      "price": 750000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 100,
+          "defense": 100,
+          "speed": 35
+        }
+      },
+      "baseStats": {
+        "attack": 100,
+        "defense": 100,
+        "speed": 35
+      },
+      "upgradeStats": {
+        "attack": 20,
+        "defense": 20,
+        "speed": 7
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "chiyu_chiyu_weapon": {
+      "name": "💊 Chiyu Chiyu no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang memberikan kemampuan penyembuhan",
+      "price": 850000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 90,
+          "defense": 120,
+          "speed": 35
+        }
+      },
+      "baseStats": {
+        "attack": 90,
+        "defense": 120,
+        "speed": 35
+      },
+      "upgradeStats": {
+        "attack": 18,
+        "defense": 24,
+        "speed": 7
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "tori_tori_phoenix_weapon": {
+      "name": "🦅 Tori Tori no Mi: Model Phoenix",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang memberikan kekuatan phoenix legendaris",
+      "price": 950000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 140,
+          "defense": 95,
+          "speed": 60
+        }
+      },
+      "baseStats": {
+        "attack": 140,
+        "defense": 95,
+        "speed": 60
+      },
+      "upgradeStats": {
+        "attack": 28,
+        "defense": 19,
+        "speed": 12
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "hebi_hebi_hydra_weapon": {
+      "name": "🐍 Hebi Hebi no Mi: Model Hydra",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang memberikan kekuatan hydra",
+      "price": 900000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 135,
+          "defense": 85,
+          "speed": 45
+        }
+      },
+      "baseStats": {
+        "attack": 135,
+        "defense": 85,
+        "speed": 45
+      },
+      "upgradeStats": {
+        "attack": 27,
+        "defense": 17,
+        "speed": 9
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "ryu_ryu_allosaurus_weapon": {
+      "name": "🦖 Ryu Ryu no Mi: Model Allosaurus",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang memberikan kekuatan dinosaurus allosaurus",
+      "price": 880000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 140,
+          "defense": 80,
+          "speed": 40
+        }
+      },
+      "baseStats": {
+        "attack": 140,
+        "defense": 80,
+        "speed": 40
+      },
+      "upgradeStats": {
+        "attack": 28,
+        "defense": 16,
+        "speed": 8
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "neko_neko_leopard_weapon": {
+      "name": "🐆 Neko Neko no Mi: Model Leopard",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang memberikan kekuatan macan tutul",
+      "price": 850000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 120,
+          "defense": 75,
+          "speed": 70
+        }
+      },
+      "baseStats": {
+        "attack": 120,
+        "defense": 75,
+        "speed": 70
+      },
+      "upgradeStats": {
+        "attack": 24,
+        "defense": 15,
+        "speed": 14
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "hito_hito_buddha_weapon": {
+      "name": "🗿 Hito Hito no Mi: Model Buddha",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang memberikan kekuatan Buddha raksasa",
+      "price": 950000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+      "attack": 145,
+          "defense": 100,
+          "speed": 25
+        }
+      },
+      "baseStats": {
+        "attack": 145,
+        "defense": 100,
+        "speed": 25
+      },
+      "upgradeStats": {
+        "attack": 29,
+        "defense": 20,
+        "speed": 5
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "mochi_mochi_weapon": {
+      "name": "🍡 Mochi Mochi no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat mengubah tubuh menjadi mochi",
+      "price": 900000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 130,
+          "defense": 90,
+          "speed": 40
+        }
+      },
+      "baseStats": {
+        "attack": 130,
+        "defense": 90,
+        "speed": 40
+      },
+      "upgradeStats": {
+        "attack": 26,
+        "defense": 18,
+        "speed": 8
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "bisu_bisu_weapon": {
+      "name": "🍬 Bisu Bisu no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat menghasilkan dan mengendalikan permen",
+      "price": 800000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 115,
+          "defense": 85,
+          "speed": 45
+        }
+      },
+      "baseStats": {
+        "attack": 115,
+        "defense": 85,
+        "speed": 45
+      },
+      "upgradeStats": {
+        "attack": 23,
+        "defense": 17,
+        "speed": 9
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "memo_memo_weapon": {
+      "name": "📝 Memo Memo no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat memanipulasi ingatan",
+      "price": 850000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 110,
+          "defense": 95,
+          "speed": 40
+        }
+      },
+      "baseStats": {
+        "attack": 110,
+        "defense": 95,
+        "speed": 40
+      },
+      "upgradeStats": {
+        "attack": 22,
+        "defense": 19,
+        "speed": 8
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "soru_soru_weapon": {
+      "name": "👻 Soru Soru no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat memanipulasi jiwa",
+      "price": 900000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 125,
+          "defense": 85,
+          "speed": 45
+        }
+      },
+      "baseStats": {
+        "attack": 125,
+        "defense": 85,
+        "speed": 45
+      },
+      "upgradeStats": {
+        "attack": 25,
+        "defense": 17,
+        "speed": 9
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    },
+    "fuku_fuku_weapon": {
+      "name": "👘 Fuku Fuku no Mi",
+      "type": "WEAPON",
+      "description": "🌟 Buah iblis yang dapat menghasilkan dan mengendalikan pakaian",
+      "price": 750000,
+      "effect": {
+        "type": "EQUIP",
+        "stats": {
+          "attack": 95,
+          "defense": 110,
+          "speed": 40
+        }
+      },
+      "baseStats": {
+        "attack": 95,
+        "defense": 110,
+        "speed": 40
+      },
+      "upgradeStats": {
+        "attack": 19,
+        "defense": 22,
+        "speed": 8
+      },
+      "maxLevel": 10,
+      "rarity": "LEGENDARY",
+      "stackLimit": 1
+    }
+  },
+  "QUESTS": {
+    "tutorial": {
+      "id": "tutorial",
+      "name": "🎓 Tutorial Quest",
+      "description": "Belajar dasar-dasar permainan",
+      "type": "HELP",
+      "requiredLevel": 1,
+      "rewards": {
+        "exp": 100,
+        "coins": 500,
+        "items": ["wooden_sword"]
+      },
+      "objectives": {
+        "complete_tutorial": 1
+      }
+    },
+    "first_hunt": {
+      "id": "first_hunt",
+      "name": "🗡️ Perburuan Pertama", 
+      "description": "Kalahkan 5 monster apapun",
+      "type": "COMBAT",
+      "requiredLevel": 1,
+      "rewards": {
+        "exp": 200,
+        "coins": 1000,
+        "items": ["healing_potion", "healing_potion"]
+      },
+      "objectives": {
+        "monsters_defeated": 5
+      }
     }
   },
   "COMBO_SYSTEM": {
@@ -681,265 +4311,9 @@
     },
     "restaurant_rush": {
       "name": "🍴 Restaurant Rush",
-      "moves": ["diable_jambe", "collier_shoot", "party_table"],
-      "bonus_damage": 1.7,
-      "description": "Serangan beruntun ala koki"
-    }
-  },
-  "TRAINING_SYSTEM": {
-    "basic": {
-      "duration": 300,
-      "exp_gain": 50,
-      "stat_gain": {
-        "attack": 1,
-        "defense": 1
-      }
-    },
-    "YB": {
-      "rubber_mastery": {
-        "required_level": 5,
-        "duration": 1800,
-        "exp_gain": 200,
-        "stat_gain": {
-          "attack": 3,
-          "speed": 2
-        },
-        "unlock": "gear_second"
-      },
-      "haki_basics": {
-        "required_level": 10,
-        "duration": 3600,
-        "exp_gain": 400,
-        "stat_gain": {
-          "attack": 5,
-          "defense": 3
-        },
-        "unlock": "armament_haki"
-      }
-    },
-    "Tierison": {
-      "sword_technique": {
-        "required_level": 5,
-        "duration": 1800,
-        "exp_gain": 200,
-        "stat_gain": {
-          "attack": 4,
-          "defense": 1
-        },
-        "unlock": "oni_giri"
-      },
-      "meditation": {
-        "required_level": 10,
-        "duration": 3600,
-        "exp_gain": 400,
-        "stat_gain": {
-          "attack": 3,
-          "defense": 5
-        },
-        "unlock": "asura"
-      }
-    },
-    "LYuka": {
-      "target_practice": {
-        "required_level": 5,
-        "duration": 1800,
-        "exp_gain": 200,
-        "stat_gain": {
-          "accuracy": 4,
-          "speed": 1
-        },
-        "unlock": "fire_bird_star"
-      },
-      "gadget_mastery": {
-        "required_level": 10,
-        "duration": 3600,
-        "exp_gain": 400,
-        "stat_gain": {
-          "attack": 2,
-          "defense": 6
-        },
-        "unlock": "impact_dial"
-      }
-    },
-    "GarryAng": {
-      "kick_technique": {
-        "required_level": 5,
-        "duration": 1800,
-        "exp_gain": 200,
-        "stat_gain": {
-          "attack": 3,
-          "speed": 2
-        },
-        "unlock": "diable_jambe"
-      },
-      "cooking_mastery": {
-        "required_level": 10,
-        "duration": 3600,
-        "exp_gain": 400,
-        "stat_gain": {
-          "healing": 5,
-          "defense": 3
-        },
-        "unlock": "recovery_meal"
-      }
-    }
-  },
-  "ACHIEVEMENTS": {
-    "first_blood": {
-      "name": "🗡️ First Blood",
-      "description": "Menangkan pertarungan pertamamu",
-      "reward": {
-        "exp": 100,
-        "coins": 500,
-        "title": "Rookie Fighter"
-      }
-    },
-    "combo_master": {
-      "name": "💫 Combo Master",
-      "description": "Lakukan 10 combo dalam satu pertarungan",
-      "reward": {
-        "exp": 500,
-        "coins": 1000,
-        "title": "Combo King"
-      }
-    },
-    "world_traveler": {
-      "name": "🗺️ World Traveler",
-      "description": "Kunjungi semua lokasi",
-      "reward": {
-        "exp": 1000,
-        "coins": 2000,
-        "title": "Explorer"
-      }
-    },
-    "treasure_hunter": {
-      "name": "💎 Treasure Hunter",
-      "description": "Temukan 100 item langka",
-      "reward": {
-        "exp": 800,
-        "coins": 1500,
-        "title": "Master Collector"
-      }
-    },
-    "training_addict": {
-      "name": "💪 Training Addict",
-      "description": "Selesaikan 50 sesi latihan",
-      "reward": {
-        "exp": 700,
-        "coins": 1200,
-        "title": "Dedicated Student"
-      }
-    },
-    "mentor_bond": {
-      "name": "🤝 Mentor Bond",
-      "description": "Capai level maksimal dengan mentormu",
-      "reward": {
-        "exp": 1500,
-        "coins": 3000,
-        "title": "Trusted Apprentice"
-      }
-    }
-  },
-  "WEAPON_UPGRADES": {
-    "wooden_sword": {
-      "name": "🗡️ Pedang Kayu",
-      "maxLevel": 5,
-      "baseAttack": 5,
-      "upgradeAttackPerLevel": 2,
-      "materials": {
-        "wood": 3,
-        "iron_ingot": 1
-      },
-      "coins": 100
-    },
-    "steel_sword": {
-      "name": "⚔️ Pedang Baja",
-      "maxLevel": 7,
-      "baseAttack": 10,
-      "upgradeAttackPerLevel": 3,
-      "materials": {
-        "iron_ingot": 3,
-        "steel_ingot": 1
-      },
-      "coins": 300
-    },
-    "wado_ichimonji": {
-      "name": "🗡️ Wado Ichimonji",
-      "maxLevel": 10,
-      "baseAttack": 25,
-      "upgradeAttackPerLevel": 5,
-      "materials": {
-        "steel_ingot": 3,
-        "rare_ore": 1,
-        "magic_crystal": 1
-      },
-      "coins": 1000
-    },
-    "kitchen_knife": {
-      "name": "🔪 Pisau Dapur",
-      "maxLevel": 5,
-      "baseAttack": 8,
-      "upgradeAttackPerLevel": 2,
-      "materials": {
-        "iron_ingot": 2,
-        "wood": 1
-      },
-      "coins": 200
-    },
-    "slingshot": {
-      "name": "🎯 Ketapel",
-      "maxLevel": 5,
-      "baseAttack": 7,
-      "upgradeAttackPerLevel": 2,
-      "materials": {
-        "wood": 2,
-        "leather": 1
-      },
-      "coins": 150
-    }
-  },
-  "MATERIALS": {
-    "wood": {
-      "name": "🪵 Kayu", 
-      "description": "Material dasar untuk upgrade senjata",
-      "dropFrom": ["wild_monkey", "angry_boar"],
-      "rarity": "COMMON",
-      "stackLimit": 100
-    },
-    "iron_ingot": {
-      "name": "⚔️ Besi",
-      "description": "Material untuk upgrade senjata tingkat menengah",
-      "dropFrom": ["pirate_rookie", "marine_trainee"],
-      "rarity": "COMMON",
-      "stackLimit": 50
-    },
-    "steel_ingot": {
-      "name": "🛡️ Baja",
-      "description": "Material berkualitas untuk senjata kuat",
-      "dropFrom": ["axe_hand", "corrupt_marine"],
-      "rarity": "UNCOMMON",
-      "stackLimit": 30
-    },
-    "rare_ore": {
-      "name": "💎 Bijih Langka",
-      "description": "Material langka untuk senjata tingkat tinggi",
-      "dropFrom": ["morgan", "buggy"],
-      "rarity": "RARE",
-      "stackLimit": 20
-    },
-    "magic_crystal": {
-      "name": "✨ Kristal Sihir",
-      "description": "Kristal dengan kekuatan magis untuk senjata legendaris",
-      "dropFrom": ["kuro", "arlong"],
-      "rarity": "EPIC",
-      "stackLimit": 10
-    },
-    "leather": {
-      "name": "🥋 Kulit",
-      "description": "Material dasar untuk armor dan aksesoris",
-      "dropFrom": ["wild_monkey", "angry_boar"],
-      "rarity": "COMMON",
-      "stackLimit": 50
+      "moves": ["collier_shoot", "diable_jambe", "party_table"],
+      "bonus_damage": 2.0,
+      "description": "Kombinasi tendangan berapi"
     }
   }
 }

@@ -2,6 +2,8 @@ import { ChatInputCommandInteraction, InteractionResponse, Message } from 'disco
 import { ServiceContainer } from '@/services';
 import { sendResponse } from '@/utils/helpers';
 import { logger } from '@/utils/logger';
+import { handleHelp } from './help';
+import { handleGambling } from './gambling';
 
 type CommandResponse = Promise<Message<boolean> | InteractionResponse<boolean> | void>;
 type ServiceKeys = keyof ServiceContainer;
@@ -26,10 +28,15 @@ const commandHandlers: Record<string, CommandHandler> = {
   map: { service: 'location', method: 'handleMapView', aliases: ['m'] },
   shop: { service: 'shop', method: 'handleShop', aliases: ['s'], allowArgs: true },
   buy: { service: 'shop', method: 'handleBuyCommand', requiresArgs: true },
+  sell: { service: 'inventory', method: 'handleSellItem', requiresArgs: true },
   leaderboard: { service: 'character', method: 'handleLeaderboard', aliases: ['lb', 'top'], allowArgs: true },
   help: { service: 'character', method: 'handleHelp' },
   equip: { service: 'equipment', method: 'handleEquipCommand', requiresArgs: true, aliases: ['e'] },
-  unequip: { service: 'equipment', method: 'handleUnequipCommand', requiresArgs: true }
+  unequip: { service: 'equipment', method: 'handleUnequipCommand', requiresArgs: true },
+  duel: { service: 'duel', method: 'handleDuel', requiresArgs: true },
+  accept: { service: 'duel', method: 'handleAccept' },
+  reject: { service: 'duel', method: 'handleReject' },
+  give: { service: 'character', method: 'handleGiveCoins', requiresArgs: true }
 };
 
 export async function handleMessageCommand(
@@ -58,6 +65,32 @@ export async function handleMessageCommand(
       throw new Error(`Mohon tentukan argumen untuk command ini!\nContoh: \`a ${normalizedCommand} [argumen]\``);
     }
 
+    // Handle duel command specially
+    if (normalizedCommand === 'duel') {
+      if (args.length === 0) {
+        throw new Error('Mohon mention player yang ingin ditantang!\nContoh: `a duel @player`');
+      }
+      const targetId = args[0].replace(/[<@!>]/g, '');
+      const serviceInstance = services[service as ServiceKeys];
+      const methodFn = serviceInstance[method as ServiceMethods<typeof service>] as unknown as (source: Message, targetId: string) => CommandResponse;
+      return methodFn.call(serviceInstance, message, targetId);
+    }
+
+    // Handle give command specially
+    if (normalizedCommand === 'give') {
+      if (args.length < 2) {
+        throw new Error('Mohon mention player dan jumlah uang yang ingin diberikan!\nContoh: `a give @player 1000`');
+      }
+      const targetId = args[0].replace(/[<@!>]/g, '');
+      const amount = parseInt(args[1]);
+      if (isNaN(amount) || amount <= 0) {
+        throw new Error('Jumlah uang harus berupa angka positif!');
+      }
+      const serviceInstance = services[service as ServiceKeys];
+      const methodFn = serviceInstance[method as ServiceMethods<typeof service>] as unknown as (source: Message, targetId: string, amount: number) => CommandResponse;
+      return methodFn.call(serviceInstance, message, targetId, amount);
+    }
+
     // Handle equip command specially
     if (normalizedCommand === 'equip' || normalizedCommand === 'e') {
       const serviceInstance = services[service as ServiceKeys];
@@ -75,6 +108,8 @@ export async function handleMessageCommand(
     // Handle use command specially
     if (normalizedCommand === 'use' || normalizedCommand === 'u') {
       const itemName = args[0].toLowerCase();
+      const quantity = args.length > 1 ? parseInt(args[1]) : 1;
+      
       const character = await services.character.getCharacterByDiscordId(message.author.id);
       if (!character) {
         throw new Error('❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.');
@@ -89,7 +124,7 @@ export async function handleMessageCommand(
 
       const serviceInstance = services[service as ServiceKeys];
       const methodFn = serviceInstance[method as ServiceMethods<typeof service>] as unknown as (source: Message, itemId: string) => CommandResponse;
-      return methodFn.call(serviceInstance, message, item.id);
+      return methodFn.call(serviceInstance, message, `${item.id} ${quantity}`);
     }
 
     // Handle buy command specially
@@ -120,6 +155,18 @@ export async function handleMessageCommand(
       return methodFn.call(serviceInstance, message, args);
     }
 
+    // Handle gambling command
+    if (normalizedCommand === 'g' || normalizedCommand === 'gamble') {
+      return handleGambling(message, services, args[0], args.slice(1));
+    }
+
+    // Handle sell command specially
+    if (normalizedCommand === 'sell') {
+      const serviceInstance = services[service as ServiceKeys];
+      const methodFn = serviceInstance[method as ServiceMethods<typeof service>] as unknown as (source: Message, args?: string[]) => CommandResponse;
+      return methodFn.call(serviceInstance, message, args);
+    }
+
     // Execute other commands normally
     const serviceInstance = services[service as ServiceKeys];
     const methodFn = serviceInstance[method as ServiceMethods<typeof service>] as unknown as (source: Message, ...args: string[]) => CommandResponse;
@@ -135,6 +182,17 @@ export async function execute(
   services: ServiceContainer
 ): CommandResponse {
   const subcommand = interaction.options.getSubcommand(false);
+  const subcommandGroup = interaction.options.getSubcommandGroup(false);
+
+  if (subcommandGroup === 'gamble') {
+    if (subcommand === 'slots') {
+      const amount = interaction.options.getInteger('amount') || 100;
+      return handleGambling(interaction, services, 'slots', [amount.toString()]);
+    } else if (subcommand === 'help') {
+      return handleGambling(interaction, services, 'help');
+    }
+  }
+
   if (!subcommand) {
     return sendResponse(interaction, {
       content: '❌ Subcommand tidak valid! Gunakan `/help` untuk melihat daftar command.'
@@ -154,6 +212,23 @@ export async function execute(
 
   const [_, { service, method }] = handler;
 
+  // Handle duel command specially
+  if (subcommand === 'duel') {
+    const target = interaction.options.getUser('user', true);
+    const serviceInstance = services[service as ServiceKeys];
+    const methodFn = serviceInstance[method as ServiceMethods<typeof service>] as unknown as (source: ChatInputCommandInteraction, targetId: string) => CommandResponse;
+    return methodFn.call(serviceInstance, interaction, target.id);
+  }
+
+  // Handle give command specially
+  if (subcommand === 'give') {
+    const target = interaction.options.getUser('user', true);
+    const amount = interaction.options.getInteger('amount', true);
+    const serviceInstance = services[service as ServiceKeys];
+    const methodFn = serviceInstance[method as ServiceMethods<typeof service>] as unknown as (source: ChatInputCommandInteraction, targetId: string, amount: number) => CommandResponse;
+    return methodFn.call(serviceInstance, interaction, target.id, amount);
+  }
+
   // Special handling for use command
   if (subcommand === 'u') {
     const itemId = interaction.options.getString('item', true);
@@ -171,6 +246,7 @@ export async function execute(
 
   // Execute other commands normally
   const serviceInstance = services[service as ServiceKeys];
-  const methodFn = serviceInstance[method as ServiceMethods<typeof service>] as unknown as (source: ChatInputCommandInteraction) => CommandResponse;
-  return methodFn.call(serviceInstance, interaction);
+  const methodFn = serviceInstance[method as ServiceMethods<typeof service>] as unknown as (source: ChatInputCommandInteraction) => Promise<unknown>;
+  const result = await methodFn.call(serviceInstance, interaction);
+  return result as CommandResponse;
 }

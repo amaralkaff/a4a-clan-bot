@@ -1,0 +1,228 @@
+{
+  "health_potion": {
+    "name": "💖 Health Potion",
+    "type": "CONSUMABLE",
+    "description": "Memulihkan 100 HP",
+    "price": 100,
+    "effect": {
+      "type": "HEAL",
+      "health": 100
+    },
+    "rarity": "COMMON",
+    "stackLimit": 10
+  },
+  "full_health_potion": {
+    "name": "💖 Full Health Potion",
+    "type": "CONSUMABLE",
+    "description": "Memulihkan HP ke maksimum",
+    "price": 500,
+    "effect": {
+      "type": "HEAL",
+      "health": -1
+    },
+    "rarity": "RARE",
+    "stackLimit": 10
+  },
+  "super_health_potion": {
+    "name": "💖 Super Health Potion",
+    "type": "CONSUMABLE",
+    "description": "Memulihkan HP ke maksimum dan memberikan regenerasi",
+    "price": 1000,
+    "effect": {
+      "type": "HEAL_AND_BUFF",
+      "health": -1,
+      "stats": {
+        "regeneration": 50
+      },
+      "duration": 300
+    },
+    "rarity": "EPIC",
+    "stackLimit": 5
+  },
+  "strength_elixir": {
+    "name": "⚔️ Strength Elixir",
+    "type": "CONSUMABLE",
+    "description": "Meningkatkan attack selama 5 menit",
+    "price": 2000,
+    "effect": {
+      "type": "BUFF",
+      "stats": {
+        "attack": 100
+      },
+      "duration": 300
+    },
+    "rarity": "RARE",
+    "stackLimit": 5
+  },
+  "defense_elixir": {
+    "name": "🛡️ Defense Elixir",
+    "type": "CONSUMABLE",
+    "description": "Meningkatkan defense selama 5 menit",
+    "price": 2000,
+    "effect": {
+      "type": "BUFF",
+      "stats": {
+        "defense": 100
+      },
+      "duration": 300
+    },
+    "rarity": "RARE",
+    "stackLimit": 5
+  },
+  "speed_elixir": {
+    "name": "💨 Speed Elixir",
+    "type": "CONSUMABLE",
+    "description": "Meningkatkan speed selama 5 menit",
+    "price": 2000,
+    "effect": {
+      "type": "BUFF",
+      "stats": {
+        "speed": 100
+      },
+      "duration": 300
+    },
+    "rarity": "RARE",
+    "stackLimit": 5
+  },
+  "warrior_elixir": {
+    "name": "🔥 Warrior Elixir",
+    "type": "CONSUMABLE",
+    "description": "Meningkatkan semua stats selama 5 menit",
+    "price": 5000,
+    "effect": {
+      "type": "BUFF",
+      "stats": {
+        "attack": 150,
+        "defense": 150,
+        "speed": 100
+      },
+      "duration": 300
+    },
+    "rarity": "EPIC",
+    "stackLimit": 3
+  },
+  "divine_essence": {
+    "name": "✨ Divine Essence",
+    "type": "CONSUMABLE",
+    "description": "Memberikan buff kuat pada semua stats selama 10 menit",
+    "price": 10000,
+    "effect": {
+      "type": "BUFF",
+      "stats": {
+        "attack": 300,
+        "defense": 300,
+        "speed": 200
+      },
+      "duration": 600
+    },
+    "rarity": "LEGENDARY",
+    "stackLimit": 2
+  },
+  "celestial_blessing": {
+    "name": "🌟 Celestial Blessing",
+    "type": "CONSUMABLE",
+    "description": "Memberikan buff sangat kuat dan regenerasi HP selama 15 menit",
+    "price": 25000,
+    "effect": {
+      "type": "HEAL_AND_BUFF",
+      "health": -1,
+      "stats": {
+        "attack": 500,
+        "defense": 500,
+        "speed": 300,
+        "regeneration": 100
+      },
+      "duration": 900
+    },
+    "rarity": "MYTHICAL",
+    "stackLimit": 1
+  },
+  "transcendent_elixir": {
+    "name": "🌌 Transcendent Elixir",
+    "type": "CONSUMABLE",
+    "description": "Memberikan buff ekstrim pada semua stats selama 30 menit",
+    "price": 50000,
+    "effect": {
+      "type": "BUFF",
+      "stats": {
+        "attack": 1000,
+        "defense": 1000,
+        "speed": 500
+      },
+      "duration": 1800
+    },
+    "rarity": "DIVINE",
+    "stackLimit": 1
+  },
+  "primordial_essence": {
+    "name": "💫 Primordial Essence",
+    "type": "CONSUMABLE",
+    "description": "Memberikan buff terkuat dan regenerasi HP selama 1 jam",
+    "price": 100000,
+    "effect": {
+      "type": "HEAL_AND_BUFF",
+      "health": -1,
+      "stats": {
+        "attack": 2000,
+        "defense": 2000,
+        "speed": 1000,
+        "regeneration": 500
+      },
+      "duration": 3600
+    },
+    "rarity": "PRIMORDIAL",
+    "stackLimit": 1
+  },
+  "meat": {
+    "name": "🍖 Meat",
+    "type": "CONSUMABLE",
+    "description": "Memulihkan 200 HP dan memberikan buff kecil",
+    "price": 300,
+    "effect": {
+      "type": "HEAL_AND_BUFF",
+      "health": 200,
+      "stats": {
+        "attack": 20,
+        "defense": 20
+      },
+      "duration": 300
+    },
+    "rarity": "COMMON",
+    "stackLimit": 10
+  },
+  "super_meat": {
+    "name": "🍖 Super Meat",
+    "type": "CONSUMABLE",
+    "description": "Memulihkan 500 HP dan memberikan buff sedang",
+    "price": 1000,
+    "effect": {
+      "type": "HEAL_AND_BUFF",
+      "health": 500,
+      "stats": {
+        "attack": 50,
+        "defense": 50,
+        "speed": 30
+      },
+      "duration": 600
+    },
+    "rarity": "RARE",
+    "stackLimit": 5
+  },
+  "rumble_ball": {
+    "name": "💊 Rumble Ball",
+    "type": "CONSUMABLE",
+    "description": "Memberikan buff ekstrim sementara",
+    "price": 5000,
+    "effect": {
+      "type": "BUFF",
+      "stats": {
+        "attack": 300,
+        "defense": 200,
+        "speed": 150
+      },
+      "duration": 180
+    },
+    "rarity": "EPIC",
+    "stackLimit": 3
+  }
+}

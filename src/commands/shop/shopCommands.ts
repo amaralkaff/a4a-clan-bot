@@ -40,6 +40,7 @@ export const shopCommands: CommandHandler = {
             .addChoices(
               // Starter Items
               { name: '🧪 Health Potion (50 coins)', value: 'potion' },
+              { name: '💖 Full Health Potion (5,000 coins)', value: 'full_health_potion' },
               { name: '🗡️ Wooden Sword (100 coins)', value: 'wooden_sword' },
               { name: '🥋 Training Gi (100 coins)', value: 'training_gi' },
               

@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,82 +8,66 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  discordId     String    @unique
-  character     Character?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id        String     @id @default(uuid())
+  discordId String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  character Character?
 
   @@index([discordId])
 }
 
 model Character {
-  id            String    @id @default(uuid())
-  name          String
-  level         Int       @default(1)
-  experience    Int       @default(0)
-  health        Int       @default(100)
-  maxHealth     Int       @default(100)
-  attack        Int       @default(10)
-  defense       Int       @default(10)
-  currentIsland String    @default("starter_island")
-  mentor        String?   
-  
-  // Progress tracking
-  luffyProgress Int       @default(0)
-  zoroProgress  Int       @default(0)
-  usoppProgress Int       @default(0)
-  sanjiProgress Int       @default(0)
-  
-  // Daily limits
-  dailyHealCount Int      @default(0)
-  lastHealTime  DateTime?
-  lastDailyReset DateTime?
-  
-  // Combat stats
-  combo         Int       @default(0)
-  wins          Int       @default(0)
-  losses        Int       @default(0)
-  winStreak     Int       @default(0)
-  highestStreak Int       @default(0)
-  
-  // Hunt streak system
-  huntStreak        Int       @default(0)
-  highestHuntStreak Int       @default(0)
+  id                String        @id @default(uuid())
+  name              String
+  level             Int           @default(1)
+  experience        Int           @default(0)
+  health            Int           @default(100)
+  maxHealth         Int           @default(100)
+  attack            Int           @default(10)
+  defense           Int           @default(10)
+  speed             Int           @default(10)
+  currentIsland     String        @default("starter_island")
+  mentor            String?
+  luffyProgress     Int           @default(0)
+  zoroProgress      Int           @default(0)
+  usoppProgress     Int           @default(0)
+  sanjiProgress     Int           @default(0)
+  dailyHealCount    Int           @default(0)
+  lastHealTime      DateTime?
+  lastDailyReset    DateTime?
+  dailyStreak       Int           @default(0)
+  combo             Int           @default(0)
+  wins              Int           @default(0)
+  losses            Int           @default(0)
+  winStreak         Int           @default(0)
+  highestStreak     Int           @default(0)
+  huntStreak        Int           @default(0)
+  highestHuntStreak Int           @default(0)
   lastHuntTime      DateTime?
-  
-  // Points system
-  questPoints   Int       @default(0)
-  explorationPoints Int   @default(0)
-  
-  // Effects and buffs
-  statusEffects String    @default("{\"effects\":[]}")
-  activeBuffs   String    @default("{\"buffs\":[]}")
-  
-  // Economy
-  coins         Int       @default(0)
-  bank          Int       @default(0)
-  totalGambled  Int       @default(0)
-  totalWon      Int       @default(0)
-  lastGambleTime DateTime?
-
-  // Equipment slots
-  equippedWeapon String?
-  equippedArmor  String?
+  questPoints       Int           @default(0)
+  explorationPoints Int           @default(0)
+  statusEffects     String        @default("{\"effects\":[]}")
+  activeBuffs       String        @default("{\"buffs\":[]}")
+  coins             Int           @default(0)
+  bank              Int           @default(0)
+  totalGambled      Int           @default(0)
+  totalWon          Int           @default(0)
+  lastGambleTime    DateTime?
+  equippedWeapon    String?
+  equippedArmor     String?
   equippedAccessory String?
-  
-  // Relations
-  inventory     Inventory[]
-  quests        Quest[]
-  battles       Battle[]
-  transactions  Transaction[]
-  userId        String    @unique
-  user          User      @relation(fields: [userId], references: [id])
-  location      Location  @relation(fields: [currentIsland], references: [id])
-  
-  // Timestamps
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  userId            String        @unique
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  battles           Battle[]
+  location          Location      @relation(fields: [currentIsland], references: [id])
+  user              User          @relation(fields: [userId], references: [id])
+  receivedDuels     Duel[]        @relation("challenged")
+  sentDuels         Duel[]        @relation("challenger")
+  inventory         Inventory[]
+  quests            Quest[]
+  transactions      Transaction[]
 
   @@index([level, currentIsland])
   @@index([mentor])
@@ -97,7 +78,6 @@ model Character {
 model Battle {
   id          String    @id @default(uuid())
   characterId String
-  character   Character @relation(fields: [characterId], references: [id])
   enemyType   String
   enemyLevel  Int
   startedAt   DateTime  @default(now())
@@ -106,85 +86,86 @@ model Battle {
   turns       String    @default("[]")
   finalStats  String?   @default("{}")
   rewards     String?   @default("{}")
-  
+  character   Character @relation(fields: [characterId], references: [id])
+
   @@index([characterId, status])
 }
 
 model Inventory {
-  id          String    @id @default(uuid())
-  itemId      String
-  quantity    Int
-  durability  Int?      
-  isEquipped  Boolean   @default(false)
-  slot        String?   
-  expiresAt   DateTime?
-  effect      String?   @default("{}")
-  stats       String?   @default("{}")  // Untuk menyimpan stats equipment
-  level       Int?      // Level equipment
-  upgrades    Int?      @default(0)  // Jumlah upgrade yang sudah dilakukan
-  maxDurability Int?    // Maximum durability
-  characterId String
-  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
-  item        Item      @relation(fields: [itemId], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String    @id @default(uuid())
+  itemId        String
+  quantity      Int
+  durability    Int?
+  isEquipped    Boolean   @default(false)
+  slot          String?
+  expiresAt     DateTime?
+  effect        String?   @default("{}")
+  stats         String?   @default("{}")
+  level         Int?
+  upgrades      Int?      @default(0)
+  maxDurability Int?
+  characterId   String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  item          Item      @relation(fields: [itemId], references: [id])
+  character     Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
 
   @@unique([characterId, itemId])
   @@index([characterId, isEquipped, slot])
 }
 
 model Item {
-  id            String    @id
+  id            String      @id
   name          String
   description   String
-  type          String    
-  value         Int       @default(0)
-  effect        String    @default("{}")
-  maxDurability Int?    
-  stackLimit    Int       @default(999)
-  rarity        String    @default("COMMON")
-  baseStats     String?   @default("{}")  // Stats dasar item
-  upgradeStats  String?   @default("{}")  // Stats per level upgrade
-  maxLevel      Int?      // Maximum level untuk upgrade
+  type          String
+  value         Int         @default(0)
+  effect        String      @default("{}")
+  maxDurability Int?
+  stackLimit    Int         @default(999)
+  rarity        String      @default("COMMON")
+  baseStats     String?     @default("{}")
+  upgradeStats  String?     @default("{}")
+  maxLevel      Int?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
   inventory     Inventory[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
 
   @@index([type, rarity])
 }
 
 model Quest {
   id          String    @id @default(cuid())
-  templateId  String    @default("none")  // Default value untuk existing rows
+  templateId  String    @default("none")
   name        String
   description String
-  type        String    
+  type        String
   objectives  String    @default("{}")
   rewards     String    @default("{}")
   progress    String    @default("{\"current\": 0, \"required\": 1}")
   status      String    @default("ACTIVE")
   characterId String
-  character   Character @relation(fields: [characterId], references: [id])
   startedAt   DateTime  @default(now())
   completedAt DateTime?
   expiresAt   DateTime?
-  
+  character   Character @relation(fields: [characterId], references: [id])
+
   @@index([characterId, status])
   @@index([templateId])
 }
 
 model QuestTemplate {
-  id            String    @id
-  name          String
-  description   String
-  type          String
-  requirements  String    @default("{}")
-  objectives    String    @default("{}")
-  rewards       String    @default("{}")
-  isRepeatable  Boolean   @default(false)
-  cooldown      Int?     
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id           String   @id
+  name         String
+  description  String
+  type         String
+  requirements String   @default("{}")
+  objectives   String   @default("{}")
+  rewards      String   @default("{}")
+  isRepeatable Boolean  @default(false)
+  cooldown     Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model Location {
@@ -195,9 +176,9 @@ model Location {
   weather           String      @default("sunny")
   lastWeatherUpdate DateTime    @default(now())
   activeEvent       String?
-  characters        Character[]
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
+  characters        Character[]
 
   @@index([level])
   @@index([weather])
@@ -206,11 +187,27 @@ model Location {
 model Transaction {
   id          String    @id @default(uuid())
   characterId String
-  character   Character @relation(fields: [characterId], references: [id])
-  type        String    
+  type        String
   amount      Int
   description String
   createdAt   DateTime  @default(now())
+  character   Character @relation(fields: [characterId], references: [id])
 
   @@index([characterId, type, createdAt])
+}
+
+model Duel {
+  id           String    @id @default(uuid())
+  challengerId String
+  challengedId String
+  status       String    @default("PENDING")
+  winner       String?
+  bet          Int       @default(0)
+  createdAt    DateTime  @default(now())
+  completedAt  DateTime?
+  challenged   Character @relation("challenged", fields: [challengedId], references: [id])
+  challenger   Character @relation("challenger", fields: [challengerId], references: [id])
+
+  @@index([challengerId, status])
+  @@index([challengedId, status])
 }

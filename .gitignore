@@ -176,3 +176,6 @@ dist
 
 # prisma
 .prisma/
+
+# api
+api/

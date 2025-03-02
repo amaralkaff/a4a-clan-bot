@@ -1,63 +1,85 @@
-import { ChatInputCommandInteraction, EmbedBuilder, Message, MessageFlags } from 'discord.js';
+import { ChatInputCommandInteraction, EmbedBuilder, Message } from 'discord.js';
 import { ServiceContainer } from '@/services';
+import { COMMAND_DESCRIPTIONS } from '@/commands/constants';
 
-export async function createHelpEmbed() {
-  const commandList = [
-    { cmd: '/a h', desc: '🗡️ Berburu dengan battle log animasi (15s cd)' },
-    { cmd: 'a h', desc: '🗡️ Berburu tanpa animasi (15s cd)' },
-    { cmd: 'a p', desc: '📊 Lihat profil' },
-    { cmd: 'a d', desc: '🎁 Daily reward' },
-    { cmd: 'a i', desc: '🎒 Inventory' },
-    { cmd: 'a u', desc: '📦 Gunakan item' },
-    { cmd: 'a b', desc: '💰 Balance' },
-    { cmd: 'a t', desc: '⚔️ Training (5m cd)' },
-    { cmd: 'a m', desc: '🗺️ Map' },
-    { cmd: 'a s', desc: '🛍️ Shop' },
-    { cmd: 'a buy [nama_item] [jumlah]', desc: '💰 Beli item dari shop' },
-    { cmd: 'a lb', desc: '👑 Leaderboard' },
-    { cmd: 'a equip [nama_item]', desc: '🎽 Equip senjata/armor' },
-    { cmd: 'a unequip [weapon/armor]', desc: '🔄 Lepas equipment' }
-  ];
-
-  return new EmbedBuilder()
-    .setTitle('A4A CLAN BOT - Panduan')
-    .setColor('#00ff00')
-    .setDescription('A4A CLAN BOT adalah game RPG One Piece yang dikembangkan oleh <@714556781912653855>')
+export async function handleHelp(source: Message | ChatInputCommandInteraction, services?: ServiceContainer) {
+  const embed = new EmbedBuilder()
+    .setTitle('📖 Panduan Command A4A CLAN BOT')
+    .setColor('#0099ff')
+    .setDescription('A4A CLAN BOT adalah game RPG One Piece. Gunakan prefix "a " sebelum setiap command.')
     .addFields([
-      { 
-        name: '📜 Basic Commands', 
-        value: commandList.map(c => `\`${c.cmd}\` - ${c.desc}`).join('\n')
-      },
       {
-        name: '💡 Perbedaan Hunt Command',
-        value: '• `/a h` - Dengan battle log animasi\n• `a h` - Langsung hasil akhir'
-      },
-      {
-        name: '🛍️ Shop System',
-        value: '• `a s` - Lihat daftar item di shop\n• `a buy [nama_item] [jumlah]` - Beli item\nContoh: `a buy potion 5` untuk membeli 5 potion'
-      },
-      {
-        name: '🎽 Equipment System',
-        value: '• `a equip [nama_item]` - Equip senjata/armor\n• `a unequip [weapon/armor]` - Lepas equipment\nContoh: `a equip wooden sword` untuk menggunakan pedang kayu',
+        name: '👤 Character Commands',
+        value: [
+          'a profile atau a p - 📊 Lihat status karaktermu',
+          'a daily atau a d - 🎁 Klaim hadiah harian',
+          'a balance atau a b - 💰 Cek uangmu',
+          'a leaderboard atau a lb - 🏆 Lihat ranking pemain',
+          'a give [user] [jumlah] - 💸 Berikan uang ke pemain lain'
+        ].join('\n'),
         inline: false
       },
       {
-        name: '📊 Leaderboard',
-        value: 'Gunakan `a lb [kategori]` untuk melihat leaderboard:\n• level - Level tertinggi\n• wins - Total kemenangan\n• coins - Total kekayaan\n• winStreak - Win streak saat ini\n• highestStreak - Win streak tertinggi'
+        name: '⚔️ Battle Commands',
+        value: [
+          'a hunt atau a h - ⚔️ Berburu monster (15s cooldown)',
+          'a duel [user] - ⚔️ Tantang pemain lain untuk duel (60s cooldown)',
+          'a accept - ✅ Terima tantangan duel',
+          'a reject - ❌ Tolak tantangan duel'
+        ].join('\n'),
+        inline: false
       },
       {
-        name: '🎮 Tips',
-        value: 'Gunakan `/a h` untuk melihat battle log animasi saat berburu!\nMulai dengan berburu di Foosha Village untuk mendapatkan EXP dan item!'
+        name: '🎒 Inventory & Equipment',
+        value: [
+          'a inventory atau a i - 🎒 Lihat inventorymu',
+          'a use [item] - 📦 Gunakan item dari inventory',
+          'a equip [item] - 🔧 Pakai equipment',
+          'a unequip [item] - 🔧 Lepas equipment'
+        ].join('\n'),
+        inline: false
+      },
+      {
+        name: '🗺️ Location & Shop',
+        value: [
+          'a map atau a m - 🗺️ Lihat peta',
+          'a shop atau a s - 🛍️ Buka toko',
+          'a buy [item] [jumlah] - 💰 Beli item dari toko'
+        ].join('\n'),
+        inline: false
+      },
+      {
+        name: '📚 Training & Quiz',
+        value: [
+          'a train atau a t - 📚 Berlatih dengan mentor (5m cooldown)',
+          'a quiz atau a q - 📝 Ikuti quiz One Piece untuk hadiah (5m cooldown)'
+        ].join('\n'),
+        inline: false
+      },
+      {
+        name: '🎰 Gambling Commands',
+        value: [
+          'a gamble slots [jumlah] atau a g s [jumlah] - 🎰 Main slot machine (10s cooldown)',
+          'a gamble help atau a g help - ❓ Lihat panduan gambling'
+        ].join('\n'),
+        inline: false
+      },
+      {
+        name: '💡 Tips',
+        value: [
+          '• Gunakan /a untuk command dengan animasi!',
+          '• Mulai dengan berburu di Foosha Village untuk EXP dan item',
+          '• Latih karaktermu dengan mentor untuk skill spesial',
+          '• Upgrade equipment untuk stats lebih baik',
+          '• Ikuti quiz untuk hadiah spesial'
+        ].join('\n'),
+        inline: false
       }
-    ]);
-}
+    ])
+    .setFooter({ 
+      text: 'Developed by A4A CLAN • Versi 1.0.0',
+      iconURL: 'https://cdn.discordapp.com/emojis/1000000000000000000.png' // Replace with your bot's icon
+    });
 
-export async function handleHelpMessage(message: Message, services: ServiceContainer) {
-  const embed = await createHelpEmbed();
-  return message.reply({ embeds: [embed] });
-}
-
-export async function handleHelp(interaction: ChatInputCommandInteraction, services: ServiceContainer) {
-  const embed = await createHelpEmbed();
-  return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+  return source.reply({ embeds: [embed] });
 } 

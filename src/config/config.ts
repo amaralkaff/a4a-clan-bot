@@ -33,6 +33,7 @@ export const CONFIG = {
   BOT_TOKEN: process.env.DISCORD_TOKEN!,
   CLIENT_ID: process.env.CLIENT_ID!,
   GUILD_ID: process.env.GUILD_ID!,
+  BOTLIST_TOKEN: process.env.BOTLIST_TOKEN,
   INVITE_URL: inviteUrl,
   
   // Game Config
@@ -40,6 +41,7 @@ export const CONFIG = {
     HEALTH: 100 as number,
     ATTACK: 10 as number,
     DEFENSE: 10 as number,
+    SPEED: 10 as number,
   },
   
   // Map Config
@@ -64,6 +66,12 @@ export const CONFIG = {
   // Weather System
   WEATHER_TYPES: ['sunny', 'rainy', 'stormy', 'foggy', 'windy'] as WeatherType[],
   WEATHER_CHANGE_INTERVAL: 1000 * 60 * 30, // 30 menit
+  
+  HUNT: {
+    COOLDOWN_MINUTES: 5,
+    STREAK_BONUS: 0.1,
+    MAX_STREAK_BONUS: 1.0
+  },
 } as const;
 
 // Validasi token ada dan tidak kosong

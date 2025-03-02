@@ -1,12 +1,47 @@
 import { PrismaClient } from '@prisma/client';
+import { injectable } from 'tsyringe';
+import { WeaponUpgradeData, MaterialData, ITEMS } from '../config/gameData';
 import { BaseService } from './BaseService';
-import { WEAPON_UPGRADES, MATERIALS, WeaponUpgradeData, MaterialData } from '../config/gameData';
 import { EmbedBuilder } from 'discord.js';
 
 interface WeaponMaterials {
   [key: string]: number;
 }
 
+interface WeaponConfig extends WeaponUpgradeData {
+  id: string;
+}
+
+const WEAPON_UPGRADES: Record<string, WeaponConfig> = Object.entries(ITEMS)
+  .filter(([_, item]) => item.type === 'WEAPON' && item.maxLevel)
+  .reduce((acc, [id, item]) => ({
+    ...acc,
+    [id]: {
+      id,
+      name: item.name,
+      maxLevel: item.maxLevel || 1,
+      baseAttack: item.baseStats?.attack || 0,
+      upgradeAttackPerLevel: item.upgradeStats?.attack || 0,
+      materials: item.effect && typeof item.effect === 'object' ? (item.effect as any).materials || {} : {},
+      coins: item.price
+    }
+  }), {});
+
+const MATERIALS = Object.entries(ITEMS)
+  .filter(([_, item]) => item.type === 'MATERIAL')
+  .reduce((acc, [id, item]) => ({
+    ...acc,
+    [id]: {
+      id,
+      name: item.name,
+      description: item.description,
+      dropFrom: [],
+      rarity: item.rarity,
+      stackLimit: item.stackLimit
+    }
+  }), {} as Record<string, MaterialData>);
+
+@injectable()
 export class WeaponService extends BaseService {
   constructor(prisma: PrismaClient) {
     super(prisma);
@@ -18,8 +53,14 @@ export class WeaponService extends BaseService {
     embed?: EmbedBuilder;
   }> {
     try {
-      // Get character's weapon from inventory
-      const weaponInventory = await this.prisma.inventory.findFirst({
+      // Get weapon data
+      const weaponData = WEAPON_UPGRADES[weaponId];
+      if (!weaponData) {
+        return { success: false, message: 'Senjata tidak dapat diupgrade' };
+      }
+
+      // Get character's weapon
+      const weapon = await this.prisma.inventory.findFirst({
         where: {
           characterId,
           itemId: weaponId,
@@ -27,35 +68,16 @@ export class WeaponService extends BaseService {
         }
       });
 
-      if (!weaponInventory) {
-        return {
-          success: false,
-          message: '❌ Kamu harus mengequip senjata yang ingin diupgrade!'
-        };
+      if (!weapon) {
+        return { success: false, message: 'Senjata tidak ditemukan atau tidak diequip' };
       }
 
-      // Get weapon upgrade config
-      const weaponConfig = WEAPON_UPGRADES[weaponId as keyof typeof WEAPON_UPGRADES];
-      if (!weaponConfig) {
-        return {
-          success: false,
-          message: '❌ Senjata ini tidak bisa diupgrade!'
-        };
+      const currentLevel = weapon.level || 0;
+      if (currentLevel >= weaponData.maxLevel) {
+        return { success: false, message: 'Senjata sudah mencapai level maksimal' };
       }
 
-      // Get current weapon level from effect
-      const effect = JSON.parse(weaponInventory.effect || '{}');
-      const currentLevel = effect.level || 0;
-
-      // Check if weapon can be upgraded
-      if (currentLevel >= weaponConfig.maxLevel) {
-        return {
-          success: false,
-          message: `❌ ${weaponConfig.name} sudah mencapai level maksimal (${weaponConfig.maxLevel})!`
-        };
-      }
-
-      // Check if character has enough materials
+      // Check materials
       const character = await this.prisma.character.findUnique({
         where: { id: characterId },
         include: {
@@ -64,114 +86,89 @@ export class WeaponService extends BaseService {
       });
 
       if (!character) {
-        return {
-          success: false,
-          message: '❌ Karakter tidak ditemukan!'
-        };
+        return { success: false, message: 'Karakter tidak ditemukan' };
       }
 
       // Check coins
-      if (character.coins < weaponConfig.coins) {
-        return {
-          success: false,
-          message: `❌ Kamu butuh ${weaponConfig.coins} coins untuk upgrade!`
-        };
+      if (character.coins < weaponData.coins) {
+        return { success: false, message: 'Koin tidak cukup' };
       }
 
       // Check materials
-      const materials = weaponConfig.materials;
-      for (const [materialId, requiredAmount] of Object.entries(materials)) {
-        const material = character.inventory.find(
-          item => item.itemId === materialId && item.quantity >= requiredAmount
-        );
-
-        if (!material) {
-          const materialData = MATERIALS[materialId as keyof typeof MATERIALS];
-          const materialName = materialData?.name || materialId;
-          return {
-            success: false,
-            message: `❌ Kamu butuh ${requiredAmount}x ${materialName} untuk upgrade!`
-          };
+      for (const [materialId, requiredAmount] of Object.entries(weaponData.materials as WeaponMaterials)) {
+        const material = character.inventory.find(item => item.itemId === materialId);
+        if (!material || material.quantity < requiredAmount) {
+          const materialName = MATERIALS[materialId]?.name || materialId;
+          return { success: false, message: `Material tidak cukup: ${materialName}` };
         }
       }
 
-      // Process upgrade
-      await this.prisma.$transaction(async (tx) => {
+      // Initialize stats
+      const currentStats = weapon.stats ? JSON.parse(weapon.stats) : {};
+      const newStats = {
+        attack: (currentStats.attack || weaponData.baseAttack) + weaponData.upgradeAttackPerLevel,
+        defense: currentStats.defense || 0
+      };
+
+      // All requirements met, perform upgrade
+      await this.prisma.$transaction(async (prisma) => {
+        // Deduct coins
+        await prisma.character.update({
+          where: { id: characterId },
+          data: {
+            coins: { decrement: weaponData.coins }
+          }
+        });
+
         // Deduct materials
-        for (const [materialId, requiredAmount] of Object.entries(materials)) {
-          await tx.inventory.update({
+        for (const [materialId, amount] of Object.entries(weaponData.materials as WeaponMaterials)) {
+          await prisma.inventory.updateMany({
             where: {
-              characterId_itemId: {
-                characterId,
-                itemId: materialId
-              }
+              characterId,
+              itemId: materialId
             },
             data: {
-              quantity: {
-                decrement: requiredAmount
-              }
+              quantity: { decrement: amount }
             }
           });
         }
 
-        // Deduct coins
-        await tx.character.update({
-          where: { id: characterId },
-          data: {
-            coins: {
-              decrement: weaponConfig.coins
-            }
-          }
-        });
-
         // Update weapon stats
-        const newLevel = currentLevel + 1;
-        const newAttack = weaponConfig.baseAttack + (newLevel * weaponConfig.upgradeAttackPerLevel);
-
-        await tx.inventory.update({
-          where: {
-            id: weaponInventory.id
-          },
+        await prisma.inventory.update({
+          where: { id: weapon.id },
           data: {
-            effect: JSON.stringify({
-              ...effect,
-              level: newLevel,
-              attack: newAttack
-            })
+            level: { increment: 1 },
+            stats: JSON.stringify(newStats)
           }
         });
       });
 
-      // Create success embed
       const embed = new EmbedBuilder()
         .setTitle('⚔️ Weapon Upgrade Success!')
         .setColor('#00ff00')
-        .setDescription(`${weaponConfig.name} telah diupgrade ke level ${currentLevel + 1}!`)
+        .setDescription(`${weaponData.name} telah diupgrade ke level ${currentLevel + 1}!`)
         .addFields(
           { 
             name: '📈 Stats Baru',
-            value: `Attack: ${weaponConfig.baseAttack + ((currentLevel + 1) * weaponConfig.upgradeAttackPerLevel)}`,
+            value: `Attack: ${newStats.attack}`,
             inline: true
           },
           {
             name: '📊 Level',
-            value: `${currentLevel + 1}/${weaponConfig.maxLevel}`,
+            value: `${currentLevel + 1}/${weaponData.maxLevel}`,
             inline: true
           }
         );
 
       return {
         success: true,
-        message: '✅ Upgrade berhasil!',
+        message: `Berhasil mengupgrade ${weaponData.name} ke level ${currentLevel + 1}!`,
         embed
       };
 
     } catch (error) {
-      this.logger.error('Error upgrading weapon:', error);
-      return {
-        success: false,
-        message: '❌ Terjadi kesalahan saat upgrade senjata!'
-      };
+      console.error('Error upgrading weapon:', error);
+      return { success: false, message: 'Terjadi kesalahan saat mengupgrade senjata' };
     }
   }
 
@@ -188,7 +185,7 @@ export class WeaponService extends BaseService {
         return null;
       }
 
-      const weaponConfig = WEAPON_UPGRADES[weaponId as keyof typeof WEAPON_UPGRADES];
+      const weaponConfig = WEAPON_UPGRADES[weaponId];
       if (!weaponConfig) {
         return null;
       }
@@ -217,7 +214,7 @@ export class WeaponService extends BaseService {
       if (currentLevel < weaponConfig.maxLevel) {
         const materials = Object.entries(weaponConfig.materials)
           .map(([id, amount]) => {
-            const material = MATERIALS[id as keyof typeof MATERIALS];
+            const material = MATERIALS[id];
             return material ? `${material.name} x${amount}` : `${id} x${amount}`;
           })
           .join('\n');
@@ -239,7 +236,7 @@ export class WeaponService extends BaseService {
       return embed;
 
     } catch (error) {
-      this.logger.error('Error getting weapon info:', error);
+      console.error('Error getting weapon info:', error);
       return null;
     }
   }

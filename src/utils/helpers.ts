@@ -136,3 +136,10 @@ export function parseJsonField<T>(jsonString: string, defaultValue: T): T {
     return defaultValue;
   }
 }
+
+export const createErrorReply = (interaction: ChatInputCommandInteraction, message: string) => {
+  return interaction.reply({
+    content: `❌ ${message}`,
+    ephemeral: true
+  });
+};

@@ -6,36 +6,29 @@ import {
   import { CommandHandler } from '@/types/commands';
   import { createEphemeralReply } from '@/utils/helpers';
 
-  interface ItemEffect {
-    type: 'HEAL' | 'BUFF';
-    value: number;
-    stats?: Record<string, number>;
-    duration?: number;
-  }
-
   interface InventoryItem {
     id: string;
     name: string;
     description: string;
-    type: 'CONSUMABLE' | 'FOOD' | 'INGREDIENT' | 'EQUIPMENT';
+    type: string;
     value: number;
+    maxDurability: number | null;
+    stackLimit: number;
+    rarity: string;
+    baseStats: string | null;
+    upgradeStats: string | null;
+    maxLevel: number | null;
     quantity: number;
-    effect: ItemEffect | null;
-    createdAt: Date;
-    updatedAt: Date;
+    effect: {
+      type: 'EQUIP' | 'HEAL';
+      stats?: {
+        attack?: number;
+        defense?: number;
+      };
+      health?: number;
+    };
   }
 
-  function formatItemEffect(effect: { type: string; value: number }): string {
-    switch (effect.type) {
-      case 'HEAL':
-        return `💚 Heal: ${effect.value} HP`;
-      case 'BUFF':
-        return `⚡ Buff: +${effect.value} stats`;
-      default:
-        return '';
-    }
-  }
-  
   export const inventoryCommands: CommandHandler = {
     data: new SlashCommandBuilder()
       .setName('inventory')
@@ -54,15 +47,7 @@ import {
               .setName('item')
               .setDescription('Item yang ingin digunakan')
               .setRequired(true)
-              .addChoices(
-                { name: '🧪 Health Potion (❤️ Heal 50 HP)', value: 'potion' },
-                { name: '🔮 Super Potion (❤️ Heal 100 HP)', value: 'super_potion' },
-                { name: '⚔️ Attack Boost (💪 ATK +5 1h)', value: 'attack_buff' },
-                { name: '🛡️ Defense Boost (🛡️ DEF +5 1h)', value: 'defense_buff' },
-                { name: '🍖 Daging Panggang (❤️ Heal 20 HP)', value: 'meat_cooked' },
-                { name: '👨‍🍳 Hidangan Spesial Sanji (⚡ ATK & DEF +10 1h)', value: 'sanji_special' },
-                { name: '🎒 Combat Ration (❤️ +30 HP, ⚡ ATK & DEF +3 30m)', value: 'combat_ration' }
-              )
+              .setAutocomplete(true)
           )
       ),
   
@@ -83,7 +68,7 @@ import {
             const inventory = await services.inventory.getInventory(character.id) as InventoryItem[];
             
             const embed = new EmbedBuilder()
-              .setTitle('🎒 Inventory')
+              .setTitle(`🎒 Inventory ${character.name}`)
               .setColor('#0099ff');
 
             if (inventory.length > 0) {
@@ -93,35 +78,85 @@ import {
                 return acc;
               }, {} as Record<string, InventoryItem[]>);
 
-              for (const [type, items] of Object.entries(groupedItems)) {
-                let typeEmoji = '';
-                switch (type) {
-                  case 'CONSUMABLE': typeEmoji = '🧪'; break;
-                  case 'FOOD': typeEmoji = '🍖'; break;
-                  case 'INGREDIENT': typeEmoji = '📦'; break;
-                  case 'EQUIPMENT': typeEmoji = '⚔️'; break;
-                  default: typeEmoji = '📝';
-                }
+              const typeOrder = ['WEAPON', 'ARMOR', 'ACCESSORY', 'CONSUMABLE'];
+              
+              for (const type of typeOrder) {
+                if (groupedItems[type] && groupedItems[type].length > 0) {
+                  const typeEmoji = {
+                    'WEAPON': '⚔️',
+                    'ARMOR': '🛡️',
+                    'ACCESSORY': '📿',
+                    'CONSUMABLE': '🧪'
+                  }[type] || '📝';
 
-                const itemList = items.map(item => {
-                  let effectText = '';
-                  if (item.effect) {
-                    if (item.effect.type === 'HEAL') {
-                      effectText = `\n❤️ Heal: ${item.effect.value} HP`;
-                    } else if (item.effect.type === 'BUFF') {
-                      const stats = item.effect.stats || {};
-                      const duration = item.effect.duration ? `${item.effect.duration / 3600}h` : '1h';
-                      effectText = `\n⚡ Buff: ${Object.entries(stats).map(([stat, val]) => 
-                        `${stat.toUpperCase()} +${val}`).join(', ')} (${duration})`;
+                  const itemList = groupedItems[type].map(item => {
+                    let itemText = '';
+                    
+                    // Add equipped status if it's equipment
+                    if (item.effect?.type === 'EQUIP') {
+                      const stats = item.effect.stats;
+                      const equipped = stats && (
+                        (stats.attack ?? 0) > 0 || 
+                        (stats.defense ?? 0) > 0
+                      );
+                      if (equipped) {
+                        itemText += '✅ ';
+                      }
                     }
-                  }
-                  return `${item.name} (${item.quantity}x)\n${item.description}${effectText}`;
-                }).join('\n\n');
+                    
+                    // Add item name and quantity
+                    itemText += `${item.name} (x${item.quantity})`;
+                    
+                    // Add durability if applicable
+                    if (item.maxDurability) {
+                      const currentDurability = item.maxDurability; // TODO: Get actual durability from inventory
+                      const durabilityPercent = (currentDurability / item.maxDurability) * 100;
+                      const durabilityColor = 
+                        durabilityPercent > 70 ? '🟢' :
+                        durabilityPercent > 30 ? '🟡' : '🔴';
+                      itemText += ` ${durabilityColor}[${currentDurability}/${item.maxDurability}]`;
+                    }
+                    
+                    // Add description
+                    itemText += `\n${item.description}`;
+                    
+                    // Add rarity
+                    const rarityColor = {
+                      'COMMON': '⚪',
+                      'UNCOMMON': '🟢',
+                      'RARE': '🔵',
+                      'EPIC': '🟣',
+                      'LEGENDARY': '🟡'
+                    }[item.rarity];
+                    itemText += `\n${rarityColor} ${item.rarity}`;
+                    
+                    // Add effect
+                    if (item.effect) {
+                      if (item.effect.type === 'EQUIP' && item.effect.stats) {
+                        const stats = Object.entries(item.effect.stats)
+                          .filter(([_, value]) => value > 0)
+                          .map(([stat, value]) => {
+                            const statEmoji = stat === 'attack' ? '⚔️' : '🛡️';
+                            return `${statEmoji} ${stat.toUpperCase()} +${value}`;
+                          })
+                          .join(', ');
+                        if (stats) {
+                          itemText += `\n${stats}`;
+                        }
+                      } else if (item.effect.type === 'HEAL') {
+                        itemText += `\n❤️ Heal: ${item.effect.health} HP`;
+                      }
+                    }
+                    
+                    return itemText;
+                  }).join('\n\n');
 
-                embed.addFields({
-                  name: `${typeEmoji} ${type}`,
-                  value: itemList
-                });
+                  embed.addFields({
+                    name: `${typeEmoji} ${type}`,
+                    value: itemList || 'Empty',
+                    inline: false
+                  });
+                }
               }
             } else {
               embed.setDescription('📭 Inventory kosong');
@@ -138,6 +173,11 @@ import {
               content: `✅ ${result.message}`
             }));
           }
+  
+          default:
+            return interaction.reply(createEphemeralReply({
+              content: '❌ Invalid subcommand'
+            }));
         }
       } catch (error) {
         services.logger.error('Error in inventory command:', error);

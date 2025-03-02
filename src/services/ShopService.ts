@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { BaseService } from './BaseService';
 import { Message, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } from 'discord.js';
 import { CharacterService } from './CharacterService';
+import { InventoryService } from './InventoryService';
 import { 
   GameItem, 
   ITEMS, 
@@ -51,17 +52,18 @@ interface DbItem {
 }
 
 interface ShopItem {
+  id: string;
   name: string;
-  type: string;
   description: string;
+  type: string;
   price: number;
-  effect?: string;
+  effect: Effect;
   baseStats?: string;
   upgradeStats?: string;
-  maxDurability?: number;
-  maxLevel?: number;
-  stackLimit?: number;
+  maxDurability?: number | null;
+  stackLimit: number;
   rarity: string;
+  maxLevel?: number | null;
 }
 
 interface BuyResult {
@@ -123,33 +125,79 @@ function isShopItemTuple(tuple: [string, any]): tuple is ShopItemTuple {
   );
 }
 
+// Helper function to convert GameItem to ShopItem
+function convertGameItemToShopItem(id: string, gameItem: GameItem): ShopItem {
+  return {
+    id,
+    name: gameItem.name,
+    description: gameItem.description,
+    type: gameItem.type,
+    price: gameItem.price,
+    effect: gameItem.effect,
+    baseStats: JSON.stringify(gameItem.baseStats || {}),
+    upgradeStats: JSON.stringify(gameItem.upgradeStats || {}),
+    maxDurability: gameItem.maxDurability || null,
+    stackLimit: gameItem.stackLimit,
+    rarity: gameItem.rarity,
+    maxLevel: gameItem.maxLevel || null
+  };
+}
+
+// Create shop items map
+const shopItems: Map<string, ShopItem> = new Map(
+  Object.entries(ITEMS).map(
+    ([id, item]) => [id, convertGameItemToShopItem(id, item)]
+  )
+);
+
 export class ShopService extends BaseService {
   private characterService: CharacterService;
+  private inventoryService: InventoryService;
 
   constructor(prisma: PrismaClient, characterService: CharacterService) {
     super(prisma);
     this.characterService = characterService;
+    this.inventoryService = new InventoryService(prisma, characterService);
   }
 
   private createShopEmbed(items: GameItem[], page: number, totalPages: number, balance: number) {
     const embed = new EmbedBuilder()
       .setTitle('🛍️ A4A CLAN Shop')
       .setColor('#ffd700')
-      .setDescription(`💰 Uangmu: ${balance} coins\nGunakan \`a buy [nama_item] [jumlah]\` untuk membeli item.`)
-      .setFooter({ text: `Halaman ${page + 1}/${totalPages} • Contoh: a buy potion 5` });
+      .setDescription(`💰 Uangmu: ${balance} coins`)
+      .setFooter({ text: `Halaman ${page + 1}/${totalPages}` });
 
     // Group items by type for current page
     const groupedItems: Record<string, GameItem[]> = {};
     const startIdx = page * ITEMS_PER_PAGE;
     const endIdx = Math.min(startIdx + ITEMS_PER_PAGE, items.length);
     
-    for (let i = startIdx; i < endIdx; i++) {
-      const item = items[i];
-      const type = item.type;
-      if (!groupedItems[type]) {
-        groupedItems[type] = [];
+    // Check if we have items for this page
+    if (startIdx >= items.length) {
+      // If we're past the last item, go back to the last valid page
+      page = Math.max(0, Math.ceil(items.length / ITEMS_PER_PAGE) - 1);
+      const newStartIdx = page * ITEMS_PER_PAGE;
+      const newEndIdx = Math.min(newStartIdx + ITEMS_PER_PAGE, items.length);
+      
+      // Update items for the corrected page
+      for (let i = newStartIdx; i < newEndIdx; i++) {
+        const item = items[i];
+        const type = item.type;
+        if (!groupedItems[type]) {
+          groupedItems[type] = [];
+        }
+        groupedItems[type].push(item);
       }
-      groupedItems[type].push(item);
+    } else {
+      // Normal case - process items for current page
+      for (let i = startIdx; i < endIdx; i++) {
+        const item = items[i];
+        const type = item.type;
+        if (!groupedItems[type]) {
+          groupedItems[type] = [];
+        }
+        groupedItems[type].push(item);
+      }
     }
 
     // Add fields for each type
@@ -159,31 +207,30 @@ export class ShopService extends BaseService {
       for (const item of typeItems) {
         let itemText = `${item.name} - 💰 ${item.price} coins\n${item.description}`;
 
-        // Only parse effect if it exists and is not empty
-        if (item.effect && item.effect !== '{}') {
-          try {
-            const effect = getEffectData(item.effect);
-            if (effect && effect.stats) {
-              const statsText = Object.entries(effect.stats)
-                .map(([stat, value]) => `${stat === 'attack' ? '⚔️' : '🛡️'} ${stat.toUpperCase()}: ${formatStatValue(value)}`)
-                .join(', ');
-              if (statsText) {
-                itemText += `\n${statsText}`;
-              }
+        // Add stats if item has effect
+        if (item.effect) {
+          const effectData = getEffectData(item.effect);
+          if (effectData?.stats) {
+            const stats = Object.entries(effectData.stats)
+              .map(([stat, value]) => `${stat === 'attack' ? '⚔️' : '🛡️'} ${stat.toUpperCase()}: ${formatStatValue(value)}`)
+              .join(', ');
+            if (stats) {
+              itemText += `\n${stats}`;
             }
-          } catch (error) {
-            // Silently handle JSON parse errors
-            console.error('Error parsing item effect:', error);
           }
         }
 
-        // Add rarity indicator
         const rarityEmoji = {
           'COMMON': '⚪',
           'UNCOMMON': '🟢',
           'RARE': '🔵',
           'EPIC': '🟣',
-          'LEGENDARY': '🟡'
+          'LEGENDARY': '🟡',
+          'MYTHICAL': '🟣',
+          'DIVINE': '🟣',
+          'TRANSCENDENT': '🟣',
+          'CELESTIAL': '🟣',
+          'PRIMORDIAL': '🟣'
         }[item.rarity] || '⚪';
         
         itemText = `${rarityEmoji} ${itemText}`;
@@ -212,7 +259,49 @@ export class ShopService extends BaseService {
       }
     }
 
+    // If no items were added, add a message
+    if (embed.data.fields?.length === 0) {
+      embed.addFields({
+        name: '❌ Tidak ada item',
+        value: 'Tidak ada item yang ditemukan di halaman ini.'
+      });
+    }
+
     return embed;
+  }
+
+  private createBuyButtons(items: GameItem[], startIdx: number, endIdx: number) {
+    const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+    let currentRow = new ActionRowBuilder<ButtonBuilder>();
+    let buttonCount = 0;
+
+    for (let i = startIdx; i < endIdx; i++) {
+      const item = items[i];
+      if (!item) continue;
+
+      // Create buy button for item using array index
+      const button = new ButtonBuilder()
+        .setCustomId(`buy_${i}_1`) // Use array index instead of item.id
+        .setLabel(`Buy ${item.name}`)
+        .setStyle(ButtonStyle.Success)
+        .setEmoji('🛒');
+
+      // Discord allows max 5 buttons per row
+      if (buttonCount % 5 === 0 && buttonCount !== 0) {
+        rows.push(currentRow);
+        currentRow = new ActionRowBuilder<ButtonBuilder>();
+      }
+
+      currentRow.addComponents(button);
+      buttonCount++;
+    }
+
+    // Add the last row if it has any buttons
+    if (currentRow.components.length > 0) {
+      rows.push(currentRow);
+    }
+
+    return rows;
   }
 
   async handleShop(message: Message, args?: string[]) {
@@ -226,8 +315,34 @@ export class ShopService extends BaseService {
       // Get character balance
       const balance = await this.characterService.getBalance(character.id);
 
+      // Get items from database
+      const dbItems = await this.prisma.item.findMany();
+      
+      // Convert DB items to GameItem format and merge with ITEMS
+      const mergedItems = {
+        ...ITEMS,
+        ...Object.fromEntries(
+          dbItems.map(dbItem => [
+            dbItem.id,
+            {
+              name: dbItem.name,
+              type: dbItem.type,
+              description: dbItem.description,
+              price: dbItem.value,
+              effect: parseDbEffect(dbItem.effect) || {},
+              baseStats: dbItem.baseStats ? JSON.parse(dbItem.baseStats) : {},
+              upgradeStats: dbItem.upgradeStats ? JSON.parse(dbItem.upgradeStats) : {},
+              maxDurability: dbItem.maxDurability || undefined,
+              stackLimit: dbItem.stackLimit,
+              rarity: dbItem.rarity,
+              maxLevel: dbItem.maxLevel || undefined
+            } as GameItem
+          ])
+        )
+      };
+
       // Convert items to array and sort by type and price
-      let itemsArray = Object.entries(ITEMS)
+      let itemsArray = Object.entries(mergedItems)
         .filter(isShopItemTuple)
         .map(([id, item]) => ({
           id,
@@ -237,13 +352,17 @@ export class ShopService extends BaseService {
       // Filter by type if argument is provided
       if (args && args.length > 0) {
         const filterType = args[0].toUpperCase();
-        const validTypes = ['WEAPON', 'ARMOR', 'ACCESSORY', 'CONSUMABLE', 'MATERIAL'];
+        const validTypes: ItemType[] = ['WEAPON', 'ARMOR', 'ACCESSORY', 'CONSUMABLE', 'MATERIAL'];
         
-        if (!validTypes.includes(filterType)) {
-          return message.reply('❌ Tipe item tidak valid! Gunakan: weapon, armor, accessory, consumable, atau material');
+        if (!validTypes.includes(filterType as ItemType) && filterType !== 'DEVIL_FRUIT') {
+          return message.reply('❌ Tipe item tidak valid! Gunakan: weapon, armor, accessory, consumable, material, atau devil_fruit');
         }
 
-        itemsArray = itemsArray.filter(item => item.type === filterType);
+        if (filterType === 'DEVIL_FRUIT') {
+          itemsArray = itemsArray.filter(item => item.name.toLowerCase().includes('no mi'));
+        } else {
+          itemsArray = itemsArray.filter(item => item.type === filterType as ItemType);
+        }
         
         if (itemsArray.length === 0) {
           return message.reply(`❌ Tidak ada item dengan tipe ${filterType.toLowerCase()} di shop!`);
@@ -264,13 +383,8 @@ export class ShopService extends BaseService {
       // Create initial embed
       const embed = this.createShopEmbed(itemsArray, currentPage, totalPages, balance.coins);
 
-      // Add filter info if filtered
-      if (args && args.length > 0) {
-        embed.setTitle(`🛍️ A4A CLAN Shop - ${args[0].toUpperCase()}`);
-      }
-
-      // Create navigation buttons
-      const row = new ActionRowBuilder<ButtonBuilder>()
+      // Create navigation and filter buttons
+      const navigationRow = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
           new ButtonBuilder()
             .setCustomId('prev')
@@ -284,35 +398,41 @@ export class ShopService extends BaseService {
             .setDisabled(totalPages <= 1)
         );
 
-      // Add filter buttons
+      // Create filter buttons
       const filterRow = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
           new ButtonBuilder()
-            .setCustomId('filter_weapon')
-            .setLabel('⚔️ Weapon')
+            .setCustomId('filter_WEAPON')
+            .setLabel(`${ITEM_TYPE_EMOJIS.WEAPON} Weapon`)
             .setStyle(ButtonStyle.Secondary),
           new ButtonBuilder()
-            .setCustomId('filter_armor')
-            .setLabel('🛡️ Armor')
+            .setCustomId('filter_ARMOR')
+            .setLabel(`${ITEM_TYPE_EMOJIS.ARMOR} Armor`)
             .setStyle(ButtonStyle.Secondary),
           new ButtonBuilder()
-            .setCustomId('filter_accessory')
-            .setLabel('💍 Accessory')
+            .setCustomId('filter_ACCESSORY')
+            .setLabel(`${ITEM_TYPE_EMOJIS.ACCESSORY} Accessory`)
             .setStyle(ButtonStyle.Secondary),
           new ButtonBuilder()
-            .setCustomId('filter_consumable')
-            .setLabel('🧪 Consumable')
-            .setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder()
-            .setCustomId('filter_all')
-            .setLabel('🔄 Show All')
+            .setCustomId('filter_CONSUMABLE')
+            .setLabel(`${ITEM_TYPE_EMOJIS.CONSUMABLE} Consumable`)
             .setStyle(ButtonStyle.Secondary)
         );
+
+      // Create buy buttons for current page
+      const buyButtonRows = this.createBuyButtons(
+        itemsArray,
+        currentPage * ITEMS_PER_PAGE,
+        Math.min((currentPage + 1) * ITEMS_PER_PAGE, itemsArray.length)
+      );
+
+      // Combine all button rows
+      const allComponents = [filterRow, ...buyButtonRows, navigationRow];
 
       // Send initial message with buttons
       const shopMessage = await message.reply({
         embeds: [embed],
-        components: [filterRow, row]
+        components: allComponents
       });
 
       // Create button collector
@@ -330,13 +450,126 @@ export class ShopService extends BaseService {
           return;
         }
 
+        let allComponents: ActionRowBuilder<ButtonBuilder>[];
+
+        // Handle buy buttons
+        if (interaction.customId.startsWith('buy_')) {
+          const [_, indexStr, quantityStr] = interaction.customId.split('_');
+          const index = parseInt(indexStr);
+          const quantity = parseInt(quantityStr);
+          
+          // Get item from array using index
+          const item = itemsArray[index];
+          if (!item) {
+            await interaction.reply({
+              content: '❌ Item tidak ditemukan!',
+              ephemeral: true
+            });
+            return;
+          }
+
+          // Get fresh character data
+          const updatedCharacter = await this.characterService.getCharacterByDiscordId(interaction.user.id);
+          if (!updatedCharacter) {
+            await interaction.reply({
+              content: '❌ Character tidak ditemukan!',
+              ephemeral: true
+            });
+            return;
+          }
+          
+          const updatedBalance = await this.characterService.getBalance(updatedCharacter.id);
+
+          // Check if character has enough coins
+          if (updatedBalance.coins < item.price * quantity) {
+            await interaction.reply({
+              content: `❌ Uang tidak cukup! Kamu butuh ${item.price * quantity} coins untuk membeli ${quantity}x ${item.name}.`,
+              ephemeral: true
+            });
+            return;
+          }
+
+          try {
+            // Find item ID from original ITEMS object
+            const itemId = Object.entries(ITEMS).find(([_, i]) => i.name === item.name)?.[0];
+            if (!itemId) {
+              await interaction.reply({
+                content: '❌ Item tidak ditemukan di database!',
+                ephemeral: true
+              });
+              return;
+            }
+
+            // Process purchase
+            await this.processPurchase(updatedCharacter.id, itemId, quantity, item);
+
+            // Send success message
+            await interaction.reply({
+              content: `✅ Berhasil membeli ${quantity}x ${item.name} seharga ${item.price * quantity} coins!`,
+              ephemeral: true
+            });
+
+            // Update shop embed with new balance
+            const newBalance = await this.characterService.getBalance(updatedCharacter.id);
+            const updatedEmbed = this.createShopEmbed(itemsArray, currentPage, totalPages, newBalance.coins);
+
+            // Create new buy buttons for current page
+            const buyButtonRows = this.createBuyButtons(
+              itemsArray,
+              currentPage * ITEMS_PER_PAGE,
+              Math.min((currentPage + 1) * ITEMS_PER_PAGE, itemsArray.length)
+            );
+
+            // Combine all button rows
+            allComponents = [filterRow, ...buyButtonRows, navigationRow];
+
+            await shopMessage.edit({
+              embeds: [updatedEmbed],
+              components: allComponents
+            });
+          } catch (error) {
+            this.logger.error('Error processing purchase:', error);
+            await interaction.reply({
+              content: '❌ Terjadi kesalahan saat membeli item.',
+              ephemeral: true
+            });
+          }
+          return;
+        }
+
         // Handle filter buttons
         if (interaction.customId.startsWith('filter_')) {
-          const filterType = interaction.customId.replace('filter_', '').toUpperCase();
+          const filterType = interaction.customId.replace('filter_', '') as ItemType | 'ALL' | 'DEVIL_FRUIT';
           
+          // Get items from database again to ensure fresh data
+          const dbItems = await this.prisma.item.findMany();
+          
+          // Convert DB items to GameItem format and merge with ITEMS
+          const mergedItems = {
+            ...ITEMS,
+            ...Object.fromEntries(
+              dbItems.map(dbItem => [
+                dbItem.id,
+                {
+                  name: dbItem.name,
+                  type: dbItem.type,
+                  description: dbItem.description,
+                  price: dbItem.value,
+                  effect: parseDbEffect(dbItem.effect) || {},
+                  baseStats: dbItem.baseStats ? JSON.parse(dbItem.baseStats) : {},
+                  upgradeStats: dbItem.upgradeStats ? JSON.parse(dbItem.upgradeStats) : {},
+                  maxDurability: dbItem.maxDurability || undefined,
+                  stackLimit: dbItem.stackLimit,
+                  rarity: dbItem.rarity,
+                  maxLevel: dbItem.maxLevel || undefined
+                } as GameItem
+              ])
+            )
+          };
+
           // Reset to original array for "Show All"
           if (filterType === 'ALL') {
-            itemsArray = Object.entries(ITEMS)
+            itemsArray = Object.entries(mergedItems)
               .filter(isShopItemTuple)
               .map(([id, item]) => ({
                 id,
@@ -346,9 +579,19 @@ export class ShopService extends BaseService {
                 if (a.type !== b.type) return a.type.localeCompare(b.type);
                 return a.price - b.price;
               });
+          } else if (filterType === 'DEVIL_FRUIT') {
+            // Filter Devil Fruit items
+            itemsArray = Object.entries(mergedItems)
+              .filter(isShopItemTuple)
+              .map(([id, item]) => ({
+                id,
+                ...item
+              } as GameItem))
+              .filter(item => item.name.toLowerCase().includes('no mi'))
+              .sort((a, b) => a.price - b.price);
           } else {
-            // Filter items by type
-            itemsArray = Object.entries(ITEMS)
+            // Filter items by type using ItemType enum
+            itemsArray = Object.entries(mergedItems)
               .filter(isShopItemTuple)
               .map(([id, item]) => ({
                 id,
@@ -363,46 +606,71 @@ export class ShopService extends BaseService {
           
           // Update embed
           const newEmbed = this.createShopEmbed(itemsArray, currentPage, totalPages, balance.coins);
-          if (filterType !== 'ALL') {
-            newEmbed.setTitle(`🛍️ A4A CLAN Shop - ${filterType}`);
+          if (filterType === 'DEVIL_FRUIT') {
+            newEmbed.setTitle('🛍️ A4A CLAN Shop - 🍎 Devil Fruits');
+          } else if (filterType !== 'ALL') {
+            newEmbed.setTitle(`🛍️ A4A CLAN Shop - ${ITEM_TYPE_EMOJIS[filterType as keyof typeof ITEM_TYPE_EMOJIS] || '📦'} ${filterType}`);
           }
 
           // Update button states
-          const buttons = row.components;
+          const buttons = navigationRow.components;
           buttons[0].setDisabled(true);
           buttons[1].setDisabled(totalPages <= 1);
 
+          // Create new buy buttons for filtered items
+          const buyButtonRows = this.createBuyButtons(
+            itemsArray,
+            currentPage * ITEMS_PER_PAGE,
+            Math.min((currentPage + 1) * ITEMS_PER_PAGE, itemsArray.length)
+          );
+
+          // Combine all button rows
+          allComponents = [filterRow, ...buyButtonRows, navigationRow];
+
           await interaction.update({
             embeds: [newEmbed],
-            components: [filterRow, row]
+            components: allComponents
           });
           return;
         }
 
         // Handle navigation buttons
         if (interaction.customId === 'prev') {
-          currentPage--;
+          if (currentPage > 0) {
+            currentPage--;
+          }
         } else if (interaction.customId === 'next') {
-          currentPage++;
+          if (currentPage < totalPages - 1) {
+            currentPage++;
+          }
         }
 
         // Update button states
-        const buttons = row.components;
+        const buttons = navigationRow.components;
         buttons[0].setDisabled(currentPage === 0);
         buttons[1].setDisabled(currentPage === totalPages - 1);
 
         // Create new embed for current page
         const newEmbed = this.createShopEmbed(itemsArray, currentPage, totalPages, balance.coins);
 
+        // Create new buy buttons for current page
+        const buyButtonRows = this.createBuyButtons(
+          itemsArray,
+          currentPage * ITEMS_PER_PAGE,
+          Math.min((currentPage + 1) * ITEMS_PER_PAGE, itemsArray.length)
+        );
+
+        // Combine all button rows
+        allComponents = [filterRow, ...buyButtonRows, navigationRow];
+
         // Update message
         await interaction.update({
           embeds: [newEmbed],
-          components: [filterRow, row]
+          components: allComponents
         });
       });
 
       collector.on('end', () => {
-        // Remove buttons after timeout
         shopMessage.edit({
           components: []
         }).catch(() => {});
@@ -412,6 +680,49 @@ export class ShopService extends BaseService {
       this.logger.error('Error in shop handler:', error);
       return message.reply('❌ Terjadi kesalahan saat membuka shop.');
     }
+  }
+
+  private async processPurchase(characterId: string, itemId: string, quantity: number, item: GameItem) {
+    await this.prisma.$transaction(async (tx) => {
+      // Remove coins
+      const totalPrice = item.price * quantity;
+      await tx.character.update({
+        where: { id: characterId },
+        data: { coins: { decrement: totalPrice } }
+      });
+
+      // Add item to inventory
+      await tx.inventory.upsert({
+        where: {
+          characterId_itemId: {
+            characterId: characterId,
+            itemId
+          }
+        },
+        create: {
+          characterId,
+          itemId,
+          quantity,
+          durability: item.type === 'WEAPON' || item.type === 'ARMOR' ? 100 : null,
+          maxDurability: item.maxDurability || null,
+          effect: JSON.stringify(item.effect || {}),
+          stats: JSON.stringify(item.baseStats || {})
+        },
+        update: {
+          quantity: { increment: quantity }
+        }
+      });
+
+      // Create transaction record
+      await tx.transaction.create({
+        data: {
+          characterId,
+          type: 'SHOP_PURCHASE',
+          amount: -totalPrice,
+          description: `Bought ${quantity}x ${item.name}`
+        }
+      });
+    });
   }
 
   async handleBuyCommand(message: Message, args: string[] | string) {
@@ -450,28 +761,40 @@ export class ShopService extends BaseService {
       // Find item by name
       const itemEntry = Object.entries(ITEMS)
         .find(([_, item]) => {
-          const itemNameLower = (item as ShopItem).name.toLowerCase();
+          // Keep emojis in the comparison
+          const itemNameLower = item.name.toLowerCase();
           const searchNameLower = itemName.toLowerCase();
           
-          // Try exact match first
+          // Try exact match first (with emojis)
           if (itemNameLower === searchNameLower) {
             return true;
           }
           
-          // Remove emojis for comparison
+          // Try exact match without emojis
           const cleanItemName = itemNameLower.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
           const cleanSearchName = searchNameLower.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
           
-          // Try partial match without emojis
-          return cleanItemName.includes(cleanSearchName) || cleanSearchName.includes(cleanItemName);
+          if (cleanItemName === cleanSearchName) {
+            return true;
+          }
+          
+          // Try partial match without special characters
+          const alphaNumItemName = cleanItemName.replace(/[^a-z0-9]/g, '');
+          const alphaNumSearchName = cleanSearchName.replace(/[^a-z0-9]/g, '');
+          
+          return alphaNumItemName.includes(alphaNumSearchName) || alphaNumSearchName.includes(alphaNumItemName);
         });
 
       if (!itemEntry) {
         this.logger.debug('Item not found:', {
           searchName: itemName,
-          availableItems: Object.keys(ITEMS)
+          cleanSearchName: itemName.toLowerCase().replace(/[^a-z0-9]/g, ''),
+          availableItems: Object.entries(ITEMS).map(([_, item]) => ({
+            name: item.name,
+            cleanName: item.name.toLowerCase().replace(/[^a-z0-9]/g, '')
+          }))
         });
-        return message.reply(`❌ Item "${itemName}" tidak ditemukan di shop!`);
+        return message.reply(`❌ Item "${args[0]}" tidak ditemukan di shop!`);
       }
 
       const [itemId, item] = itemEntry as [string, ShopItem];
@@ -559,8 +882,8 @@ export class ShopService extends BaseService {
             quantity,
             durability: item.type === 'WEAPON' || item.type === 'ARMOR' ? 100 : null,
             maxDurability: item.maxDurability || null,
-            effect: effectToDbString(item.effect),
-            stats: item.baseStats || null
+            effect: JSON.stringify(item.effect || {}),
+            stats: JSON.stringify(item.baseStats || {})
           },
           update: {
             quantity: { increment: quantity }
@@ -596,20 +919,30 @@ export class ShopService extends BaseService {
           { name: '📦 Item', value: `${item.name}\n${item.description}`, inline: true }
         );
 
-      // Add stats info if equipment
+      // Add effect info based on item type
       if (item.effect) {
         try {
           const effect = getEffectData(item.effect);
-          if (effect && effect.stats) {
-            const statsText = Object.entries(effect.stats)
-              .map(([stat, value]) => `${stat === 'attack' ? '⚔️' : '🛡️'} ${stat.toUpperCase()}: ${formatStatValue(value)}`)
-              .join('\n');
-            
-            embed.addFields({
-              name: '📊 Stats',
-              value: statsText,
-              inline: true
-            });
+          if (effect) {
+            if (effect.type === 'HEAL') {
+              const healValue = effect.health || 0;
+              const healText = healValue < 0 ? '❤️ Memulihkan HP ke maksimum' : `❤️ Memulihkan ${healValue} HP`;
+              embed.addFields({
+                name: '💫 Efek',
+                value: healText,
+                inline: true
+              });
+            } else if (effect.stats) {
+              const statsText = Object.entries(effect.stats)
+                .map(([stat, value]) => `${stat === 'attack' ? '⚔️' : '🛡️'} ${stat.toUpperCase()}: ${formatStatValue(value)}`)
+                .join('\n');
+              
+              embed.addFields({
+                name: '📊 Stats',
+                value: statsText,
+                inline: true
+              });
+            }
           }
         } catch (error) {
           this.logger.error('Error parsing item effect:', error);
@@ -709,6 +1042,77 @@ export class ShopService extends BaseService {
         success: false,
         message: '❌ Terjadi kesalahan saat membeli item.'
       };
+    }
+  }
+
+  async handleSellCommand(message: Message, args: string[] | string) {
+    try {
+      // Ensure args is array
+      const argArray = Array.isArray(args) ? args : args.split(' ');
+      
+      if (!argArray || argArray.length === 0) {
+        return message.reply('❌ Format: `a sell [nama_item] [jumlah]`\nContoh: `a sell potion 5`');
+      }
+
+      const character = await this.characterService.getCharacterByDiscordId(message.author.id);
+      
+      if (!character) {
+        return message.reply('❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.');
+      }
+
+      // Parse quantity from last argument if it's a number
+      let quantity = 1;
+      let itemName = '';
+      
+      const lastArg = argArray[argArray.length - 1];
+      if (!isNaN(parseInt(lastArg))) {
+        quantity = Math.max(1, parseInt(lastArg)); // Ensure minimum 1
+        itemName = argArray.slice(0, -1).join(' ');
+      } else {
+        itemName = argArray.join(' ');
+      }
+
+      // Get user's inventory items first
+      const inventoryItems = await this.prisma.inventory.findMany({
+        where: { 
+          characterId: character.id,
+          quantity: { gte: 1 }
+        },
+        include: { item: true }
+      });
+
+      // Find matching item from inventory
+      const inventoryItem = inventoryItems.find(inv => {
+        const itemNameLower = inv.item.name.toLowerCase();
+        const searchNameLower = itemName.toLowerCase();
+        
+        // Try exact match first
+        if (itemNameLower === searchNameLower) {
+          return true;
+        }
+        
+        // Try match without emojis
+        const cleanItemName = itemNameLower.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
+        const cleanSearchName = searchNameLower.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
+        
+        if (cleanItemName === cleanSearchName) {
+          return true;
+        }
+        
+        // Try partial match
+        return cleanItemName.includes(cleanSearchName) || cleanSearchName.includes(cleanItemName);
+      });
+
+      if (!inventoryItem) {
+        return message.reply(`❌ Item "${itemName}" tidak ditemukan di inventory!`);
+      }
+
+      // Use inventory service to handle the sale
+      return await this.inventoryService.handleSellItem(message, inventoryItem.itemId, quantity);
+
+    } catch (error) {
+      this.logger.error('Error in sell command:', error);
+      return message.reply('❌ Terjadi kesalahan saat menjual item.');
     }
   }
 } 

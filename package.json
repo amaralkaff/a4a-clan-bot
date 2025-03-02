@@ -16,13 +16,15 @@
     "seed": "bun prisma/seed.ts"
   },
   "dependencies": {
-    "@prisma/client": "^5.9.1",
+    "@prisma/client": "^6.4.1",
     "discord.js": "^14.14.1",
-    "dotenv": "^16.4.1"
+    "dotenv": "^16.4.1",
+    "reflect-metadata": "^0.2.2",
+    "tsyringe": "^4.8.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",
-    "prisma": "^5.9.1",
+    "prisma": "^6.4.1",
     "typescript": "^5.3.3"
   },
   "type": "module"
