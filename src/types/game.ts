@@ -48,6 +48,7 @@ export type ItemType = 'WEAPON' | 'ARMOR' | 'ACCESSORY' | 'CONSUMABLE' | 'MATERI
 export type Rarity = 'COMMON' | 'UNCOMMON' | 'RARE' | 'EPIC' | 'LEGENDARY';
 
 export interface GameItem {
+  id?: string;
   name: string;
   type: ItemType;
   description: string;
@@ -55,10 +56,10 @@ export interface GameItem {
   effect: Effect;
   baseStats?: Stats;
   upgradeStats?: Stats;
-  maxLevel?: number;
-  rarity: Rarity;
-  stackLimit: number;
   maxDurability?: number;
+  stackLimit: number;
+  rarity: Rarity;
+  maxLevel?: number;
 }
 
 export interface InventoryItem {

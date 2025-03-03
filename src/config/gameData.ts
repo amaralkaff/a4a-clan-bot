@@ -5,9 +5,10 @@ import weaponDataJson from './weaponData.json';
 import armorDataJson from './armorData.json';
 import accessoryDataJson from './accessoryData.json';
 import consumableDataJson from './consumableData.json';
+import monsterDataJson from './monsterData.json';
 
 export type ItemType = 'WEAPON' | 'ARMOR' | 'ACCESSORY' | 'CONSUMABLE' | 'MATERIAL';
-export type Rarity = 'COMMON' | 'UNCOMMON' | 'RARE' | 'EPIC' | 'LEGENDARY' | 'MYTHICAL' | 'DIVINE' | 'TRANSCENDENT';
+export type Rarity = 'COMMON' | 'UNCOMMON' | 'RARE' | 'EPIC' | 'LEGENDARY' | 'MYTHICAL' | 'DIVINE' | 'TRANSCENDENT' | 'CELESTIAL' | 'PRIMORDIAL' | 'ULTIMATE';
 export type EffectType = 'EQUIP' | 'HEAL' | 'BUFF' | 'HEAL_AND_BUFF';
 export type QuestType = 'COMBAT' | 'GATHER' | 'CRAFT' | 'HELP' | 'EXPLORE';
 
@@ -162,7 +163,8 @@ export const RARITY_COLORS = {
   DIVINE: '#8A2BE2',
   TRANSCENDENT: '#FF4500',
   CELESTIAL: '#000000',
-  PRIMORDIAL: '#000000'
+  PRIMORDIAL: '#000000',
+  ULTIMATE: '#FF0000'
 } as const;
 
 export const ITEM_TYPE_EMOJIS = {
@@ -182,13 +184,56 @@ export const QUEST_TYPES = {
 } as const;
 
 // Import data from JSON with proper typing
-export const ITEMS = {
-  ...gameDataJson.ITEMS,
-  ...weaponDataJson,
-  ...armorDataJson,
-  ...accessoryDataJson,
-  ...consumableDataJson
-} as unknown as Record<string, GameItem>;
+export const ITEMS: { [key: string]: GameItem } = {
+  health_potion: {
+    name: '❤️ Health Potion',
+    type: 'CONSUMABLE',
+    description: 'Restores 100 HP',
+    price: 1000,
+    effect: { type: 'HEAL', health: 100 },
+    stackLimit: 99,
+    rarity: 'COMMON'
+  },
+  wooden_sword: {
+    name: '⚔️ Wooden Sword',
+    type: 'WEAPON',
+    description: 'A basic training sword',
+    price: 2000,
+    effect: { type: 'EQUIP', stats: { attack: 5 } },
+    stackLimit: 1,
+    rarity: 'COMMON',
+    maxDurability: 100
+  },
+  leather_armor: {
+    name: '🛡️ Leather Armor',
+    type: 'ARMOR',
+    description: 'Basic protective gear',
+    price: 2000,
+    effect: { type: 'EQUIP', stats: { defense: 5 } },
+    stackLimit: 1,
+    rarity: 'COMMON',
+    maxDurability: 100
+  },
+  super_health_potion: {
+    name: '💖 Super Health Potion',
+    type: 'CONSUMABLE',
+    description: 'Restores 250 HP',
+    price: 2500,
+    effect: { type: 'HEAL', health: 250 },
+    stackLimit: 99,
+    rarity: 'UNCOMMON'
+  },
+  training_weights: {
+    name: '🏋️ Training Weights',
+    type: 'ACCESSORY',
+    description: 'Increases strength through training',
+    price: 5000,
+    effect: { type: 'EQUIP', stats: { attack: 8, speed: -2 } },
+    stackLimit: 1,
+    rarity: 'UNCOMMON',
+    maxDurability: 100
+  }
+};
 
-export const MONSTERS = gameDataJson.MONSTERS as unknown as Record<string, JsonMonster>;
-export const QUESTS = gameDataJson.QUESTS as unknown as Record<string, Quest>;
+export const MONSTERS = monsterDataJson.MONSTERS as Record<string, JsonMonster>;
+export const QUESTS = gameDataJson.QUESTS as Record<string, Quest>;

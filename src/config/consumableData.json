@@ -224,5 +224,195 @@
     },
     "rarity": "EPIC",
     "stackLimit": 3
+  },
+  "omnipotent_elixir": {
+    "name": "🌌 Omnipotent Elixir",
+    "type": "CONSUMABLE",
+    "description": "Memberikan buff tertinggi pada semua stats selama 24 jam",
+    "price": 1000000000,
+    "effect": {
+      "type": "HEAL_AND_BUFF",
+      "health": -1,
+      "stats": {
+        "attack": 10000,
+        "defense": 8000,
+        "speed": 5000,
+        "regeneration": 2000
+      },
+      "duration": 86400
+    },
+    "rarity": "ULTIMATE",
+    "stackLimit": 1
+  },
+  "genesis_potion": {
+    "name": "💫 Genesis Potion",
+    "type": "CONSUMABLE",
+    "description": "Memberikan kekuatan penciptaan selama 12 jam",
+    "price": 800000000,
+    "effect": {
+      "type": "HEAL_AND_BUFF",
+      "health": -1,
+      "stats": {
+        "attack": 8000,
+        "defense": 6000,
+        "speed": 4000,
+        "regeneration": 1500
+      },
+      "duration": 43200
+    },
+    "rarity": "ULTIMATE",
+    "stackLimit": 1
+  },
+  "reality_fragment": {
+    "name": "🎭 Reality Fragment",
+    "type": "CONSUMABLE",
+    "description": "Memberikan kendali atas realitas selama 6 jam",
+    "price": 600000000,
+    "effect": {
+      "type": "HEAL_AND_BUFF",
+      "health": -1,
+      "stats": {
+        "attack": 6000,
+        "defense": 4500,
+        "speed": 3000,
+        "regeneration": 1200
+      },
+      "duration": 21600
+    },
+    "rarity": "ULTIMATE",
+    "stackLimit": 2
+  },
+  "cosmic_essence": {
+    "name": "🌠 Cosmic Essence",
+    "type": "CONSUMABLE",
+    "description": "Memberikan kekuatan kosmik selama 4 jam",
+    "price": 500000000,
+    "effect": {
+      "type": "HEAL_AND_BUFF",
+      "health": -1,
+      "stats": {
+        "attack": 5000,
+        "defense": 4000,
+        "speed": 2500,
+        "regeneration": 1000
+      },
+      "duration": 14400
+    },
+    "rarity": "ULTIMATE",
+    "stackLimit": 2
+  },
+  "quantum_catalyst": {
+    "name": "⚛️ Quantum Catalyst",
+    "type": "CONSUMABLE",
+    "description": "Memberikan kendali atas probabilitas selama 3 jam",
+    "price": 400000000,
+    "effect": {
+      "type": "HEAL_AND_BUFF",
+      "health": -1,
+      "stats": {
+        "attack": 4000,
+        "defense": 3200,
+        "speed": 2000,
+        "regeneration": 800
+      },
+      "duration": 10800
+    },
+    "rarity": "ULTIMATE",
+    "stackLimit": 2
+  },
+  "void_shard": {
+    "name": "⚫ Void Shard",
+    "type": "CONSUMABLE",
+    "description": "Memberikan kekuatan kekosongan selama 2 jam",
+    "price": 300000000,
+    "effect": {
+      "type": "HEAL_AND_BUFF",
+      "health": -1,
+      "stats": {
+        "attack": 3500,
+        "defense": 2800,
+        "speed": 1750,
+        "regeneration": 700
+      },
+      "duration": 7200
+    },
+    "rarity": "ULTIMATE",
+    "stackLimit": 3
+  },
+  "celestial_core": {
+    "name": "✨ Celestial Core",
+    "type": "CONSUMABLE",
+    "description": "Memberikan kekuatan surgawi selama 1.5 jam",
+    "price": 200000000,
+    "effect": {
+      "type": "HEAL_AND_BUFF",
+      "health": -1,
+      "stats": {
+        "attack": 3000,
+        "defense": 2400,
+        "speed": 1500,
+        "regeneration": 600
+      },
+      "duration": 5400
+    },
+    "rarity": "ULTIMATE",
+    "stackLimit": 3
+  },
+  "eternal_crystal": {
+    "name": "♾️ Eternal Crystal",
+    "type": "CONSUMABLE",
+    "description": "Memberikan kekuatan abadi selama 1 jam",
+    "price": 150000000,
+    "effect": {
+      "type": "HEAL_AND_BUFF",
+      "health": -1,
+      "stats": {
+        "attack": 2500,
+        "defense": 2000,
+        "speed": 1250,
+        "regeneration": 500
+      },
+      "duration": 3600
+    },
+    "rarity": "ULTIMATE",
+    "stackLimit": 3
+  },
+  "chaos_matrix": {
+    "name": "🌪️ Chaos Matrix",
+    "type": "CONSUMABLE",
+    "description": "Memberikan kekuatan kekacauan selama 45 menit",
+    "price": 100000000,
+    "effect": {
+      "type": "HEAL_AND_BUFF",
+      "health": -1,
+      "stats": {
+        "attack": 2000,
+        "defense": 1600,
+        "speed": 1000,
+        "regeneration": 400
+      },
+      "duration": 2700
+    },
+    "rarity": "ULTIMATE",
+    "stackLimit": 4
+  },
+  "divine_nexus": {
+    "name": "👑 Divine Nexus",
+    "type": "CONSUMABLE",
+    "description": "Memberikan kekuatan ilahi selama 30 menit",
+    "price": 80000000,
+    "effect": {
+      "type": "HEAL_AND_BUFF",
+      "health": -1,
+      "stats": {
+        "attack": 1500,
+        "defense": 1200,
+        "speed": 750,
+        "regeneration": 300
+      },
+      "duration": 1800
+    },
+    "rarity": "ULTIMATE",
+    "stackLimit": 4
   }
 }

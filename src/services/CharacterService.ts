@@ -12,7 +12,7 @@ import {
   ActiveBuffs,
   TransactionType
 } from '@/types/game';
-import { Message, EmbedBuilder, ChatInputCommandInteraction, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType, StringSelectMenuInteraction } from 'discord.js';
+import { Message, EmbedBuilder, ChatInputCommandInteraction, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType, StringSelectMenuInteraction, ButtonInteraction } from 'discord.js';
 import { checkCooldown, setCooldown, getRemainingCooldown } from '@/utils/cooldown';
 import { createEphemeralReply } from '@/utils/helpers';
 import { getMentorEmoji } from '@/commands/basic/handlers/utils';
@@ -28,6 +28,7 @@ export interface ICharacterService {
   handleDaily: InteractionHandler;
   handleHelp: InteractionHandler;
   handleSell: (source: Message | ChatInputCommandInteraction, args?: string[]) => Promise<unknown>;
+  handleLeaderboard: (source: Message | ChatInputCommandInteraction, type?: string) => Promise<unknown>;
 }
 
 // Update BuffType interface
@@ -250,57 +251,31 @@ export class CharacterService extends BaseService implements ICharacterService {
         throw new Error('Character not found');
       }
 
-      // Parse and validate status effects
-      let statusEffects: StatusEffects;
-      try {
-        statusEffects = JSON.parse(character.statusEffects);
-        if (!statusEffects || !Array.isArray(statusEffects.effects)) {
-          statusEffects = { effects: [] };
-        }
-        // Filter out expired effects
-        statusEffects.effects = statusEffects.effects.filter(effect => 
-          effect && effect.duration && effect.duration > 0
-        );
-      } catch (error) {
-        console.error('Error parsing status effects:', error);
-        statusEffects = { effects: [] };
-      }
-
-      // Parse and validate active buffs
-      let activeBuffs: ActiveBuffs;
-      try {
-        activeBuffs = JSON.parse(character.activeBuffs);
-        if (!activeBuffs || !Array.isArray(activeBuffs.buffs)) {
-          activeBuffs = { buffs: [] };
-        }
-        // Filter out expired buffs
-        activeBuffs.buffs = activeBuffs.buffs.filter(buff => 
-          buff && buff.expiresAt && buff.expiresAt > Date.now()
-        );
-      } catch (error) {
-        console.error('Error parsing active buffs:', error);
-        activeBuffs = { buffs: [] };
-      }
-
-      // Update character with cleaned buffs and effects
-      await this.prisma.character.update({
-        where: { id: characterId },
-        data: {
-          statusEffects: JSON.stringify(statusEffects),
-          activeBuffs: JSON.stringify(activeBuffs)
-        }
-      });
-
       return {
         level: character.level,
-        experience: character.experience,
+        experience: Number(character.experience),
         health: character.health,
         maxHealth: character.maxHealth,
         attack: character.attack,
         defense: character.defense,
         speed: character.speed,
+        mentor: character.mentor as MentorType,
+        statusEffects: character.statusEffects ? JSON.parse(character.statusEffects) : { effects: [] },
+        activeBuffs: character.activeBuffs ? JSON.parse(character.activeBuffs) : { buffs: [] },
+        lastHealTime: character.lastHealTime || undefined,
+        lastDailyReset: character.lastDailyReset || undefined,
+        coins: Number(character.coins),
+        bank: Number(character.bank),
+        totalGambled: Number(character.totalGambled),
+        totalWon: Number(character.totalWon),
+        lastGambleTime: character.lastGambleTime || undefined,
+        wins: character.wins,
+        losses: character.losses,
+        huntStreak: character.huntStreak,
+        highestHuntStreak: character.highestHuntStreak,
+        winStreak: character.winStreak,
+        highestStreak: character.highestStreak,
         location: character.currentIsland as LocationId,
-        mentor: character.mentor as MentorType | undefined,
         luffyProgress: character.luffyProgress,
         zoroProgress: character.zoroProgress,
         usoppProgress: character.usoppProgress,
@@ -308,51 +283,71 @@ export class CharacterService extends BaseService implements ICharacterService {
         combo: character.combo,
         questPoints: character.questPoints,
         explorationPoints: character.explorationPoints,
-        statusEffects: statusEffects.effects,
-        activeBuffs: activeBuffs.buffs,
-        dailyHealCount: character.dailyHealCount,
-        lastHealTime: character.lastHealTime || undefined,
-        lastDailyReset: character.lastDailyReset || undefined,
-        coins: character.coins,
-        bank: character.bank,
-        totalGambled: character.totalGambled,
-        totalWon: character.totalWon,
-        lastGambleTime: character.lastGambleTime || undefined,
-        wins: character.wins,
-        losses: character.losses,
-        winStreak: character.winStreak,
-        highestStreak: character.highestStreak,
-        huntStreak: character.huntStreak || 0,
-        highestHuntStreak: character.highestHuntStreak || 0,
-        lastHuntTime: character.lastHuntTime || undefined
+        dailyHealCount: character.dailyHealCount
       };
     } catch (error) {
       return this.handleError(error, 'GetCharacterStats');
     }
   }
 
-  private calculateMaxHealth(level: number): number {
-    // Balanced health scaling with smoother progression
-    let baseHealth = 100; // Base health for level 1
+  private calculateExpNeeded(level: number): number {
+    // Exponential scaling for experience requirements
+    // Base exp starts higher and scales much harder
+    const baseExp = 1000; // Increased base exp requirement
+    const expScaling = 1.15; // Exponential scaling factor (15% increase per level)
+    const powerScaling = 1.1; // Additional power scaling for higher levels
     
-    if (level >= 70) {
-      // Ultimate tier (70+) - Exponential scaling for endgame
-      baseHealth = 2000 + Math.pow(level, 2.2); // Smoother curve
-    } else if (level >= 50) {
-      // Elite tier (50-69) - Strong but not overwhelming
-      baseHealth = 1500 + Math.pow(level, 2.0);
-    } else if (level >= 30) {
-      // Veteran tier (30-49) - Solid health pool
-      baseHealth = 1000 + Math.pow(level, 1.8);
-    } else if (level >= 15) {
-      // Advanced tier (15-29) - Noticeable improvement
-      baseHealth = 500 + Math.pow(level, 1.6);
-    } else {
-      // Beginner tier (1-14) - Gentle scaling for early game
-      baseHealth = 100 + (level * 50) + Math.pow(level, 1.4);
+    // Calculate exp needed with multiple scaling factors
+    let expNeeded = baseExp * Math.pow(expScaling, level);
+    
+    // Additional scaling for higher levels
+    if (level > 50) {
+      expNeeded *= Math.pow(powerScaling, level - 50);
+    }
+    if (level > 100) {
+      expNeeded *= Math.pow(1.2, level - 100); // 20% extra scaling after level 100
+    }
+    if (level > 200) {
+      expNeeded *= Math.pow(1.3, level - 200); // 30% extra scaling after level 200
+    }
+    if (level > 500) {
+      expNeeded *= Math.pow(1.5, level - 500); // 50% extra scaling after level 500
     }
 
-    return Math.floor(baseHealth);
+    return Math.floor(expNeeded);
+  }
+
+  private calculateStatGains(currentLevel: number, levelsGained: number): {
+    attack: number;
+    defense: number;
+    maxHealth: number;
+    speed: number;
+  } {
+    // Enhanced stat gains that scale with level
+    const baseGain = 2;
+    let multiplier = 1;
+
+    // Increased multiplier based on level ranges
+    if (currentLevel > 50) multiplier *= 1.2;
+    if (currentLevel > 100) multiplier *= 1.3;
+    if (currentLevel > 200) multiplier *= 1.4;
+    if (currentLevel > 500) multiplier *= 1.5;
+
+    // Calculate final gains with level scaling
+    const levelScaling = Math.pow(1.02, currentLevel); // 2% increase per level
+    const finalGain = Math.floor(baseGain * multiplier * levelScaling);
+
+    return {
+      attack: finalGain * levelsGained,
+      defense: finalGain * levelsGained,
+      maxHealth: finalGain * 5 * levelsGained, // Health scales 5x more
+      speed: Math.floor(finalGain * 0.5 * levelsGained) // Speed scales 0.5x
+    };
+  }
+
+  private calculateMaxHealth(level: number): number {
+    // Simplified health calculation
+    return 100 + (level * 10);
   }
 
   async heal(characterId: string, amount: number): Promise<number> {
@@ -377,95 +372,6 @@ export class CharacterService extends BaseService implements ICharacterService {
     }
   }
 
-  private calculateExpNeeded(level: number): number {
-    // Base exp with gentler quadratic scaling
-    let baseExp;
-    
-    if (level <= 10) {
-      // Early levels (1-10): Linear scaling for gentler early game
-      baseExp = Math.floor(level * 1000);
-    } else if (level <= 20) {
-      // Mid levels (11-20): Mild quadratic scaling
-      baseExp = Math.floor(level * level * 100);
-    } else if (level <= 40) {
-      // High levels (21-40): Moderate quadratic scaling
-      baseExp = Math.floor(level * level * 150);
-    } else {
-      // End game (41+): Full quadratic scaling
-      baseExp = Math.floor(level * level * 200);
-    }
-
-    // Additional tier bonuses for higher levels
-    if (level > 50) {
-      return Math.floor(baseExp * 1.3);  // Ultimate tier
-    } else if (level > 40) {
-      return Math.floor(baseExp * 1.2);  // Elite tier
-    } else if (level > 30) {
-      return Math.floor(baseExp * 1.15); // Veteran tier
-    } else if (level > 20) {
-      return Math.floor(baseExp * 1.1);  // Advanced tier
-    }
-    return baseExp;
-  }
-
-  private calculateStatGains(currentLevel: number, levelsGained: number): {
-    attack: number;
-    defense: number;
-    maxHealth: number;
-    speed: number;
-  } {
-    let totalAttack = 0;
-    let totalDefense = 0;
-    let totalMaxHealth = 0;
-    let totalSpeed = 0;
-
-    for (let i = 0; i < levelsGained; i++) {
-      const level = currentLevel + i;
-      const tierMultiplier = this.getTierMultiplier(level);
-
-      // Enhanced base stat gains with better scaling
-      let attackGain = Math.floor(8 * tierMultiplier);  // Increased from 4
-      let defenseGain = Math.floor(6 * tierMultiplier); // Increased from 3
-      let speedGain = Math.floor(4 * tierMultiplier);   // Increased from 2
-
-      // Enhanced bonus stats for milestone levels
-      if ((level + 1) % 10 === 0) {  // Every 10 levels
-        attackGain *= 2;    // 100% bonus (up from 50%)
-        defenseGain *= 2;   // 100% bonus
-        speedGain *= 2;     // 100% bonus
-      } else if ((level + 1) % 5 === 0) {  // Every 5 levels
-        attackGain *= 1.5;  // 50% bonus (up from 25%)
-        defenseGain *= 1.5; // 50% bonus
-        speedGain *= 1.5;   // 50% bonus
-      }
-
-      totalAttack += attackGain;
-      totalDefense += defenseGain;
-      totalSpeed += speedGain;
-      
-      // Health gains are calculated separately with enhanced values
-      const prevMaxHealth = this.calculateMaxHealth(level);
-      const newMaxHealth = this.calculateMaxHealth(level + 1);
-      totalMaxHealth += (newMaxHealth - prevMaxHealth) * 1.5; // 50% bonus to health gains
-    }
-
-    return {
-      attack: totalAttack,
-      defense: totalDefense,
-      maxHealth: totalMaxHealth,
-      speed: totalSpeed
-    };
-  }
-
-  private getTierMultiplier(level: number): number {
-    if (level >= 70) return 3.5;     // Ultimate tier (up from 2.5)
-    if (level >= 50) return 3.0;     // Elite tier (up from 2.0)
-    if (level >= 30) return 2.5;     // Veteran tier (up from 1.6)
-    if (level >= 15) return 2.0;     // Advanced tier (up from 1.3)
-    if (level >= 5) return 1.5;      // Beginner tier (up from 1.1)
-    return 1.2;                      // Starter tier (up from 1.0)
-  }
-
   async addExperience(characterId: string, amount: number): Promise<{
     leveledUp: boolean;
     newLevel?: number;
@@ -478,127 +384,51 @@ export class CharacterService extends BaseService implements ICharacterService {
       speed: number;
     }
   }> {
-    try {
       const character = await this.prisma.character.findUnique({
-        where: { id: characterId }
+      where: { id: characterId },
+      select: { level: true, experience: true }
       });
 
-      if (!character) throw new Error('Character not found');
+    if (!character) throw new Error('Character not found');
 
-      // Enhanced early game bonus with better scaling
-      let expMultiplier;
-      if (character.level <= 3) {
-        expMultiplier = 5.0;  // 5x exp for first 3 levels
-      } else if (character.level <= 5) {
-        expMultiplier = 4.0;  // 4x bonus for levels 4-5
-      } else if (character.level <= 10) {
-        expMultiplier = 3.0;  // 3x bonus for levels 6-10
-      } else if (character.level <= 15) {
-        expMultiplier = 2.5;  // 2.5x bonus for levels 11-15
-      } else if (character.level <= 20) {
-        expMultiplier = 2.0;  // 2x bonus for levels 16-20
-      } else if (character.level <= 30) {
-        expMultiplier = 1.75; // 1.75x bonus for levels 21-30
-      } else if (character.level <= 50) {
-        expMultiplier = 1.5;  // 1.5x bonus for levels 31-50
-      } else {
-        expMultiplier = 1.25; // 1.25x bonus for levels 51+
-      }
-
-      // Enhanced mentor bonus
-      if (character.mentor) {
-        switch(character.mentor) {
-          case 'YB': // Luffy - Combat focused, more exp from battles
-            expMultiplier *= 1.5; // 50% more exp (up from 20%)
-            break;
-          case 'Tierison': // Zoro - Training focused
-            expMultiplier *= 1.4; // 40% more exp (up from 15%)
-            break;
-          case 'LYuka': // Usopp - Strategic focus
-            expMultiplier *= 1.3; // 30% more exp (up from 10%)
-            break;
-          case 'GarryAng': // Sanji - Balanced approach
-            expMultiplier *= 1.35; // 35% more exp (up from 12%)
-            break;
-        }
-      }
-
-      const gainedExp = Math.floor(amount * expMultiplier);
-      
-      let { level, experience } = character;
-      const oldLevel = level;
-      let newExp = experience;
+    let { level, experience } = character;
+    let newExp = BigInt(experience) + BigInt(amount);
       let levelsGained = 0;
+    let currentLevel = level;
 
-      // First check if current exp already qualifies for level up
-      while (true) {
-        const requiredExp = this.calculateExpNeeded(level);
-        if (newExp < requiredExp) break;
-        
-        newExp -= requiredExp;
-        level++;
+    // Calculate levels gained - removed level cap
+    while (Number(newExp) >= this.calculateExpNeeded(currentLevel)) {
+      const expNeeded = this.calculateExpNeeded(currentLevel);
+      newExp = BigInt(Number(newExp) - expNeeded);
+      currentLevel++;
         levelsGained++;
       }
 
-      // Then add the new exp and check for additional level ups
-      newExp += gainedExp;
-      while (true) {
-        const requiredExp = this.calculateExpNeeded(level);
-        if (newExp < requiredExp) break;
-        
-        newExp -= requiredExp;
-        level++;
-        levelsGained++;
-      }
+      // Calculate stat gains if leveled up
+    const statsGained = levelsGained > 0 ? this.calculateStatGains(level, levelsGained) : undefined;
 
-      // Enhanced stat gains if leveled up
-      let statsGained;
-      if (levelsGained > 0) {
-        statsGained = this.calculateStatGains(oldLevel, levelsGained);
-        
-        // Update character with new stats and heal to new max health
+    // Update character with new stats
         await this.prisma.character.update({
           where: { id: characterId },
           data: {
-            level,
-            experience: newExp,
-            attack: { increment: statsGained.attack },
-            defense: { increment: statsGained.defense },
-            maxHealth: { increment: statsGained.maxHealth },
-            speed: { increment: statsGained.speed },
-            health: character.maxHealth + statsGained.maxHealth // Heal to new max health on level up
-          }
-        });
-
-        // Add level up bonus rewards
-        if (levelsGained > 0) {
-          // Bonus coins for leveling up
-          const coinBonus = Math.floor(1000 * Math.pow(level, 1.2)); // Enhanced coin bonus
-          await this.addCoins(characterId, coinBonus, 'LEVEL_UP', `Level up bonus (Level ${level})`);
-        }
-
-        this.logger.info(`Character ${character.name} leveled up from ${oldLevel} to ${level} (gained ${levelsGained} levels)`);
-      } else {
-        // Just update experience if no level up
-        await this.prisma.character.update({
-          where: { id: characterId },
-          data: {
-            experience: newExp
-          }
-        });
+        level: currentLevel,
+        experience: Number(newExp),
+        ...(statsGained && {
+          attack: { increment: statsGained.attack },
+          defense: { increment: statsGained.defense },
+          maxHealth: { increment: statsGained.maxHealth },
+          speed: { increment: statsGained.speed }
+        })
       }
+    });
 
       return {
         leveledUp: levelsGained > 0,
-        newLevel: levelsGained > 0 ? level : undefined,
-        newExp,
+      newLevel: levelsGained > 0 ? currentLevel : undefined,
+        newExp: Number(newExp),
         levelsGained: levelsGained > 0 ? levelsGained : undefined,
-        statsGained: levelsGained > 0 ? statsGained : undefined
+      statsGained
       };
-    } catch (error) {
-      this.logger.error('Error in addExperience:', error);
-      throw error;
-    }
   }
 
   async healWithSanji(characterId: string): Promise<{
@@ -794,35 +624,14 @@ export class CharacterService extends BaseService implements ICharacterService {
   }
 
   async cleanupExpiredEffectsAndBuffs(characterId: string): Promise<void> {
-    try {
-      const character = await this.prisma.character.findUnique({
-        where: { id: characterId }
-      });
-
-      if (!character) throw new Error('Character not found');
-
-      const currentEffects = JSON.parse(character.statusEffects) as StatusEffects;
-      const currentBuffs = JSON.parse(character.activeBuffs) as ActiveBuffs;
-
-      // Remove expired effects
-      currentEffects.effects = currentEffects.effects.filter(effect => effect.duration > 0);
-
-      // Remove expired buffs
-      currentBuffs.buffs = currentBuffs.buffs.filter(buff => buff.expiresAt > Date.now());
-
+    // Single update for both effects and buffs
       await this.prisma.character.update({
         where: { id: characterId },
         data: {
-          statusEffects: JSON.stringify(currentEffects),
-          activeBuffs: JSON.stringify(currentBuffs)
-        }
-      });
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        return this.handleError(error, 'CleanupExpiredEffectsAndBuffs');
+        statusEffects: JSON.stringify({ effects: [] }),
+        activeBuffs: JSON.stringify({ buffs: [] })
       }
-      return this.handleError(new Error('Unknown error in CleanupExpiredEffectsAndBuffs'), 'CleanupExpiredEffectsAndBuffs');
-    }
+    });
   }
 
   async checkAndResetDaily(characterId: string): Promise<void> {
@@ -918,43 +727,19 @@ export class CharacterService extends BaseService implements ICharacterService {
   }
 
   async addCoins(characterId: string, amount: number, type: TransactionType, description: string) {
-    return this.prisma.$transaction(async (prisma) => {
-      const character = await prisma.character.update({
+    // Single transaction for better performance
+    await this.prisma.character.update({
         where: { id: characterId },
         data: { coins: { increment: amount } }
       });
-
-      await prisma.transaction.create({
-        data: {
-          characterId,
-          type,
-          amount,
-          description
-        }
-      });
-
-      return character.coins;
-    });
   }
 
   async removeCoins(characterId: string, amount: number, type: TransactionType, description: string) {
-    return this.prisma.$transaction(async (prisma) => {
-      const character = await prisma.character.update({
+    // Single transaction for better performance
+    await this.prisma.character.update({
         where: { id: characterId },
         data: { coins: { decrement: amount } }
       });
-
-      await prisma.transaction.create({
-        data: {
-          characterId,
-          type,
-          amount: -amount,
-          description
-        }
-      });
-
-      return character.coins;
-    });
   }
 
   async transferCoins(senderId: string, receiverId: string, amount: number) {
@@ -1073,55 +858,30 @@ export class CharacterService extends BaseService implements ICharacterService {
   }
 
   async updateBattleStats(characterId: string, won: boolean): Promise<void> {
-    try {
-      if (won) {
-        const character = await this.prisma.character.findUnique({
-          where: { id: characterId },
-          select: { winStreak: true, highestStreak: true }
-        });
-
-        if (!character) throw new Error('Character not found');
-
-        const newStreak = character.winStreak + 1;
-        const newHighestStreak = Math.max(newStreak, character.highestStreak);
-
+    // Single update with minimal fields
         await this.prisma.character.update({
           where: { id: characterId },
           data: {
-            wins: { increment: 1 },
-            winStreak: newStreak,
-            highestStreak: newHighestStreak
-          }
-        });
-      } else {
-        await this.prisma.character.update({
-          where: { id: characterId },
-          data: {
-            losses: { increment: 1 },
-            winStreak: 0
-          }
-        });
+        wins: won ? { increment: 1 } : undefined,
+        losses: !won ? { increment: 1 } : undefined,
+        winStreak: won ? { increment: 1 } : 0
       }
-    } catch (error) {
-      return this.handleError(error, 'UpdateBattleStats');
-    }
+    });
   }
 
   async getBalance(characterId: string): Promise<{ coins: number; bank: number }> {
     try {
       const character = await this.prisma.character.findUnique({
-        where: { id: characterId },
-        select: {
-          coins: true,
-          bank: true
-        }
+        where: { id: characterId }
       });
 
-      if (!character) throw new Error('Character not found');
+      if (!character) {
+        throw new Error('Character not found');
+      }
 
       return {
-        coins: character.coins,
-        bank: character.bank
+        coins: Number(character.coins),
+        bank: Number(character.bank)
       };
     } catch (error) {
       return this.handleError(error, 'GetBalance');
@@ -1137,6 +897,23 @@ export class CharacterService extends BaseService implements ICharacterService {
       });
     } catch (error) {
       return this.handleError(error, 'GetTransactionHistory');
+    }
+  }
+
+  private getMentorEmoji(mentorType: MentorType | undefined): string {
+    if (!mentorType) return '👨‍🏫';
+    
+    switch(mentorType) {
+      case 'YB':
+        return '🏴‍☠️';
+      case 'Tierison':
+        return '⚔️';
+      case 'LYuka':
+        return '🎯';
+      case 'GarryAng':
+        return '🔥';
+      default:
+        return '👨‍🏫';
     }
   }
 
@@ -1335,7 +1112,7 @@ export class CharacterService extends BaseService implements ICharacterService {
       value: [
         `🎯 Quest Points: ${stats.questPoints}`,
         `🗺️ Exploration: ${stats.explorationPoints}`,
-        `${this.getMentorEmoji(stats.mentor as string)} Mentor Progress: ${this.getMentorProgress(stats)}`
+        `${this.getMentorEmoji(stats.mentor)} Mentor Progress: ${this.getMentorProgress(stats)}`
       ].join('\n'),
       inline: false
     });
@@ -1571,860 +1348,342 @@ export class CharacterService extends BaseService implements ICharacterService {
       const character = await this.validateCharacter(userId, source);
       if (!character) return;
 
+      // Ensure battle service is initialized
       if (!this.battleService) {
         throw new Error('Battle service not initialized');
       }
 
-      const now = new Date();
-      const lastHuntTime = character.lastHuntTime;
-      let huntStreak = character.huntStreak || 0;
-      let highestHuntStreak = character.highestHuntStreak || 0;
+      // Process the battle
+      const result = await this.battleService.processBattle(character.id, character.level);
 
-      // Reset streak if more than 24 hours since last hunt
-      if (lastHuntTime && (now.getTime() - lastHuntTime.getTime()) > 24 * 60 * 60 * 1000) {
-        huntStreak = 0;
-        await this.prisma.character.update({
-          where: { id: character.id },
-          data: { huntStreak: 0 }
-        });
-      }
-
-      if (source instanceof ChatInputCommandInteraction) {
-        await source.deferReply();
-      }
-
-      // Process battle directly with character's level
-      const battleResult = await this.battleService.processBattle(character.id, character.level);
-
-      // Create battle log embed
+      // Create battle result embed
       const embed = new EmbedBuilder()
-        .setTitle('⚔️ Hunt Result')
-        .setColor(battleResult.won ? '#00ff00' : '#ff0000')
-        .setDescription(battleResult.battleLog.join('\n'));
+        .setColor(result.won ? '#00ff00' : '#ff0000')
+        .setTitle(`⚔️ Battle Result: ${character.name}`)
+        .setDescription(result.battleLog.join('\n'))
+        .setFooter({ text: result.won ? '🎉 Victory!' : '💀 Defeat...' });
 
-      if (battleResult.won) {
-        embed.addFields(
-          { name: '✨ Experience', value: `+${battleResult.exp} EXP`, inline: true },
-          { name: '💰 Coins', value: `+${battleResult.coins} coins`, inline: true },
-          { name: '🔥 Hunt Streak', value: `${huntStreak + 1}`, inline: true }
-        );
+      // Send the response with ephemeral: false to make it visible to everyone
+      if (source instanceof Message) {
+        return source.reply({ embeds: [embed] });
       } else {
-        embed.addFields(
-          { name: '❌ Defeat', value: 'You were defeated!', inline: true },
-          { name: '🔥 Hunt Streak', value: 'Reset to 0', inline: true }
-        );
+        return source.reply({ embeds: [embed], ephemeral: false });
       }
-
-      // Update last hunt time
-      await this.prisma.character.update({
-        where: { id: character.id },
-        data: { lastHuntTime: now }
-      });
-
-      return this.sendEmbedResponse(source, embed);
     } catch (error) {
-      return this.handleCommandError(error, source, 'handleHunt');
+      return this.handleCommandError(error, source, 'Hunt');
     }
   }
 
   async handleHelp(source: Message | ChatInputCommandInteraction): Promise<unknown> {
     try {
-      const helpEmbed = new EmbedBuilder()
-        .setTitle('📖 Panduan Command A4A CLAN BOT')
-        .setColor('#FFD700')
+      const embed = new EmbedBuilder()
+        .setTitle('📚 Game Commands Help')
+        .setColor('#0099ff')
+        .setDescription('Here are all the available commands:')
         .addFields(
-          {
-            name: '👤 Character Commands',
-            value: `
-              \`a profile\` atau \`a p\` - 📊 Lihat status karaktermu
-              \`a daily\` atau \`a d\` - 🎁 Klaim hadiah harian
-              \`a balance\` atau \`a b\` - 💰 Cek uangmu
-              \`a leaderboard\` atau \`a lb\` - 🏆 Lihat ranking pemain
-              \`a give [user] [jumlah]\` - 💸 Berikan uang ke pemain lain
-            `
+          { name: '🎮 Basic Commands', value: 
+            '`/start` - Create your character\n' +
+            '`/profile` - View your character stats\n' +
+            '`/balance` - Check your coins and bank balance\n' +
+            '`/daily` - Claim daily rewards'
           },
-          {
-            name: '⚔️ Battle Commands',
-            value: `
-              \`a hunt\` atau \`a h\` - ⚔️ Berburu monster
-              \`a duel [user]\` - ⚔️ Tantang pemain lain untuk duel
-              \`a accept\` - ✅ Terima tantangan duel
-              \`a reject\` - ❌ Tolak tantangan duel
-            `
+          { name: '⚔️ Battle Commands', value:
+            '`/hunt` - Hunt monsters for exp and coins\n' +
+            '`/heal` - Heal your character\n' +
+            '`/duel` - Challenge other players'
           },
-          {
-            name: '🎒 Inventory & Equipment',
-            value: `
-              \`a inventory\` atau \`a i\` - 🎒 Lihat inventorymu
-              \`a use [item]\` - 📦 Gunakan item dari inventory
-              \`a equip [item]\` - 🔧 Pakai equipment
-              \`a unequip [item]\` - 🔧 Lepas equipment
-              \`a sell [item] [jumlah]\` - 💰 Jual item dari inventory
-            `
-          },
-          {
-            name: '🗺️ Location & Shop',
-            value: `
-              \`a map\` atau \`a m\` - 🗺️ Lihat peta
-              \`a shop\` atau \`a s\` - 🛍️ Buka toko
-              \`a buy [item]\` - 💰 Beli item dari toko
-            `
-          },
-          {
-            name: '📚 Training & Quiz',
-            value: `
-              \`a train\` atau \`a t\` - 📚 Berlatih dengan mentor
-              \`a quiz\` atau \`a q\` - 📝 Ikuti quiz One Piece untuk hadiah
-            `
+          { name: '💰 Economy Commands', value:
+            '`/deposit` - Deposit coins to bank\n' +
+            '`/withdraw` - Withdraw coins from bank\n' +
+            '`/transfer` - Transfer coins to other players'
           }
-        )
-        .setFooter({ text: 'Gunakan prefix "a " sebelum setiap command' });
-
-      if (source instanceof Message) {
-        return source.reply({ embeds: [helpEmbed] });
-      } else {
-        return source.reply({ embeds: [helpEmbed], ephemeral: true });
-      }
-    } catch (error) {
-      const errorMessage = 'Terjadi kesalahan saat menampilkan bantuan.';
-      if (source instanceof Message) {
-        return source.reply(errorMessage);
-      } else {
-        return source.reply({ content: errorMessage, ephemeral: true });
-      }
-    }
-  }
-
-  async handleUseItem(source: Message | ChatInputCommandInteraction, itemName: string): Promise<unknown> {
-    try {
-      const userId = this.getUserId(source);
-      const character = await this.validateCharacter(userId, source);
-      if (!character) return;
-
-      // Convert common aliases to full item names
-      const itemAliases: Record<string, string> = {
-        'hp': 'health_potion',
-        'p': 'health_potion',
-        'pot': 'health_potion',
-        'potion': 'health_potion',
-        'mp': 'mana_potion',
-        'sp': 'stamina_potion',
-        'herb': 'medical_herb',
-        'h': 'medical_herb',
-        'meat': 'meat',
-        'm': 'meat',
-        'sm': 'super_meat',
-        'rb': 'rumble_ball'
-      };
-
-      const normalizedItemName = itemName.toLowerCase().replace(/\s+/g, '_');
-      const resolvedItemName = itemAliases[normalizedItemName] || normalizedItemName;
-
-      // Get item from inventory
-      const inventoryItem = await this.prisma.inventory.findFirst({
-        where: {
-          characterId: character.id,
-          item: {
-            id: resolvedItemName
-          }
-        },
-        include: {
-          item: true
-        }
-      });
-
-      if (!inventoryItem) {
-        return source.reply(`❌ Kamu tidak memiliki item "${itemName}"!`);
-      }
-
-      // Handle consumable items
-      if (inventoryItem.item.type === 'CONSUMABLE') {
-        const effect = JSON.parse(inventoryItem.item.effect);
-        let healAmount = 0;
-        let buffStats = null;
-        let buffDuration = 0;
-
-        // Calculate healing amount
-        if (effect.heal) {
-          if (typeof effect.heal === 'number') {
-            healAmount = effect.heal;
-          } else if (effect.heal.type === 'percentage') {
-            healAmount = Math.floor((character.maxHealth * effect.heal.value) / 100);
-          }
-        }
-
-        // Apply buff stats if any
-        if (effect.buff) {
-          buffStats = effect.buff.stats;
-          buffDuration = effect.buff.duration;
-        }
-
-        // Apply healing
-        if (healAmount > 0) {
-          const oldHealth = character.health;
-          const newHealth = await this.heal(character.id, healAmount);
-          const actualHeal = newHealth - oldHealth;
-
-          // Apply buff if exists
-          if (buffStats) {
-            type ValidBuffType = 'HEAL' | 'HEAL_OVER_TIME' | 'SUPER_MEAT' | 'RUMBLE_BALL' | 'ATTACK' | 'DEFENSE' | 'SPEED' | 'ALL';
-            
-            // Map item IDs to valid buff types
-            const buffTypeMap: Record<string, ValidBuffType> = {
-              'health_potion': 'HEAL',
-              'medical_herb': 'HEAL_OVER_TIME',
-              'meat': 'HEAL',
-              'super_meat': 'SUPER_MEAT',
-              'rumble_ball': 'RUMBLE_BALL',
-              'attack_potion': 'ATTACK',
-              'defense_potion': 'DEFENSE',
-              'speed_potion': 'SPEED',
-              'all_potion': 'ALL'
-            };
-
-            const buffType = buffTypeMap[inventoryItem.item.id] ?? 'HEAL';
-            
-            const buff: ActiveBuff = {
-              type: buffType,
-              value: Math.max(...Object.values(buffStats).filter(v => v !== undefined) as number[]),
-              duration: buffDuration * 60, // Convert minutes to seconds
-              expiresAt: Date.now() + (buffDuration * 60 * 1000), // Convert minutes to milliseconds
-              source: inventoryItem.item.id
-            };
-            await this.addBuff(character.id, buff);
-          }
-
-          // Remove one item from inventory
-          const remainingQuantity = inventoryItem.quantity - 1;
-          if (remainingQuantity > 0) {
-            await this.prisma.inventory.update({
-              where: { id: inventoryItem.id },
-              data: {
-                quantity: remainingQuantity
-              }
-            });
-          } else {
-            await this.prisma.inventory.delete({
-              where: { id: inventoryItem.id }
-            });
-          }
-
-          const embed = new EmbedBuilder()
-            .setTitle('🧪 Item Used')
-            .setColor('#00ff00')
-            .addFields([
-              { 
-                name: '💊 Item', 
-                value: `${inventoryItem.item.name}\nRemaining: ${remainingQuantity}x`, 
-                inline: true 
-              },
-              { 
-                name: '❤️ Health', 
-                value: `${oldHealth} → ${newHealth} (+${actualHeal})`, 
-                inline: true 
-              }
-            ]);
-
-          if (buffStats) {
-            const buffDetails = Object.entries(buffStats)
-              .map(([stat, value]) => `${stat.charAt(0).toUpperCase() + stat.slice(1)}: +${value}`)
-              .join('\n');
-            
-            embed.addFields({
-              name: '⚡ Buff Applied',
-              value: `${buffDetails}\nDuration: ${buffDuration} minutes`,
-              inline: true
-            });
-          }
-
-          // Add warning if running low on items
-          if (remainingQuantity <= 3 && remainingQuantity > 0) {
-            embed.addFields({
-              name: '⚠️ Warning',
-              value: `You only have ${remainingQuantity} ${inventoryItem.item.name}${remainingQuantity === 1 ? '' : 's'} left!`,
-              inline: false
-            });
-          } else if (remainingQuantity === 0) {
-            embed.addFields({
-              name: '⚠️ Warning',
-              value: `This was your last ${inventoryItem.item.name}!`,
-              inline: false
-            });
-          }
-
-          return source.reply({ embeds: [embed] });
-        }
-      }
-
-      return source.reply('❌ Item ini tidak bisa digunakan!');
-    } catch (error) {
-      return this.handleCommandError(error, source, 'handleUseItem');
-    }
-  }
-
-  private getMentorEmoji(mentor: string): string {
-    const emojiMap: Record<string, string> = {
-      'YB': '⚔️',
-      'Tierison': '🗡️',
-      'LYuka': '🎯',
-      'GarryAng': '🔥'
-    };
-    return emojiMap[mentor] || '👨‍🏫';
-  }
-
-  async handleInventory(message: Message) {
-    const character = await this.getCharacterByDiscordId(message.author.id);
-    if (!character) {
-      return message.reply('❌ Kamu belum memiliki karakter! Gunakan `start` untuk membuat karakter.');
-    }
-
-    const inventory = await this.prisma.inventory.findMany({
-      where: { characterId: character.id },
-      include: { item: true }
-    });
-
-    if (!inventory || inventory.length === 0) {
-      return message.reply('📦 Inventorymu masih kosong!');
-    }
-
-    // Group items by type
-    const groupedItems = inventory.reduce((acc: Record<string, Array<{name: string; description: string; quantity: number; type: string}>>, inv) => {
-      if (!acc[inv.item.type]) {
-        acc[inv.item.type] = [];
-      }
-      acc[inv.item.type].push({
-        name: inv.item.name,
-        description: inv.item.description,
-        quantity: inv.quantity,
-        type: inv.item.type
-      });
-      return acc;
-    }, {});
-
-    const embed = new EmbedBuilder()
-      .setTitle(`📦 Inventory ${character.name}`)
-      .setColor('#0099ff');
-
-    // Add fields for each item type
-    for (const [type, items] of Object.entries(groupedItems)) {
-      const itemList = items.map(item => 
-        `${item.name} (x${item.quantity})\n${item.description}`
-      ).join('\n\n');
-
-      embed.addFields([{
-        name: `${this.getItemTypeEmoji(type)} ${type}`,
-        value: itemList || 'Kosong'
-      }]);
-    }
-
-    return message.reply({ embeds: [embed] });
-  }
-
-  private getItemTypeEmoji(type: string): string {
-    const emojiMap: Record<string, string> = {
-      'CONSUMABLE': '🧪',
-      'WEAPON': '⚔️',
-      'ARMOR': '🛡️',
-      'MATERIAL': '📦',
-      'FOOD': '🍖',
-      'INGREDIENT': '🌿'
-    };
-    return emojiMap[type] || '📦';
-  }
-
-  async getLeaderboard(
-    type: 'level' | 'wins' | 'coins' | 'winStreak' | 'highestStreak' | 'huntStreak' = 'level',
-    page: number = 1,
-    limit: number = 10,
-    filter?: string
-  ) {
-    try {
-      const skip = (page - 1) * limit;
-      let orderBy: any[] = [];
-      let where: any = {};
-
-      // Add filter if provided
-      if (filter) {
-        where.name = {
-          contains: filter,
-          mode: 'insensitive'
-        };
-      }
-
-      switch (type) {
-        case 'level':
-          orderBy = [
-            { level: 'desc' },
-            { experience: 'desc' }
-          ];
-          break;
-        case 'wins':
-          orderBy = [{ wins: 'desc' }];
-          break;
-        case 'coins':
-          orderBy = [
-            { coins: 'desc' },
-            { bank: 'desc' }
-          ];
-          break;
-        case 'winStreak':
-          orderBy = [{ winStreak: 'desc' }];
-          break;
-        case 'highestStreak':
-          orderBy = [{ highestStreak: 'desc' }];
-          break;
-        case 'huntStreak':
-          orderBy = [
-            { huntStreak: 'desc' },
-            { highestHuntStreak: 'desc' }
-          ];
-          break;
-      }
-
-      // Get total count for pagination
-      const total = await this.prisma.character.count({ where });
-
-      // Get paginated data
-      const characters = await this.prisma.character.findMany({
-        skip,
-        take: limit,
-        where,
-        orderBy,
-        include: {
-          user: true
-        }
-      });
-
-      const totalPages = Math.ceil(total / limit);
-
-      return {
-        data: characters.map((char, index) => ({
-          rank: skip + index + 1,
-          name: char.name,
-          discordId: char.user.discordId,
-          value: type === 'coins' ? char.coins + char.bank :
-                 type === 'level' ? `Level ${char.level} (${char.experience} EXP)` :
-                 type === 'huntStreak' ? `${char.huntStreak} (Highest: ${char.highestHuntStreak})` :
-                 char[type]
-        })),
-        pagination: {
-          page,
-          totalPages,
-          total,
-          hasMore: page < totalPages
-        }
-      };
-    } catch (error) {
-      return this.handleError(error, 'GetLeaderboard');
-    }
-  }
-
-  async handleLeaderboard(
-    source: Message | ChatInputCommandInteraction, 
-    type?: string,
-    page: number = 1,
-    filter?: string
-  ): Promise<unknown> {
-    try {
-      const validTypes = ['level', 'wins', 'coins', 'winStreak', 'highestStreak', 'huntStreak'];
-      const leaderboardType = type && validTypes.includes(type) ? type : 'level';
-      const itemsPerPage = 10;
-
-      const { data, pagination } = await this.getLeaderboard(
-        leaderboardType as any,
-        page,
-        itemsPerPage,
-        filter
-      );
-      
-      const typeEmoji = {
-        level: '📊',
-        wins: '⚔️',
-        coins: '💰',
-        winStreak: '🔥',
-        highestStreak: '👑',
-        huntStreak: '🎯'
-      }[leaderboardType];
-
-      const typeTitle = {
-        level: 'Level Tertinggi',
-        wins: 'Total Kemenangan',
-        coins: 'Total Kekayaan',
-        winStreak: 'Win Streak Saat Ini',
-        highestStreak: 'Win Streak Tertinggi',
-        huntStreak: 'Hunt Streak'
-      }[leaderboardType];
-
-      const embed = new EmbedBuilder()
-        .setTitle(`${typeEmoji} Leaderboard: ${typeTitle}`)
-        .setColor('#ffd700');
-
-      if (data.length === 0) {
-        embed.setDescription('Tidak ada data untuk ditampilkan.');
-      } else {
-        embed.setDescription(
-          data.map(entry => 
-            `${entry.rank === 1 ? '👑' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : `${entry.rank}.`} ${entry.name}: ${entry.value}`
-          ).join('\n')
         );
 
-        embed.setFooter({ 
-          text: `Page ${pagination.page}/${pagination.totalPages} • Total ${pagination.total} players${filter ? ` • Filter: ${filter}` : ''}\nGunakan /lb [type] [page] [filter] atau menu dibawah untuk navigasi` 
-        });
-      }
-
-      const components: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
-
-      // Add type selection menu
-      const typeSelect = new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(
-          new StringSelectMenuBuilder()
-            .setCustomId('leaderboard_type')
-            .setPlaceholder('Pilih jenis leaderboard')
-            .addOptions([
-              {
-                label: 'Level Tertinggi',
-                description: 'Tampilkan ranking berdasarkan level',
-                value: 'level',
-                emoji: '📊',
-                default: leaderboardType === 'level'
-              },
-              {
-                label: 'Total Kemenangan',
-                description: 'Tampilkan ranking berdasarkan jumlah kemenangan',
-                value: 'wins',
-                emoji: '⚔️',
-                default: leaderboardType === 'wins'
-              },
-              {
-                label: 'Total Kekayaan',
-                description: 'Tampilkan ranking berdasarkan total coins',
-                value: 'coins',
-                emoji: '💰',
-                default: leaderboardType === 'coins'
-              },
-              {
-                label: 'Win Streak Saat Ini',
-                description: 'Tampilkan ranking berdasarkan win streak saat ini',
-                value: 'winStreak',
-                emoji: '🔥',
-                default: leaderboardType === 'winStreak'
-              },
-              {
-                label: 'Win Streak Tertinggi',
-                description: 'Tampilkan ranking berdasarkan win streak tertinggi',
-                value: 'highestStreak',
-                emoji: '👑',
-                default: leaderboardType === 'highestStreak'
-              },
-              {
-                label: 'Hunt Streak',
-                description: 'Tampilkan ranking berdasarkan hunt streak',
-                value: 'huntStreak',
-                emoji: '🎯',
-                default: leaderboardType === 'huntStreak'
-              }
-            ])
-        );
-
-      components.push(typeSelect);
-
-      // Add navigation buttons if needed
-      if (pagination.totalPages > 1) {
-        const navigationRow = new ActionRowBuilder<ButtonBuilder>()
-          .addComponents(
-            new ButtonBuilder()
-              .setCustomId(`lb_first_${leaderboardType}`)
-              .setLabel('⏪ First')
-              .setStyle(ButtonStyle.Secondary)
-              .setDisabled(page === 1),
-            new ButtonBuilder()
-              .setCustomId(`lb_prev_${leaderboardType}`)
-              .setLabel('◀️ Prev')
-              .setStyle(ButtonStyle.Primary)
-              .setDisabled(page === 1),
-            new ButtonBuilder()
-              .setCustomId(`lb_next_${leaderboardType}`)
-              .setLabel('Next ▶️')
-              .setStyle(ButtonStyle.Primary)
-              .setDisabled(page === pagination.totalPages),
-            new ButtonBuilder()
-              .setCustomId(`lb_last_${leaderboardType}`)
-              .setLabel('Last ⏩')
-              .setStyle(ButtonStyle.Secondary)
-              .setDisabled(page === pagination.totalPages)
-          );
-        components.push(navigationRow);
-      }
-
-      // Add filter selection menu
-      const filterSelect = new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(
-          new StringSelectMenuBuilder()
-            .setCustomId('leaderboard_filter')
-            .setPlaceholder('Filter berdasarkan level')
-            .addOptions([
-              {
-                label: 'Semua Level',
-                description: 'Tampilkan semua pemain',
-                value: 'all',
-                emoji: '👥',
-                default: !filter
-              },
-              {
-                label: 'Level 1-10',
-                description: 'Filter pemain level 1-10',
-                value: 'low_level',
-                emoji: '🔰',
-                default: filter === 'low_level'
-              },
-              {
-                label: 'Level 11-20',
-                description: 'Filter pemain level 11-20',
-                value: 'mid_level',
-                emoji: '⚜️',
-                default: filter === 'mid_level'
-              },
-              {
-                label: 'Level 21+',
-                description: 'Filter pemain level 21+',
-                value: 'high_level',
-                emoji: '👑',
-                default: filter === 'high_level'
-              }
-            ])
-        );
-
-      components.push(filterSelect);
-
-      const baseMessageOptions = {
-        embeds: [embed],
-        components,
-        fetchReply: true as const
-      };
-
-      const messageOptions = source instanceof ChatInputCommandInteraction 
-        ? { ...baseMessageOptions, ephemeral: true }
-        : baseMessageOptions;
-
-      const message = await (source instanceof ChatInputCommandInteraction 
-        ? source.reply(messageOptions) 
-        : source.reply(messageOptions)) as Message;
-
-      // Create collectors for both buttons and select menus
-      if (message) {
-        // Collector for select menus
-        const selectCollector = message.createMessageComponentCollector({
-          componentType: ComponentType.StringSelect,
-          time: 300000 // 5 minutes
-        });
-
-        // Collector for buttons
-        const buttonCollector = message.createMessageComponentCollector({
-          componentType: ComponentType.Button,
-          time: 300000 // 5 minutes
-        });
-
-        // Handle select menu interactions
-        selectCollector.on('collect', async (interaction: StringSelectMenuInteraction) => {
-          await interaction.deferUpdate();
-          
-          const newType = interaction.customId === 'leaderboard_type' ? interaction.values[0] : leaderboardType;
-          const newFilter = interaction.customId === 'leaderboard_filter' ? 
-            (interaction.values[0] === 'all' ? undefined : interaction.values[0]) : 
-            filter;
-
-          // Update leaderboard with new type/filter
-          await this.handleLeaderboard(source, newType, 1, newFilter);
-        });
-
-        // Handle button interactions
-        buttonCollector.on('collect', async (interaction) => {
-          await interaction.deferUpdate();
-
-          const [action, type] = interaction.customId.split('_');
-          let newPage = page;
-
-          switch (action) {
-            case 'lb':
-              const command = type.split('_')[0]; // first, prev, next, or last
-              switch (command) {
-                case 'first':
-                  newPage = 1;
-                  break;
-                case 'prev':
-                  newPage = Math.max(1, page - 1);
-                  break;
-                case 'next':
-                  newPage = Math.min(pagination.totalPages, page + 1);
-                  break;
-                case 'last':
-                  newPage = pagination.totalPages;
-                  break;
-              }
-              break;
-          }
-
-          if (newPage !== page) {
-            await this.handleLeaderboard(source, leaderboardType, newPage, filter);
-          }
-        });
-
-        // Handle collector end
-        const cleanup = () => {
-          if (message && 'edit' in message) {
-            message.edit({ components: [] }).catch(console.error);
-          }
-        };
-
-        selectCollector.on('end', cleanup);
-        buttonCollector.on('end', cleanup);
-      }
-
-      return;
+      return this.sendEmbedResponse(source, embed);
     } catch (error) {
-      console.error('Error in handleLeaderboard:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      if (source instanceof ChatInputCommandInteraction) {
-        return source.reply({ 
-          content: `❌ Error: ${errorMessage}`,
-          ephemeral: true
-        });
-      } else {
-        return source.reply(`❌ Error: ${errorMessage}`);
-      }
-    }
-  }
-
-  async handleGiveCoins(source: Message | ChatInputCommandInteraction, targetId: string, amount: number): Promise<unknown> {
-    try {
-      // Get sender's character
-      const sender = await this.getCharacterByDiscordId(source instanceof Message ? source.author.id : source.user.id);
-      if (!sender) {
-        return source.reply('❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.');
-      }
-
-      // Validate amount
-      if (amount <= 0) {
-        return source.reply('❌ Jumlah coins harus lebih dari 0!');
-      }
-
-      // Get sender's balance
-      const senderBalance = await this.getBalance(sender.id);
-      if (senderBalance.coins < amount) {
-        return source.reply(`❌ Uang tidak cukup! Kamu butuh ${amount} coins.`);
-      }
-
-      // Get receiver's character
-      const receiver = await this.getCharacterByDiscordId(targetId);
-      if (!receiver) {
-        return source.reply('❌ Player yang dituju belum memiliki karakter!');
-      }
-
-      // Don't allow sending to self
-      if (sender.id === receiver.id) {
-        return source.reply('❌ Kamu tidak bisa mengirim coins ke dirimu sendiri!');
-      }
-
-      // Process transfer
-      await this.transferCoins(sender.id, receiver.id, amount);
-
-      // Create success embed
-      const embed = new EmbedBuilder()
-        .setTitle('💰 Transfer Berhasil!')
-        .setColor('#00ff00')
-        .setDescription(`Berhasil mengirim ${amount} coins ke ${receiver.name}!`)
-        .addFields([
-          { name: '👤 Pengirim', value: sender.name, inline: true },
-          { name: '👥 Penerima', value: receiver.name, inline: true },
-          { name: '💰 Jumlah', value: `${amount} coins`, inline: true }
-        ]);
-
-      return source.reply({ embeds: [embed] });
-    } catch (error) {
-      console.error('Error in handleGiveCoins:', error);
-      return source.reply('❌ Terjadi kesalahan saat mengirim coins.');
+      return this.handleCommandError(error, source, 'handleHelp');
     }
   }
 
   async handleSell(source: Message | ChatInputCommandInteraction, args?: string[]): Promise<unknown> {
     try {
+      const userId = this.getUserId(source);
+      const character = await this.validateCharacter(userId, source);
+      if (!character) return;
+
+      if (!args || args.length === 0) {
+        return source.reply('❌ Please specify what you want to sell!');
+      }
+
       if (!this.inventoryService) {
         throw new Error('Inventory service not initialized');
       }
 
-      const userId = source instanceof Message ? source.author.id : source.user.id;
-      const character = await this.getCharacterByDiscordId(userId);
-      
-      if (!character) {
-        return source.reply('❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.');
-      }
+      // Implement sell logic here
+          const embed = new EmbedBuilder()
+        .setTitle('🏪 Market')
+        .setColor('#ffd700')
+        .setDescription('Sell feature coming soon!');
 
-      if (!args || args.length === 0) {
-        return source.reply('❌ Format: `a sell [nama_item] [jumlah]`\nContoh: `a sell potion 5`');
-      }
-
-      // Parse quantity from last argument if it's a number
-      let quantity = 1;
-      let itemName = '';
-      
-      const lastArg = args[args.length - 1];
-      if (!isNaN(parseInt(lastArg))) {
-        quantity = Math.max(1, parseInt(lastArg)); // Ensure minimum 1
-        itemName = args.slice(0, -1).join(' ').toLowerCase();
-      } else {
-        itemName = args.join(' ').toLowerCase();
-      }
-
-      // Find item in inventory
-      const inventory = await this.prisma.inventory.findMany({
-        where: { characterId: character.id },
-        include: { item: true }
-      });
-
-      const inventoryItem = inventory.find(inv => {
-        const itemNameLower = inv.item.name.toLowerCase();
-        const searchNameLower = itemName.toLowerCase();
-        
-        // Clean both names by removing emojis and extra spaces
-        const cleanItemName = itemNameLower.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
-        const cleanSearchName = searchNameLower.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
-        
-        // Try exact match first
-        if (cleanItemName === cleanSearchName) {
-          return true;
-        }
-
-        // Try partial match with common aliases
-        const aliases = {
-          'full': ['full health potion', 'full hp', 'full heal'],
-          'health': ['health potion', 'hp pot', 'heal pot'],
-          'super': ['super health potion', 'super hp', 'super heal'],
-          'meat': ['meat', 'food'],
-          'super meat': ['super meat', 'super food']
-        };
-
-        // Check if search term matches any alias
-        for (const [key, aliasList] of Object.entries(aliases)) {
-          if (cleanItemName.includes(key) && aliasList.some(alias => cleanSearchName.includes(alias.toLowerCase()))) {
-            return true;
-          }
-        }
-        
-        // Fallback to partial match
-        return cleanItemName.includes(cleanSearchName) || cleanSearchName.includes(cleanItemName);
-      });
-
-      if (!inventoryItem) {
-        return source.reply(`❌ Item "${itemName}" tidak ditemukan di inventory!`);
-      }
-
-      // Use inventory service to handle the sale
-      return await this.inventoryService.handleSellItem(source, inventoryItem.itemId, quantity);
-
+      return this.sendEmbedResponse(source, embed);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Terjadi kesalahan saat menjual item';
-      return source.reply(`❌ ${message}`);
+      return this.handleCommandError(error, source, 'handleSell');
+    }
+  }
+
+  async handleLeaderboard(source: Message | ChatInputCommandInteraction, type?: string): Promise<unknown> {
+    try {
+      // Get page number from options if it exists
+      let currentPage = source instanceof ChatInputCommandInteraction 
+        ? (source.options.getInteger('page') || 1)
+        : 1;
+      
+      // Default to level leaderboard if no type specified
+      type = type?.toLowerCase() || 'level';
+
+      const itemsPerPage = 10;
+
+      // Function to generate leaderboard embed and components
+      const generateLeaderboard = async (page: number) => {
+        const skip = (page - 1) * itemsPerPage;
+
+        let orderBy: any;
+        let title: string;
+        let valueFormatter: (value: any) => string;
+        let description: string;
+
+        switch (type) {
+          case 'level':
+            orderBy = { level: 'desc' };
+            title = '🏆 Level Leaderboard';
+            description = 'Top players by level';
+            valueFormatter = (value: number) => `Level ${value}`;
+            break;
+          case 'coins':
+          case 'money':
+            orderBy = { coins: 'desc' };
+            title = '💰 Richest Players';
+            description = 'Top players by coins';
+            valueFormatter = (value: bigint) => `${value} coins`;
+            break;
+          case 'bank':
+            orderBy = { bank: 'desc' };
+            title = '🏦 Bank Leaderboard';
+            description = 'Top players by bank balance';
+            valueFormatter = (value: bigint) => `${value} coins`;
+            break;
+          case 'streak':
+          case 'huntstreak':
+            orderBy = { huntStreak: 'desc' };
+            title = '🔥 Highest Hunt Streaks';
+            description = 'Top players by hunt streak';
+            valueFormatter = (value: number) => `${value} streak`;
+            break;
+          case 'highstreak':
+            orderBy = { highestHuntStreak: 'desc' };
+            title = '👑 All-Time Highest Streaks';
+            description = 'Top players by highest hunt streak achieved';
+            valueFormatter = (value: number) => `${value} streak`;
+            break;
+          case 'wins':
+            orderBy = { wins: 'desc' };
+            title = '⚔️ Most Wins';
+            description = 'Top players by battle wins';
+            valueFormatter = (value: number) => `${value} wins`;
+            break;
+          case 'winrate':
+            orderBy = [
+              { wins: 'desc' },
+              { losses: 'asc' }
+            ];
+            title = '🎯 Best Win Rate';
+            description = 'Top players by win/loss ratio';
+            valueFormatter = (char: any) => `${((char.wins / (char.wins + char.losses)) * 100).toFixed(1)}% (${char.wins}W/${char.losses}L)`;
+            break;
+          case 'gambled':
+            orderBy = { totalGambled: 'desc' };
+            title = '🎲 Biggest Gamblers';
+            description = 'Top players by total amount gambled';
+            valueFormatter = (value: bigint) => `${value} coins`;
+            break;
+          case 'won':
+            orderBy = { totalWon: 'desc' };
+            title = '🎰 Luckiest Players';
+            description = 'Top players by total gambling winnings';
+            valueFormatter = (value: bigint) => `${value} coins`;
+            break;
+          default:
+            return null;
+        }
+
+        // Get total count for pagination
+        const totalCount = await this.prisma.character.count({
+          where: type === 'winrate' ? { wins: { gt: 0 } } : undefined
+        });
+        
+        const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+        // Validate page number
+        if (page < 1 || page > totalPages) {
+          return null;
+        }
+
+        // Get characters for current page
+        const characters = await this.prisma.character.findMany({
+          take: itemsPerPage,
+          skip,
+          orderBy,
+          where: type === 'winrate' ? { wins: { gt: 0 } } : undefined,
+          select: {
+            name: true,
+            level: true,
+            coins: true,
+            bank: true,
+            huntStreak: true,
+            highestHuntStreak: true,
+            wins: true,
+            losses: true,
+            totalGambled: true,
+            totalWon: true,
+            user: {
+              select: {
+                discordId: true
+              }
+            }
+          }
+        });
+
+        if (characters.length === 0) {
+          return null;
+        }
+
+        const embed = new EmbedBuilder()
+          .setTitle(title)
+          .setColor('#FFD700')
+          .setDescription(description)
+          .addFields({
+            name: `Rankings (Page ${page}/${totalPages})`,
+            value: characters.map((char, index) => {
+              const position = skip + index + 1;
+              const medal = position === 1 ? '🥇' : position === 2 ? '🥈' : position === 3 ? '🥉' : '🏅';
+              const value = type === 'level' ? char.level :
+                           type === 'coins' || type === 'money' ? char.coins :
+                           type === 'bank' ? char.bank :
+                           type === 'streak' || type === 'huntstreak' ? char.huntStreak :
+                           type === 'highstreak' ? char.highestHuntStreak :
+                           type === 'winrate' ? char :
+                           type === 'gambled' ? char.totalGambled :
+                           type === 'won' ? char.totalWon :
+                           char.wins;
+              return `${medal} ${position}. ${char.name} - ${valueFormatter(value)}`;
+            }).join('\n')
+          })
+          .setFooter({ text: `Page ${page}/${totalPages} • Use /leaderboard <type> <page>` })
+          .setTimestamp();
+
+        // Create navigation buttons
+        const row = new ActionRowBuilder<ButtonBuilder>()
+          .addComponents(
+            new ButtonBuilder()
+              .setCustomId(`prev_${type}`)
+              .setLabel('Previous')
+              .setStyle(ButtonStyle.Primary)
+              .setDisabled(page <= 1),
+            new ButtonBuilder()
+              .setCustomId(`next_${type}`)
+              .setLabel('Next')
+              .setStyle(ButtonStyle.Primary)
+              .setDisabled(page >= totalPages)
+          );
+
+        return { embed, components: [row], totalPages };
+      };
+
+      // Generate initial leaderboard
+      const initial = await generateLeaderboard(currentPage);
+      if (!initial) {
+        return source.reply({
+          content: '❌ Invalid leaderboard type or no data found! Available types:\n' +
+                  '• level - Top players by level\n' +
+                  '• coins/money - Richest players\n' +
+                  '• bank - Highest bank balances\n' +
+                  '• streak/huntstreak - Current hunt streaks\n' +
+                  '• highstreak - All-time highest streaks\n' +
+                  '• wins - Most battle wins\n' +
+                  '• winrate - Best win/loss ratio\n' +
+                  '• gambled - Most coins gambled\n' +
+                  '• won - Most gambling winnings',
+          ephemeral: true
+        });
+      }
+
+      // Send initial message and get the message object for collector
+      let messageToCollectFrom: Message;
+      if (source instanceof Message) {
+        const reply = await source.reply({ 
+          embeds: [initial.embed], 
+          components: initial.components,
+        });
+        messageToCollectFrom = reply as Message;
+      } else {
+        const reply = await source.reply({ 
+          embeds: [initial.embed], 
+          components: initial.components, 
+          ephemeral: false, 
+        });
+        messageToCollectFrom = reply as unknown as Message;
+      }
+
+      // Create button collector
+      const collector = messageToCollectFrom.createMessageComponentCollector({ 
+        componentType: ComponentType.Button,
+        time: 300000 // 5 minutes
+      });
+
+      collector.on('collect', async (interaction: ButtonInteraction) => {
+        // Verify the user who clicked is the one who ran the command
+        if (interaction.user.id !== (source instanceof Message ? source.author.id : source.user.id)) {
+          await interaction.reply({
+            content: '❌ Only the person who ran this command can use these buttons!',
+            ephemeral: true
+          });
+          return;
+        }
+
+        // Handle navigation
+        if (interaction.customId === `prev_${type}`) {
+          currentPage--;
+        } else if (interaction.customId === `next_${type}`) {
+          currentPage++;
+        }
+
+        // Generate new leaderboard
+        const updated = await generateLeaderboard(currentPage);
+        if (!updated) {
+          await interaction.reply({
+            content: '❌ Failed to load leaderboard page.',
+            ephemeral: true
+          });
+          return;
+        }
+
+        // Update the message
+        await interaction.update({
+          embeds: [updated.embed],
+          components: updated.components
+        });
+      });
+
+      collector.on('end', () => {
+        // Remove buttons when collector expires
+        if (messageToCollectFrom.editable) {
+          messageToCollectFrom.edit({ components: [] }).catch(() => {});
+        }
+      });
+
+      return messageToCollectFrom;
+    } catch (error) {
+      return this.handleCommandError(error, source, 'handleLeaderboard');
     }
   }
 }

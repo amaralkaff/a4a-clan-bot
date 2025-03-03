@@ -699,34 +699,6 @@
     "stackLimit": 1,
     "maxDurability": 8000
   },
-  "reality_sovereign": {
-    "name": "💫 Reality Sovereign",
-    "type": "WEAPON",
-    "description": "🌌 Senjata penguasa realitas",
-    "price": 25000000,
-    "effect": {
-      "type": "EQUIP",
-      "stats": {
-        "attack": 750,
-        "defense": 550,
-        "speed": 380
-      }
-    },
-    "baseStats": {
-      "attack": 750,
-      "defense": 550,
-      "speed": 380
-    },
-    "upgradeStats": {
-      "attack": 150,
-      "defense": 110,
-      "speed": 76
-    },
-    "maxLevel": 50,
-    "rarity": "TRANSCENDENT",
-    "stackLimit": 1,
-    "maxDurability": 7500
-  },
   "celestial_overlord": {
     "name": "🌟 Celestial Overlord",
     "type": "WEAPON",
@@ -1118,5 +1090,1209 @@
     "rarity": "PRIMORDIAL",
     "stackLimit": 1,
     "maxDurability": 11000
+  },
+  "genesis_blade": {
+    "name": "🌟 Genesis Blade",
+    "type": "WEAPON",
+    "description": "🌌 Pedang penciptaan yang dapat membentuk dan menghancurkan alam semesta",
+    "price": 5000000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 10000,
+        "defense": 8000,
+        "speed": 5000
+      }
+    },
+    "baseStats": {
+      "attack": 10000,
+      "defense": 8000,
+      "speed": 5000
+    },
+    "upgradeStats": {
+      "attack": 2000,
+      "defense": 1600,
+      "speed": 1000
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 100000
+  },
+  "omniversal_eraser": {
+    "name": "💫 Omniversal Eraser",
+    "type": "WEAPON",
+    "description": "🌌 Senjata yang dapat menghapus seluruh omniverse",
+    "price": 4800000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 9500,
+        "defense": 7600,
+        "speed": 4750
+      }
+    },
+    "baseStats": {
+      "attack": 9500,
+      "defense": 7600,
+      "speed": 4750
+    },
+    "upgradeStats": {
+      "attack": 1900,
+      "defense": 1520,
+      "speed": 950
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 95000
+  },
+  "reality_matrix": {
+    "name": "🎭 Reality Matrix",
+    "type": "WEAPON",
+    "description": "🌌 Senjata yang mengendalikan matriks realitas",
+    "price": 4500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 9000,
+        "defense": 7200,
+        "speed": 4500
+      }
+    },
+    "baseStats": {
+      "attack": 9000,
+      "defense": 7200,
+      "speed": 4500
+    },
+    "upgradeStats": {
+      "attack": 1800,
+      "defense": 1440,
+      "speed": 900
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 90000
+  },
+  "infinity_paradigm": {
+    "name": "♾️ Infinity Paradigm",
+    "type": "WEAPON",
+    "description": "🌌 Senjata yang melampaui konsep ketidakterbatasan",
+    "price": 4200000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 8500,
+        "defense": 6800,
+        "speed": 4250
+      }
+    },
+    "baseStats": {
+      "attack": 8500,
+      "defense": 6800,
+      "speed": 4250
+    },
+    "upgradeStats": {
+      "attack": 1700,
+      "defense": 1360,
+      "speed": 850
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 85000
+  },
+  "quantum_absolute": {
+    "name": "⚛️ Quantum Absolute",
+    "type": "WEAPON",
+    "description": "🌌 Senjata yang menguasai seluruh kemungkinan kuantum",
+    "price": 4000000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 8000,
+        "defense": 6400,
+        "speed": 4000
+      }
+    },
+    "baseStats": {
+      "attack": 8000,
+      "defense": 6400,
+      "speed": 4000
+    },
+    "upgradeStats": {
+      "attack": 1600,
+      "defense": 1280,
+      "speed": 800
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 80000
+  },
+  "cosmic_authority": {
+    "name": "🌠 Cosmic Authority",
+    "type": "WEAPON",
+    "description": "🌌 Senjata dengan otoritas kosmik absolut",
+    "price": 3800000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 7500,
+        "defense": 6000,
+        "speed": 3750
+      }
+    },
+    "baseStats": {
+      "attack": 7500,
+      "defense": 6000,
+      "speed": 3750
+    },
+    "upgradeStats": {
+      "attack": 1500,
+      "defense": 1200,
+      "speed": 750
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 75000
+  },
+  "eternal_dominion": {
+    "name": "👑 Eternal Dominion",
+    "type": "WEAPON",
+    "description": "🌌 Senjata penguasa keabadian mutlak",
+    "price": 3500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 7000,
+        "defense": 5600,
+        "speed": 3500
+      }
+    },
+    "baseStats": {
+      "attack": 7000,
+      "defense": 5600,
+      "speed": 3500
+    },
+    "upgradeStats": {
+      "attack": 1400,
+      "defense": 1120,
+      "speed": 700
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 70000
+  },
+  "void_supremacy": {
+    "name": "⚫ Void Supremacy",
+    "type": "WEAPON",
+    "description": "🌌 Senjata dengan supremasi kekosongan absolut",
+    "price": 3200000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 6500,
+        "defense": 5200,
+        "speed": 3250
+      }
+    },
+    "baseStats": {
+      "attack": 6500,
+      "defense": 5200,
+      "speed": 3250
+    },
+    "upgradeStats": {
+      "attack": 1300,
+      "defense": 1040,
+      "speed": 650
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 65000
+  },
+  "dimensional_apex": {
+    "name": "🌀 Dimensional Apex",
+    "type": "WEAPON",
+    "description": "🌌 Senjata puncak dimensi",
+    "price": 3000000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 6000,
+        "defense": 4800,
+        "speed": 3000
+      }
+    },
+    "baseStats": {
+      "attack": 6000,
+      "defense": 4800,
+      "speed": 3000
+    },
+    "upgradeStats": {
+      "attack": 1200,
+      "defense": 960,
+      "speed": 600
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 60000
+  },
+  "chaos_absolute": {
+    "name": "🌪️ Chaos Absolute",
+    "type": "WEAPON",
+    "description": "🌌 Senjata kekacauan mutlak",
+    "price": 2800000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 5500,
+        "defense": 4400,
+        "speed": 2750
+      }
+    },
+    "baseStats": {
+      "attack": 5500,
+      "defense": 4400,
+      "speed": 2750
+    },
+    "upgradeStats": {
+      "attack": 1100,
+      "defense": 880,
+      "speed": 550
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 55000
+  },
+  "celestial_zenith": {
+    "name": "🌟 Celestial Zenith",
+    "type": "WEAPON",
+    "description": "🌌 Senjata puncak surgawi",
+    "price": 2500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 5000,
+        "defense": 4000,
+        "speed": 2500
+      }
+    },
+    "baseStats": {
+      "attack": 5000,
+      "defense": 4000,
+      "speed": 2500
+    },
+    "upgradeStats": {
+      "attack": 1000,
+      "defense": 800,
+      "speed": 500
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 50000
+  },
+  "astral_dominance": {
+    "name": "✨ Astral Dominance",
+    "type": "WEAPON",
+    "description": "🌌 Senjata dominasi astral",
+    "price": 2300000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 4800,
+        "defense": 3840,
+        "speed": 2400
+      }
+    },
+    "baseStats": {
+      "attack": 4800,
+      "defense": 3840,
+      "speed": 2400
+    },
+    "upgradeStats": {
+      "attack": 960,
+      "defense": 768,
+      "speed": 480
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 48000
+  },
+  "divine_ascendance": {
+    "name": "🏆 Divine Ascendance",
+    "type": "WEAPON",
+    "description": "🌌 Senjata kenaikan ilahi",
+    "price": 2100000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 4600,
+        "defense": 3680,
+        "speed": 2300
+      }
+    },
+    "baseStats": {
+      "attack": 4600,
+      "defense": 3680,
+      "speed": 2300
+    },
+    "upgradeStats": {
+      "attack": 920,
+      "defense": 736,
+      "speed": 460
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 46000
+  },
+  "ethereal_sovereign": {
+    "name": "🌈 Ethereal Sovereign",
+    "type": "WEAPON",
+    "description": "🌌 Senjata kedaulatan ethereal",
+    "price": 1900000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 4400,
+        "defense": 3520,
+        "speed": 2200
+      }
+    },
+    "baseStats": {
+      "attack": 4400,
+      "defense": 3520,
+      "speed": 2200
+    },
+    "upgradeStats": {
+      "attack": 880,
+      "defense": 704,
+      "speed": 440
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 44000
+  },
+  "primordial_might": {
+    "name": "🌋 Primordial Might",
+    "type": "WEAPON",
+    "description": "🌌 Senjata kekuatan primordial",
+    "price": 1700000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 4200,
+        "defense": 3360,
+        "speed": 2100
+      }
+    },
+    "baseStats": {
+      "attack": 4200,
+      "defense": 3360,
+      "speed": 2100
+    },
+    "upgradeStats": {
+      "attack": 840,
+      "defense": 672,
+      "speed": 420
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 42000
+  },
+  "transcendent_authority": {
+    "name": "🎯 Transcendent Authority",
+    "type": "WEAPON",
+    "description": "🌌 Senjata otoritas transenden",
+    "price": 1500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 4000,
+        "defense": 3200,
+        "speed": 2000
+      }
+    },
+    "baseStats": {
+      "attack": 4000,
+      "defense": 3200,
+      "speed": 2000
+    },
+    "upgradeStats": {
+      "attack": 800,
+      "defense": 640,
+      "speed": 400
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 40000
+  },
+  "omega_dominion": {
+    "name": "Ω Omega Dominion",
+    "type": "WEAPON",
+    "description": "🌌 Senjata dominasi omega",
+    "price": 1300000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 3800,
+        "defense": 3040,
+        "speed": 1900
+      }
+    },
+    "baseStats": {
+      "attack": 3800,
+      "defense": 3040,
+      "speed": 1900
+    },
+    "upgradeStats": {
+      "attack": 760,
+      "defense": 608,
+      "speed": 380
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 38000
+  },
+  "quantum_sovereign": {
+    "name": "⚛️ Quantum Sovereign",
+    "type": "WEAPON",
+    "description": "🌌 Senjata kedaulatan kuantum",
+    "price": 1100000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 3600,
+        "defense": 2880,
+        "speed": 1800
+      }
+    },
+    "baseStats": {
+      "attack": 3600,
+      "defense": 2880,
+      "speed": 1800
+    },
+    "upgradeStats": {
+      "attack": 720,
+      "defense": 576,
+      "speed": 360
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 36000
+  },
+  "reality_sovereign": {
+    "name": "🎭 Reality Sovereign",
+    "type": "WEAPON",
+    "description": "🌌 Senjata kedaulatan realitas",
+    "price": 900000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 3400,
+        "defense": 2720,
+        "speed": 1700
+      }
+    },
+    "baseStats": {
+      "attack": 3400,
+      "defense": 2720,
+      "speed": 1700
+    },
+    "upgradeStats": {
+      "attack": 680,
+      "defense": 544,
+      "speed": 340
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 34000
+  },
+  "void_emperor_absolute": {
+    "name": "⚫ Void Emperor Absolute",
+    "type": "WEAPON",
+    "description": "🌌 Senjata kaisar kekosongan absolut",
+    "price": 700000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 3200,
+        "defense": 2560,
+        "speed": 1600
+      }
+    },
+    "baseStats": {
+      "attack": 3200,
+      "defense": 2560,
+      "speed": 1600
+    },
+    "upgradeStats": {
+      "attack": 640,
+      "defense": 512,
+      "speed": 320
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 32000
+  },
+  "celestial_emperor_supreme": {
+    "name": "👑 Celestial Emperor Supreme",
+    "type": "WEAPON",
+    "description": "🌌 Senjata kaisar surgawi tertinggi",
+    "price": 500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 3000,
+        "defense": 2400,
+        "speed": 1500
+      }
+    },
+    "baseStats": {
+      "attack": 3000,
+      "defense": 2400,
+      "speed": 1500
+    },
+    "upgradeStats": {
+      "attack": 600,
+      "defense": 480,
+      "speed": 300
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 30000
+  },
+  "chaos_emperor_absolute": {
+    "name": "🌪️ Chaos Emperor Absolute",
+    "type": "WEAPON",
+    "description": "🌌 Senjata kaisar kekacauan absolut",
+    "price": 300000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 2800,
+        "defense": 2240,
+        "speed": 1400
+      }
+    },
+    "baseStats": {
+      "attack": 2800,
+      "defense": 2240,
+      "speed": 1400
+    },
+    "upgradeStats": {
+      "attack": 560,
+      "defense": 448,
+      "speed": 280
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 28000
+  },
+  "divine_emperor_supreme": {
+    "name": "✨ Divine Emperor Supreme",
+    "type": "WEAPON",
+    "description": "🌌 Senjata kaisar ilahi tertinggi",
+    "price": 100000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 2600,
+        "defense": 2080,
+        "speed": 1300
+      }
+    },
+    "baseStats": {
+      "attack": 2600,
+      "defense": 2080,
+      "speed": 1300
+    },
+    "upgradeStats": {
+      "attack": 520,
+      "defense": 416,
+      "speed": 260
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 26000
+  },
+  "kronos_timeweaver": {
+    "name": "⌛ Kronos Timeweaver",
+    "type": "WEAPON",
+    "description": "🌌 Senjata yang dapat memanipulasi aliran waktu universal",
+    "price": 10000000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 15000,
+        "defense": 12000,
+        "speed": 7500
+      }
+    },
+    "baseStats": {
+      "attack": 15000,
+      "defense": 12000,
+      "speed": 7500
+    },
+    "upgradeStats": {
+      "attack": 3000,
+      "defense": 2400,
+      "speed": 1500
+    },
+    "maxLevel": 300,
+    "rarity": "COSMIC",
+    "stackLimit": 1,
+    "maxDurability": 150000
+  },
+  "zeus_skyruler": {
+    "name": "⚡ Zeus Skyruler",
+    "type": "WEAPON",
+    "description": "🌌 Senjata penguasa petir dan langit tertinggi",
+    "price": 9500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 14500,
+        "defense": 11600,
+        "speed": 7250
+      }
+    },
+    "baseStats": {
+      "attack": 14500,
+      "defense": 11600,
+      "speed": 7250
+    },
+    "upgradeStats": {
+      "attack": 2900,
+      "defense": 2320,
+      "speed": 1450
+    },
+    "maxLevel": 300,
+    "rarity": "COSMIC",
+    "stackLimit": 1,
+    "maxDurability": 145000
+  },
+  "odin_worldender": {
+    "name": "👁️ Odin Worldender",
+    "type": "WEAPON",
+    "description": "🌌 Senjata dengan kebijaksanaan dan kekuatan Yggdrasil",
+    "price": 9000000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 14000,
+        "defense": 11200,
+        "speed": 7000
+      }
+    },
+    "baseStats": {
+      "attack": 14000,
+      "defense": 11200,
+      "speed": 7000
+    },
+    "upgradeStats": {
+      "attack": 2800,
+      "defense": 2240,
+      "speed": 1400
+    },
+    "maxLevel": 300,
+    "rarity": "COSMIC",
+    "stackLimit": 1,
+    "maxDurability": 140000
+  },
+  "ra_solarflare": {
+    "name": "☀️ Ra Solarflare",
+    "type": "WEAPON",
+    "description": "🌌 Senjata dengan kekuatan matahari kosmik",
+    "price": 8500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 13500,
+        "defense": 10800,
+        "speed": 6750
+      }
+    },
+    "baseStats": {
+      "attack": 13500,
+      "defense": 10800,
+      "speed": 6750
+    },
+    "upgradeStats": {
+      "attack": 2700,
+      "defense": 2160,
+      "speed": 1350
+    },
+    "maxLevel": 300,
+    "rarity": "COSMIC",
+    "stackLimit": 1,
+    "maxDurability": 135000
+  },
+  "shiva_destroyer": {
+    "name": "💫 Shiva Destroyer",
+    "type": "WEAPON",
+    "description": "🌌 Senjata penghancur dan pembaharu universal",
+    "price": 8000000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 13000,
+        "defense": 10400,
+        "speed": 6500
+      }
+    },
+    "baseStats": {
+      "attack": 13000,
+      "defense": 10400,
+      "speed": 6500
+    },
+    "upgradeStats": {
+      "attack": 2600,
+      "defense": 2080,
+      "speed": 1300
+    },
+    "maxLevel": 300,
+    "rarity": "COSMIC",
+    "stackLimit": 1,
+    "maxDurability": 130000
+  },
+  "amaterasu_sunforge": {
+    "name": "🌞 Amaterasu Sunforge",
+    "type": "WEAPON",
+    "description": "🌌 Senjata cahaya ilahi tertinggi",
+    "price": 7500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 12500,
+        "defense": 10000,
+        "speed": 6250
+      }
+    },
+    "baseStats": {
+      "attack": 12500,
+      "defense": 10000,
+      "speed": 6250
+    },
+    "upgradeStats": {
+      "attack": 2500,
+      "defense": 2000,
+      "speed": 1250
+    },
+    "maxLevel": 300,
+    "rarity": "COSMIC",
+    "stackLimit": 1,
+    "maxDurability": 125000
+  },
+  "brahma_creator": {
+    "name": "🎭 Brahma Creator",
+    "type": "WEAPON",
+    "description": "🌌 Senjata penciptaan universal tertinggi",
+    "price": 7000000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 12000,
+        "defense": 9600,
+        "speed": 6000
+      }
+    },
+    "baseStats": {
+      "attack": 12000,
+      "defense": 9600,
+      "speed": 6000
+    },
+    "upgradeStats": {
+      "attack": 2400,
+      "defense": 1920,
+      "speed": 1200
+    },
+    "maxLevel": 300,
+    "rarity": "COSMIC",
+    "stackLimit": 1,
+    "maxDurability": 120000
+  },
+  "vishnu_preserver": {
+    "name": "🌀 Vishnu Preserver",
+    "type": "WEAPON",
+    "description": "🌌 Senjata pemelihara keseimbangan kosmik",
+    "price": 6500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 11500,
+        "defense": 9200,
+        "speed": 5750
+      }
+    },
+    "baseStats": {
+      "attack": 11500,
+      "defense": 9200,
+      "speed": 5750
+    },
+    "upgradeStats": {
+      "attack": 2300,
+      "defense": 1840,
+      "speed": 1150
+    },
+    "maxLevel": 300,
+    "rarity": "COSMIC",
+    "stackLimit": 1,
+    "maxDurability": 115000
+  },
+  "izanagi_creator": {
+    "name": "⚔️ Izanagi Creator",
+    "type": "WEAPON",
+    "description": "🌌 Senjata penciptaan primordial Jepang",
+    "price": 6000000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 11000,
+        "defense": 8800,
+        "speed": 5500
+      }
+    },
+    "baseStats": {
+      "attack": 11000,
+      "defense": 8800,
+      "speed": 5500
+    },
+    "upgradeStats": {
+      "attack": 2200,
+      "defense": 1760,
+      "speed": 1100
+    },
+    "maxLevel": 300,
+    "rarity": "COSMIC",
+    "stackLimit": 1,
+    "maxDurability": 110000
+  },
+  "thor_stormbreaker": {
+    "name": "🔨 Thor Stormbreaker",
+    "type": "WEAPON",
+    "description": "🌌 Senjata penguasa badai kosmik",
+    "price": 5500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 10500,
+        "defense": 8400,
+        "speed": 5250
+      }
+    },
+    "baseStats": {
+      "attack": 10500,
+      "defense": 8400,
+      "speed": 5250
+    },
+    "upgradeStats": {
+      "attack": 2100,
+      "defense": 1680,
+      "speed": 1050
+    },
+    "maxLevel": 300,
+    "rarity": "COSMIC",
+    "stackLimit": 1,
+    "maxDurability": 105000
+  },
+  "anubis_soulreaper": {
+    "name": "💀 Anubis Soulreaper",
+    "type": "WEAPON",
+    "description": "🌌 Senjata penghakiman jiwa universal",
+    "price": 5000000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 10000,
+        "defense": 8000,
+        "speed": 5000
+      }
+    },
+    "baseStats": {
+      "attack": 10000,
+      "defense": 8000,
+      "speed": 5000
+    },
+    "upgradeStats": {
+      "attack": 2000,
+      "defense": 1600,
+      "speed": 1000
+    },
+    "maxLevel": 300,
+    "rarity": "COSMIC",
+    "stackLimit": 1,
+    "maxDurability": 100000
+  },
+  "hades_soulking": {
+    "name": "👻 Hades Soulking",
+    "type": "WEAPON",
+    "description": "🌌 Senjata penguasa dunia bawah kosmik",
+    "price": 4500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 9500,
+        "defense": 7600,
+        "speed": 4750
+      }
+    },
+    "baseStats": {
+      "attack": 9500,
+      "defense": 7600,
+      "speed": 4750
+    },
+    "upgradeStats": {
+      "attack": 1900,
+      "defense": 1520,
+      "speed": 950
+    },
+    "maxLevel": 300,
+    "rarity": "COSMIC",
+    "stackLimit": 1,
+    "maxDurability": 95000
+  },
+  "quetzalcoatl_skyserpentt": {
+    "name": "🐍 Quetzalcoatl Skyserpent",
+    "type": "WEAPON",
+    "description": "🌌 Senjata ular langit pembawa kebijaksanaan",
+    "price": 4000000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 9000,
+        "defense": 7200,
+        "speed": 4500
+      }
+    },
+    "baseStats": {
+      "attack": 9000,
+      "defense": 7200,
+      "speed": 4500
+    },
+    "upgradeStats": {
+      "attack": 1800,
+      "defense": 1440,
+      "speed": 900
+    },
+    "maxLevel": 300,
+    "rarity": "COSMIC",
+    "stackLimit": 1,
+    "maxDurability": 90000
+  },
+  "ares_warmaster": {
+    "name": "⚔️ Ares Warmaster",
+    "type": "WEAPON",
+    "description": "🌌 Senjata dewa perang kosmik",
+    "price": 3500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 8500,
+        "defense": 6800,
+        "speed": 4250
+      }
+    },
+    "baseStats": {
+      "attack": 8500,
+      "defense": 6800,
+      "speed": 4250
+    },
+    "upgradeStats": {
+      "attack": 1700,
+      "defense": 1360,
+      "speed": 850
+    },
+    "maxLevel": 300,
+    "rarity": "COSMIC",
+    "stackLimit": 1,
+    "maxDurability": 85000
+  },
+  "tsukuyomi_moonblade": {
+    "name": "🌙 Tsukuyomi Moonblade",
+    "type": "WEAPON",
+    "description": "🌌 Senjata bulan yang menguasai kegelapan",
+    "price": 3000000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 8000,
+        "defense": 6400,
+        "speed": 4000
+      }
+    },
+    "baseStats": {
+      "attack": 8000,
+      "defense": 6400,
+      "speed": 4000
+    },
+    "upgradeStats": {
+      "attack": 1600,
+      "defense": 1280,
+      "speed": 800
+    },
+    "maxLevel": 300,
+    "rarity": "COSMIC",
+    "stackLimit": 1,
+    "maxDurability": 80000
+  },
+  "susanoo_stormrage": {
+    "name": "🌪️ Susanoo Stormrage",
+    "type": "WEAPON",
+    "description": "🌌 Senjata badai yang menguasai elemen",
+    "price": 2500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 7500,
+        "defense": 6000,
+        "speed": 3750
+      }
+    },
+    "baseStats": {
+      "attack": 7500,
+      "defense": 6000,
+      "speed": 3750
+    },
+    "upgradeStats": {
+      "attack": 1500,
+      "defense": 1200,
+      "speed": 750
+    },
+    "maxLevel": 300,
+    "rarity": "COSMIC",
+    "stackLimit": 1,
+    "maxDurability": 75000
+  },
+  "osiris_lifeender": {
+    "name": "🌿 Osiris Lifeender",
+    "type": "WEAPON",
+    "description": "🌌 Senjata penguasa kehidupan dan kematian",
+    "price": 2000000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 7000,
+        "defense": 5600,
+        "speed": 3500
+      }
+    },
+    "baseStats": {
+      "attack": 7000,
+      "defense": 5600,
+      "speed": 3500
+    },
+    "upgradeStats": {
+      "attack": 1400,
+      "defense": 1120,
+      "speed": 700
+    },
+    "maxLevel": 300,
+    "rarity": "COSMIC",
+    "stackLimit": 1,
+    "maxDurability": 70000
+  },
+  "tyr_justicar": {
+    "name": "⚖️ Tyr Justicar",
+    "type": "WEAPON",
+    "description": "🌌 Senjata keadilan kosmik",
+    "price": 1500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 6500,
+        "defense": 5200,
+        "speed": 3250
+      }
+    },
+    "baseStats": {
+      "attack": 6500,
+      "defense": 5200,
+      "speed": 3250
+    },
+    "upgradeStats": {
+      "attack": 1300,
+      "defense": 1040,
+      "speed": 650
+    },
+    "maxLevel": 300,
+    "rarity": "COSMIC",
+    "stackLimit": 1,
+    "maxDurability": 65000
+  },
+  "heimdall_allseer": {
+    "name": "👁️ Heimdall Allseer",
+    "type": "WEAPON",
+    "description": "🌌 Senjata pengawas sembilan dunia",
+    "price": 1000000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 6000,
+        "defense": 4800,
+        "speed": 3000
+      }
+    },
+    "baseStats": {
+      "attack": 6000,
+      "defense": 4800,
+      "speed": 3000
+    },
+    "upgradeStats": {
+      "attack": 1200,
+      "defense": 960,
+      "speed": 600
+    },
+    "maxLevel": 300,
+    "rarity": "COSMIC",
+    "stackLimit": 1,
+    "maxDurability": 60000
+  },
+  "set_chaosmaster": {
+    "name": "🌪️ Set Chaosmaster",
+    "type": "WEAPON",
+    "description": "🌌 Senjata kekacauan padang pasir kosmik",
+    "price": 500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 5500,
+        "defense": 4400,
+        "speed": 2750
+      }
+    },
+    "baseStats": {
+      "attack": 5500,
+      "defense": 4400,
+      "speed": 2750
+    },
+    "upgradeStats": {
+      "attack": 1100,
+      "defense": 880,
+      "speed": 550
+    },
+    "maxLevel": 300,
+    "rarity": "COSMIC",
+    "stackLimit": 1,
+    "maxDurability": 55000
   }
 }

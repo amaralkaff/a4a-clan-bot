@@ -1,0 +1,2245 @@
+{
+  "MONSTERS": {
+    "sea_beast_small": {
+      "name": "🦑 Baby Sea King",
+      "level": 1,
+      "hp": 50,
+      "attack": 5,
+      "defense": 3,
+      "exp": 20,
+      "drops": ["fish_small", "sea_crystal"]
+    },
+    "bandit_weak": {
+      "name": "👤 Bandit Lemah",
+      "level": 1,
+      "hp": 45,
+      "attack": 6,
+      "defense": 2,
+      "exp": 15,
+      "drops": ["wooden_sword", "bandage"]
+    },
+    "wild_monkey": {
+      "name": "🐒 Monyet Liar",
+      "level": 2,
+      "hp": 60,
+      "attack": 7,
+      "defense": 4,
+      "exp": 25,
+      "drops": ["banana", "monkey_fur"]
+    },
+    "angry_boar": {
+      "name": "🐗 Babi Hutan",
+      "level": 2,
+      "hp": 70,
+      "attack": 8,
+      "defense": 5,
+      "exp": 30,
+      "drops": ["meat_raw", "boar_tusk"]
+    },
+    "pirate_rookie": {
+      "name": "🏴‍☠️ Bajak Laut Pemula",
+      "level": 3,
+      "hp": 80,
+      "attack": 10,
+      "defense": 6,
+      "exp": 35,
+      "drops": ["pirate_coin", "rum"]
+    },
+    "marine_trainee": {
+      "name": "👮 Marinir Pelatih",
+      "level": 5,
+      "hp": 100,
+      "attack": 12,
+      "defense": 8,
+      "exp": 45,
+      "drops": ["marine_badge", "training_manual"]
+    },
+    "axe_hand": {
+      "name": "🪓 Tangan Kapak",
+      "level": 6,
+      "hp": 120,
+      "attack": 15,
+      "defense": 10,
+      "exp": 50,
+      "drops": ["steel_axe", "iron_plate"]
+    },
+    "corrupt_marine": {
+      "name": "🦹‍♂️ Marinir Korup",
+      "level": 7,
+      "hp": 130,
+      "attack": 16,
+      "defense": 12,
+      "exp": 55,
+      "drops": ["bribe_money", "corrupt_badge"]
+    },
+    "helmeppo": {
+      "name": "👑 Helmeppo",
+      "level": 8,
+      "hp": 150,
+      "attack": 18,
+      "defense": 15,
+      "exp": 70,
+      "drops": ["golden_sword", "fancy_clothes"]
+    },
+    "morgan": {
+      "name": "💀 Kapten Morgan",
+      "level": 10,
+      "hp": 200,
+      "attack": 25,
+      "defense": 20,
+      "exp": 100,
+      "drops": ["morgan_axe", "captain_coat"]
+    },
+    "buggy_pirate": {
+      "name": "🤡 Anak Buah Buggy",
+      "level": 10,
+      "hp": 160,
+      "attack": 20,
+      "defense": 15,
+      "exp": 75,
+      "drops": ["circus_knife", "red_nose"]
+    },
+    "mohji_richie": {
+      "name": "🦁 Mohji & Richie",
+      "level": 12,
+      "hp": 180,
+      "attack": 22,
+      "defense": 18,
+      "exp": 85,
+      "drops": ["lion_fang", "beast_tamer_whip"]
+    },
+    "cabaji": {
+      "name": "🎪 Cabaji",
+      "level": 13,
+      "hp": 190,
+      "attack": 23,
+      "defense": 19,
+      "exp": 90,
+      "drops": ["acrobat_sword", "unicycle"]
+    },
+    "buggy": {
+      "name": "🃏 Buggy si Badut",
+      "level": 15,
+      "hp": 250,
+      "attack": 30,
+      "defense": 25,
+      "exp": 120,
+      "drops": ["bara_bara_fruit", "buggy_cape"]
+    },
+    "black_cat_pirate": {
+      "name": "🐱‍👤 Bajak Laut Kucing Hitam",
+      "level": 15,
+      "hp": 200,
+      "attack": 25,
+      "defense": 20,
+      "exp": 95,
+      "drops": ["cat_claw", "black_flag"]
+    },
+    "sham": {
+      "name": "😺 Sham",
+      "level": 16,
+      "hp": 210,
+      "attack": 26,
+      "defense": 21,
+      "exp": 100,
+      "drops": ["cat_bell", "stealth_boots"]
+    },
+    "buchi": {
+      "name": "😾 Buchi",
+      "level": 16,
+      "hp": 220,
+      "attack": 27,
+      "defense": 22,
+      "exp": 100,
+      "drops": ["heavy_paw", "cat_armor"]
+    },
+    "jango": {
+      "name": "🎩 Jango",
+      "level": 17,
+      "hp": 230,
+      "attack": 28,
+      "defense": 23,
+      "exp": 110,
+      "drops": ["hypno_ring", "chakram"]
+    },
+    "kuro": {
+      "name": "👓 Kuro",
+      "level": 20,
+      "hp": 300,
+      "attack": 35,
+      "defense": 30,
+      "exp": 150,
+      "drops": ["cat_claws", "kuro_glasses"]
+    },
+    "cook_pirate": {
+      "name": "👨‍🍳 Bajak Laut Koki",
+      "level": 20,
+      "hp": 250,
+      "attack": 30,
+      "defense": 25,
+      "exp": 120,
+      "drops": ["kitchen_knife", "spice_set"]
+    },
+    "street_thug": {
+      "name": "🦹 Preman Jalanan",
+      "level": 25,
+      "hp": 280,
+      "attack": 32,
+      "defense": 28,
+      "exp": 130,
+      "drops": ["brass_knuckles", "leather_jacket"]
+    },
+    "corrupt_merchant": {
+      "name": "🤑 Pedagang Licik",
+      "level": 26,
+      "hp": 290,
+      "attack": 33,
+      "defense": 29,
+      "exp": 135,
+      "drops": ["fake_berry", "merchant_list"]
+    },
+    "bounty_hunter": {
+      "name": "🎯 Pemburu Hadiah",
+      "level": 27,
+      "hp": 300,
+      "attack": 35,
+      "defense": 30,
+      "exp": 140,
+      "drops": ["wanted_poster", "hunter_badge"]
+    },
+    "smoker": {
+      "name": "💨 Kapten Smoker",
+      "level": 30,
+      "hp": 400,
+      "attack": 45,
+      "defense": 40,
+      "exp": 200,
+      "drops": ["smoke_fruit", "justice_coat"]
+    },
+    "fishman_grunt": {
+      "name": "🐟 Anak Buah Arlong",
+      "level": 30,
+      "hp": 350,
+      "attack": 40,
+      "defense": 35,
+      "exp": 160,
+      "drops": ["fish_scale", "water_pearl"]
+    },
+    "chu": {
+      "name": "💦 Chu",
+      "level": 31,
+      "hp": 360,
+      "attack": 42,
+      "defense": 36,
+      "exp": 165,
+      "drops": ["water_gun", "fish_teeth"]
+    },
+    "kuroobi": {
+      "name": "🥋 Kuroobi",
+      "level": 32,
+      "hp": 370,
+      "attack": 44,
+      "defense": 38,
+      "exp": 170,
+      "drops": ["karate_gi", "ray_fin"]
+    },
+    "hatchan": {
+      "name": "🐙 Hatchan",
+      "level": 33,
+      "hp": 380,
+      "attack": 46,
+      "defense": 39,
+      "exp": 175,
+      "drops": ["six_swords", "takoyaki_set"]
+    },
+    "arlong": {
+      "name": "🦈 Arlong",
+      "level": 35,
+      "hp": 450,
+      "attack": 52,
+      "defense": 45,
+      "exp": 250,
+      "drops": ["saw_nose", "shark_tooth"]
+    },
+    "mohji": {
+      "name": "🦁 Mohji",
+      "level": 28,
+      "hp": 320,
+      "attack": 38,
+      "defense": 32,
+      "exp": 145,
+      "drops": ["beast_whip", "lion_mane"]
+    },
+    "alvida": {
+      "name": "👸 Alvida",
+      "level": 25,
+      "hp": 300,
+      "attack": 35,
+      "defense": 40,
+      "exp": 130,
+      "drops": ["iron_mace", "slip_fruit"]
+    },
+    "pearl": {
+      "name": "🛡️ Pearl",
+      "level": 34,
+      "hp": 400,
+      "attack": 43,
+      "defense": 50,
+      "exp": 180,
+      "drops": ["pearl_shield", "fire_pearl"]
+    },
+    "gin": {
+      "name": "😈 Gin",
+      "level": 35,
+      "hp": 420,
+      "attack": 48,
+      "defense": 42,
+      "exp": 190,
+      "drops": ["tonfa", "battle_commander_coat"]
+    },
+    "don_krieg": {
+      "name": "🎭 Don Krieg",
+      "level": 37,
+      "hp": 480,
+      "attack": 54,
+      "defense": 48,
+      "exp": 260,
+      "drops": ["poison_gas", "wootz_steel_armor"]
+    },
+    "johnny": {
+      "name": "🗡️ Johnny",
+      "level": 28,
+      "hp": 310,
+      "attack": 36,
+      "defense": 31,
+      "exp": 140,
+      "drops": ["sunglasses", "bounty_book"]
+    },
+    "yosaku": {
+      "name": "⚔️ Yosaku",
+      "level": 28,
+      "hp": 310,
+      "attack": 36,
+      "defense": 31,
+      "exp": 140,
+      "drops": ["bandana", "hunting_sword"]
+    },
+    "nezumi": {
+      "name": "🐀 Nezumi",
+      "level": 29,
+      "hp": 320,
+      "attack": 35,
+      "defense": 33,
+      "exp": 145,
+      "drops": ["marine_coat", "bribe_money"]
+    },
+    "snow_beast": {
+      "name": "❄️ Binatang Salju",
+      "level": 35,
+      "hp": 400,
+      "attack": 48,
+      "defense": 42,
+      "exp": 180,
+      "drops": ["winter_fur", "ice_crystal"]
+    },
+    "lapahn": {
+      "name": "🐰 Lapahn",
+      "level": 36,
+      "hp": 410,
+      "attack": 50,
+      "defense": 44,
+      "exp": 185,
+      "drops": ["rabbit_meat", "snow_boots"]
+    },
+    "wapol_soldier": {
+      "name": "🤖 Tentara Wapol",
+      "level": 37,
+      "hp": 420,
+      "attack": 52,
+      "defense": 46,
+      "exp": 190,
+      "drops": ["metal_piece", "tin_plate"]
+    },
+    "chess": {
+      "name": "♟️ Chess",
+      "level": 38,
+      "hp": 430,
+      "attack": 54,
+      "defense": 48,
+      "exp": 195,
+      "drops": ["chess_piece", "strategy_book"]
+    },
+    "wapol": {
+      "name": "🤴 Wapol",
+      "level": 40,
+      "hp": 600,
+      "attack": 65,
+      "defense": 60,
+      "exp": 300,
+      "drops": ["munch_fruit", "crown"]
+    },
+    "sky_warrior": {
+      "name": "⚔️ Prajurit Langit",
+      "level": 25,
+      "hp": 300,
+      "attack": 35,
+      "defense": 30,
+      "exp": 150,
+      "drops": ["cloud_cotton", "sky_stone"]
+    },
+    "thunder_beast": {
+      "name": "⚡ Monster Petir",
+      "level": 30,
+      "hp": 350,
+      "attack": 40,
+      "defense": 35,
+      "exp": 180,
+      "drops": ["thunder_crystal", "storm_crystal"]
+    },
+    "sky_sheep": {
+      "name": "🐑 Domba Langit",
+      "level": 15,
+      "hp": 200,
+      "attack": 20,
+      "defense": 25,
+      "exp": 100,
+      "drops": ["cloud_wool", "sky_bell"]
+    },
+    "tashigi": {
+      "name": "⚔️ Tashigi",
+      "level": 38,
+      "hp": 440,
+      "attack": 50,
+      "defense": 45,
+      "exp": 200,
+      "drops": ["shigure", "marine_glasses"]
+    },
+    "miss_monday": {
+      "name": "💪 Miss Monday",
+      "level": 39,
+      "hp": 450,
+      "attack": 52,
+      "defense": 47,
+      "exp": 210,
+      "drops": ["brass_knuckles_plus", "strength_drink"]
+    },
+    "mr_9": {
+      "name": "🤴 Mr. 9",
+      "level": 39,
+      "hp": 445,
+      "attack": 51,
+      "defense": 46,
+      "exp": 205,
+      "drops": ["metal_bat", "crown_weapon"]
+    },
+    "miss_wednesday": {
+      "name": "👸 Miss Wednesday",
+      "level": 39,
+      "hp": 440,
+      "attack": 50,
+      "defense": 45,
+      "exp": 205,
+      "drops": ["peacock_slasher", "perfume"]
+    },
+    "mr_8": {
+      "name": "🎷 Mr. 8",
+      "level": 40,
+      "hp": 460,
+      "attack": 53,
+      "defense": 48,
+      "exp": 215,
+      "drops": ["saxophone_gun", "curly_hair"]
+    },
+    "miss_valentine": {
+      "name": "☂️ Miss Valentine",
+      "level": 41,
+      "hp": 470,
+      "attack": 54,
+      "defense": 49,
+      "exp": 220,
+      "drops": ["kilo_fruit", "yellow_umbrella"]
+    },
+    "mr_5": {
+      "name": "💥 Mr. 5",
+      "level": 42,
+      "hp": 480,
+      "attack": 56,
+      "defense": 50,
+      "exp": 225,
+      "drops": ["bomb_fruit", "flick_gun"]
+    },
+    "dorry": {
+      "name": "🗡️ Dorry",
+      "level": 45,
+      "hp": 600,
+      "attack": 65,
+      "defense": 60,
+      "exp": 300,
+      "drops": ["giant_sword", "warrior_helmet"]
+    },
+    "brogy": {
+      "name": "🪓 Brogy",
+      "level": 45,
+      "hp": 600,
+      "attack": 65,
+      "defense": 60,
+      "exp": 300,
+      "drops": ["giant_axe", "viking_shield"]
+    },
+    "mr_3": {
+      "name": "🕯️ Mr. 3",
+      "level": 43,
+      "hp": 490,
+      "attack": 57,
+      "defense": 52,
+      "exp": 230,
+      "drops": ["wax_fruit", "candle_set"]
+    },
+    "miss_goldenweek": {
+      "name": "🎨 Miss Goldenweek",
+      "level": 41,
+      "hp": 450,
+      "attack": 51,
+      "defense": 48,
+      "exp": 220,
+      "drops": ["color_palette", "paint_brush"]
+    },
+    "kuromarimo": {
+      "name": "🎱 Kuromarimo",
+      "level": 39,
+      "hp": 440,
+      "attack": 53,
+      "defense": 47,
+      "exp": 200,
+      "drops": ["afro_ball", "static_glove"]
+    },
+    "dalton": {
+      "name": "🐃 Dalton",
+      "level": 42,
+      "hp": 520,
+      "attack": 58,
+      "defense": 54,
+      "exp": 240,
+      "drops": ["bison_fruit", "guard_spade"]
+    },
+    "robson": {
+      "name": "🏃 Robson",
+      "level": 38,
+      "hp": 430,
+      "attack": 49,
+      "defense": 45,
+      "exp": 195,
+      "drops": ["running_shoes", "delivery_bag"]
+    },
+    "dragon_small": {
+      "name": "🐲 Naga Kecil",
+      "level": 35,
+      "hp": 400,
+      "attack": 45,
+      "defense": 40,
+      "exp": 200,
+      "drops": ["dragon_bone", "dragon_scale"]
+    },
+    "devil_beast": {
+      "name": "😈 Monster Iblis",
+      "level": 40,
+      "hp": 450,
+      "attack": 50,
+      "defense": 45,
+      "exp": 250,
+      "drops": ["devil_ore", "cursed_metal"]
+    },
+    "mermaid_guard": {
+      "name": "🧜‍♀️ Penjaga Duyung",
+      "level": 28,
+      "hp": 320,
+      "attack": 38,
+      "defense": 32,
+      "exp": 160,
+      "drops": ["mermaid_scale", "coral_crystal"]
+    },
+    "sky_knight": {
+      "name": "🛡️ Ksatria Langit",
+      "level": 32,
+      "hp": 380,
+      "attack": 42,
+      "defense": 38,
+      "exp": 190,
+      "drops": ["sky_stone", "celestial_gold"]
+    },
+    "cursed_pirate": {
+      "name": "☠️ Bajak Laut Terkutuk",
+      "level": 38,
+      "hp": 420,
+      "attack": 48,
+      "defense": 42,
+      "exp": 220,
+      "drops": ["cursed_metal", "shadow_essence"]
+    },
+    "fire_bird": {
+      "name": "🔥 Burung Api",
+      "level": 45,
+      "hp": 480,
+      "attack": 55,
+      "defense": 48,
+      "exp": 280,
+      "drops": ["phoenix_feather", "storm_crystal"]
+    },
+    "sky_fish": {
+      "name": "🐠 Ikan Langit",
+      "level": 20,
+      "hp": 250,
+      "attack": 28,
+      "defense": 25,
+      "exp": 120,
+      "drops": ["sea_cloud", "fish_scale"]
+    },
+    "forest_guardian": {
+      "name": "🌳 Penjaga Hutan",
+      "level": 36,
+      "hp": 400,
+      "attack": 44,
+      "defense": 40,
+      "exp": 210,
+      "drops": ["ancient_wood", "sacred_vine"]
+    },
+    "coral_fish": {
+      "name": "🐟 Ikan Karang",
+      "level": 22,
+      "hp": 280,
+      "attack": 30,
+      "defense": 28,
+      "exp": 130,
+      "drops": ["coral_crystal", "fish_scale"]
+    },
+    "void_walker": {
+      "name": "🌌 Penjelajah Void",
+      "level": 50,
+      "hp": 550,
+      "attack": 60,
+      "defense": 55,
+      "exp": 300,
+      "drops": ["void_matter", "astral_dust"]
+    },
+    "sky_noble": {
+      "name": "👑 Bangsawan Langit",
+      "level": 42,
+      "hp": 460,
+      "attack": 52,
+      "defense": 46,
+      "exp": 260,
+      "drops": ["celestial_gold", "sky_stone"]
+    },
+    "shadow_beast": {
+      "name": "👻 Monster Bayangan",
+      "level": 48,
+      "hp": 520,
+      "attack": 58,
+      "defense": 52,
+      "exp": 290,
+      "drops": ["shadow_essence", "void_matter"]
+    },
+    "sea_king": {
+      "name": "👑 Raja Laut",
+      "level": 55,
+      "hp": 600,
+      "attack": 65,
+      "defense": 60,
+      "exp": 350,
+      "drops": ["sea_emperor_bone", "sea_king_scale"]
+    },
+    "storm_bird": {
+      "name": "🌪️ Burung Badai",
+      "level": 46,
+      "hp": 500,
+      "attack": 56,
+      "defense": 50,
+      "exp": 270,
+      "drops": ["storm_crystal", "phoenix_feather"]
+    },
+    "forest_spirit": {
+      "name": "🌿 Roh Hutan",
+      "level": 34,
+      "hp": 360,
+      "attack": 40,
+      "defense": 36,
+      "exp": 180,
+      "drops": ["sacred_vine", "ancient_wood"]
+    },
+    "young_dragon": {
+      "name": "🐉 Naga Muda",
+      "level": 52,
+      "hp": 580,
+      "attack": 62,
+      "defense": 58,
+      "exp": 320,
+      "drops": ["dragon_scale", "dragon_bone"]
+    },
+    "star_beast": {
+      "name": "⭐ Monster Bintang",
+      "level": 58,
+      "hp": 650,
+      "attack": 70,
+      "defense": 65,
+      "exp": 380,
+      "drops": ["astral_dust", "celestial_gold"]
+    },
+    "marine_captain_tashigi": {
+      "name": "⚔️ Kapten Tashigi",
+      "level": 35,
+      "hp": 420,
+      "attack": 48,
+      "defense": 42,
+      "exp": 180,
+      "drops": ["shigure_sword", "marine_glasses"]
+    },
+    "vice_admiral_momonga": {
+      "name": "🗡️ Wakil Laksamana Momonga",
+      "level": 45,
+      "hp": 550,
+      "attack": 65,
+      "defense": 58,
+      "exp": 250,
+      "drops": ["marine_sword", "justice_badge"]
+    },
+    "vice_admiral_doberman": {
+      "name": "⚔️ Wakil Laksamana Doberman",
+      "level": 46,
+      "hp": 560,
+      "attack": 67,
+      "defense": 60,
+      "exp": 260,
+      "drops": ["marine_coat", "justice_sword"]
+    },
+    "vice_admiral_onigumo": {
+      "name": "🕷️ Wakil Laksamana Onigumo",
+      "level": 47,
+      "hp": 570,
+      "attack": 69,
+      "defense": 62,
+      "exp": 270,
+      "drops": ["spider_blade", "marine_cape"]
+    },
+    "vice_admiral_strawberry": {
+      "name": "🗡️ Wakil Laksamana Strawberry",
+      "level": 48,
+      "hp": 580,
+      "attack": 71,
+      "defense": 64,
+      "exp": 280,
+      "drops": ["dual_sword", "marine_medal"]
+    },
+    "admiral_fujitora": {
+      "name": "👁️ Laksamana Fujitora",
+      "level": 70,
+      "hp": 1200,
+      "attack": 120,
+      "defense": 100,
+      "exp": 600,
+      "drops": ["gravity_sword", "admiral_coat"]
+    },
+    "admiral_ryokugyu": {
+      "name": "🌿 Laksamana Ryokugyu",
+      "level": 70,
+      "hp": 1200,
+      "attack": 120,
+      "defense": 100,
+      "exp": 600,
+      "drops": ["forest_blade", "admiral_ring"]
+    },
+    "admiral_kizaru": {
+      "name": "✨ Laksamana Kizaru",
+      "level": 75,
+      "hp": 1300,
+      "attack": 130,
+      "defense": 110,
+      "exp": 650,
+      "drops": ["light_sword", "yellow_suit"]
+    },
+    "fleet_admiral_akainu": {
+      "name": "🌋 Laksamana Armada Akainu",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["magma_gauntlet", "fleet_coat"]
+    },
+    "admiral_aokiji": {
+      "name": "❄️ Laksamana Aokiji",
+      "level": 75,
+      "hp": 1300,
+      "attack": 130,
+      "defense": 110,
+      "exp": 650,
+      "drops": ["ice_blade", "ice_bike"]
+    },
+    "kaido": {
+      "name": "👑 Kaido",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["kaido_sword", "kaido_coat"]
+    },
+    "titan_eren": {
+      "name": "🔥 Attack Titan",
+      "level": 75,
+      "hp": 1400,
+      "attack": 140,
+      "defense": 120,
+      "exp": 700,
+      "drops": ["titan_crystal", "freedom_wings"]
+    },
+    "demon_muzan": {
+      "name": "🌙 Muzan Kibutsuji",
+      "level": 78,
+      "hp": 1450,
+      "attack": 145,
+      "defense": 125,
+      "exp": 750,
+      "drops": ["blood_art_scroll", "demon_robe"]
+    },
+    "dragon_acnologia": {
+      "name": "🐉 Acnologia",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["dragon_scale", "chaos_wing"]
+    },
+    "madara_uchiha": {
+      "name": "👁️ Madara Uchiha",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["sharingan_scroll", "uchiha_armor"]
+    },
+    "all_might": {
+      "name": "💪 All Might",
+      "level": 79,
+      "hp": 1480,
+      "attack": 148,
+      "defense": 128,
+      "exp": 780,
+      "drops": ["hero_cape", "plus_ultra_gloves"]
+    },
+    "meruem": {
+      "name": "♟️ Meruem",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["royal_crown", "chimera_wings"]
+    },
+    "escanor": {
+      "name": "☀️ Escanor",
+      "level": 78,
+      "hp": 1450,
+      "attack": 145,
+      "defense": 125,
+      "exp": 750,
+      "drops": ["divine_axe", "lion_pride"]
+    },
+    "yami_sukehiro": {
+      "name": "⚔️ Yami Sukehiro",
+      "level": 76,
+      "hp": 1420,
+      "attack": 142,
+      "defense": 122,
+      "exp": 720,
+      "drops": ["dark_katana", "bull_cape"]
+    },
+    "anos_voldigoad": {
+      "name": "👿 Anos Voldigoad",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["demon_sword", "tyranny_crown"]
+    },
+    "rimuru_tempest": {
+      "name": "🌀 Rimuru Tempest",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["slime_core", "storm_cloak"]
+    },
+    "saitama": {
+      "name": "👨‍🦲 Saitama",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["hero_gloves", "casual_cape"]
+    },
+    "gojo_satoru": {
+      "name": "👁️ Gojo Satoru",
+      "level": 79,
+      "hp": 1480,
+      "attack": 148,
+      "defense": 128,
+      "exp": 780,
+      "drops": ["infinity_blindfold", "cursed_robe"]
+    },
+    "sukuna": {
+      "name": "👹 Ryomen Sukuna",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["cursed_fingers", "demon_tattoo"]
+    },
+    "zeno_zoldyck": {
+      "name": "⚡ Zeno Zoldyck",
+      "level": 77,
+      "hp": 1440,
+      "attack": 144,
+      "defense": 124,
+      "exp": 740,
+      "drops": ["dragon_crest", "assassin_robe"]
+    },
+    "netero": {
+      "name": "🙏 Isaac Netero",
+      "level": 78,
+      "hp": 1460,
+      "attack": 146,
+      "defense": 126,
+      "exp": 760,
+      "drops": ["buddha_staff", "chairman_robe"]
+    },
+    "yhwach": {
+      "name": "👑 Yhwach",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["almighty_crown", "quincy_cloak"]
+    },
+    "aizen": {
+      "name": "🦋 Sosuke Aizen",
+      "level": 79,
+      "hp": 1480,
+      "attack": 148,
+      "defense": 128,
+      "exp": 780,
+      "drops": ["hogyoku", "arrancar_robe"]
+    },
+    "pain": {
+      "name": "👁️ Pain",
+      "level": 77,
+      "hp": 1440,
+      "attack": 144,
+      "defense": 124,
+      "exp": 740,
+      "drops": ["rinnegan_scroll", "akatsuki_cloak"]
+    },
+    "kaguya": {
+      "name": "🌙 Kaguya Otsutsuki",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["rinne_sharingan", "celestial_robe"]
+    },
+    "yoriichi": {
+      "name": "☀️ Yoriichi Tsugikuni",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["sun_katana", "breath_earrings"]
+    },
+    "toji_fushiguro": {
+      "name": "🗡️ Toji Fushiguro",
+      "level": 76,
+      "hp": 1420,
+      "attack": 142,
+      "defense": 122,
+      "exp": 720,
+      "drops": ["cursed_spear", "assassin_suit"]
+    },
+    "feitan": {
+      "name": "⚔️ Feitan",
+      "level": 75,
+      "hp": 1400,
+      "attack": 140,
+      "defense": 120,
+      "exp": 700,
+      "drops": ["pain_umbrella", "spider_coat"]
+    },
+    "ichigo_kurosaki": {
+      "name": "⚔️ Ichigo Kurosaki",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["zangetsu", "bankai_robe"]
+    },
+    "naruto_sage": {
+      "name": "🦊 Sage Naruto",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["sage_scroll", "kyuubi_cloak"]
+    },
+    "sasuke_uchiha": {
+      "name": "⚡ Sasuke Uchiha",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["kusanagi", "rinnegan_eye"]
+    },
+    "tatsumaki": {
+      "name": "🌪️ Tatsumaki",
+      "level": 78,
+      "hp": 1450,
+      "attack": 145,
+      "defense": 125,
+      "exp": 750,
+      "drops": ["psychic_orb", "esper_dress"]
+    },
+    "garou": {
+      "name": "👹 Cosmic Garou",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["cosmic_fist", "monster_core"]
+    },
+    "yuno": {
+      "name": "🌟 Yuno",
+      "level": 77,
+      "hp": 1440,
+      "attack": 144,
+      "defense": 124,
+      "exp": 740,
+      "drops": ["sylph_grimoire", "spade_crown"]
+    },
+    "asta": {
+      "name": "⚔️ Asta",
+      "level": 77,
+      "hp": 1440,
+      "attack": 144,
+      "defense": 124,
+      "exp": 740,
+      "drops": ["anti_magic_sword", "black_bull_robe"]
+    },
+    "julius_novachrono": {
+      "name": "⌛ Julius Novachrono",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["time_grimoire", "wizard_cape"]
+    },
+    "zenon": {
+      "name": "💀 Zenon Zogratis",
+      "level": 78,
+      "hp": 1450,
+      "attack": 145,
+      "defense": 125,
+      "exp": 750,
+      "drops": ["bone_sword", "devil_heart"]
+    },
+    "itadori_yuji": {
+      "name": "👊 Yuji Itadori",
+      "level": 76,
+      "hp": 1420,
+      "attack": 142,
+      "defense": 122,
+      "exp": 720,
+      "drops": ["cursed_band", "jujutsu_uniform"]
+    },
+    "megumi_fushiguro": {
+      "name": "🐺 Megumi Fushiguro",
+      "level": 76,
+      "hp": 1420,
+      "attack": 142,
+      "defense": 122,
+      "exp": 720,
+      "drops": ["divine_dogs", "shadow_orb"]
+    },
+    "yamamoto": {
+      "name": "🔥 Genryusai Yamamoto",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["ryujin_jakka", "captain_haori"]
+    },
+    "ulquiorra": {
+      "name": "🦇 Ulquiorra Cifer",
+      "level": 78,
+      "hp": 1450,
+      "attack": 145,
+      "defense": 125,
+      "exp": 750,
+      "drops": ["murcielago", "espada_uniform"]
+    },
+    "hashirama": {
+      "name": "🌳 Hashirama Senju",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["wood_staff", "hokage_necklace"]
+    },
+    "tobirama": {
+      "name": "💧 Tobirama Senju",
+      "level": 79,
+      "hp": 1480,
+      "attack": 148,
+      "defense": 128,
+      "exp": 780,
+      "drops": ["water_blade", "hokage_armor"]
+    },
+    "minato": {
+      "name": "⚡ Minato Namikaze",
+      "level": 79,
+      "hp": 1480,
+      "attack": 148,
+      "defense": 128,
+      "exp": 780,
+      "drops": ["flying_kunai", "hokage_cloak"]
+    },
+    "kokushibo": {
+      "name": "🌙 Kokushibo",
+      "level": 79,
+      "hp": 1480,
+      "attack": 148,
+      "defense": 128,
+      "exp": 780,
+      "drops": ["moon_sword", "upper_uniform"]
+    },
+    "doflamingo": {
+      "name": "🕶️ Doflamingo",
+      "level": 77,
+      "hp": 1440,
+      "attack": 144,
+      "defense": 124,
+      "exp": 740,
+      "drops": ["string_coat", "king_crown"]
+    },
+    "whitebeard": {
+      "name": "👊 Whitebeard",
+      "level": 80,
+      "hp": 1500,
+      "attack": 150,
+      "defense": 130,
+      "exp": 800,
+      "drops": ["gura_blade", "captain_coat"]
+    },
+    "zeno": {
+      "name": "👑 Zeno",
+      "level": 95,
+      "hp": 2500,
+      "attack": 280,
+      "defense": 250,
+      "exp": 1500,
+      "drops": ["dragon_king_crown", "omni_orb"]
+    },
+    "grand_priest": {
+      "name": "😇 Grand Priest",
+      "level": 98,
+      "hp": 2800,
+      "attack": 300,
+      "defense": 280,
+      "exp": 1800,
+      "drops": ["angel_staff", "divine_robe"]
+    },
+    "ultra_instinct_goku": {
+      "name": "⚡ Ultra Instinct Goku",
+      "level": 95,
+      "hp": 2600,
+      "attack": 290,
+      "defense": 260,
+      "exp": 1600,
+      "drops": ["ultra_gi", "divine_essence"]
+    },
+    "cosmic_armor_superman": {
+      "name": "🦸‍♂️ Cosmic Armor Superman",
+      "level": 99,
+      "hp": 3000,
+      "attack": 320,
+      "defense": 300,
+      "exp": 2000,
+      "drops": ["cosmic_armor", "plot_manipulator"]
+    },
+    "anti_spiral": {
+      "name": "🌌 Anti-Spiral",
+      "level": 96,
+      "hp": 2700,
+      "attack": 285,
+      "defense": 270,
+      "exp": 1700,
+      "drops": ["spiral_nemesis", "probability_manipulator"]
+    },
+    "featherine": {
+      "name": "📚 Featherine Augustus Aurora",
+      "level": 100,
+      "hp": 3500,
+      "attack": 350,
+      "defense": 330,
+      "exp": 2500,
+      "drops": ["creator_quill", "meta_crown"]
+    },
+    "rimuru_eos": {
+      "name": "⭐ True Dragon Rimuru",
+      "level": 97,
+      "hp": 2900,
+      "attack": 310,
+      "defense": 290,
+      "exp": 1900,
+      "drops": ["void_god_sword", "turn_null_core"]
+    },
+    "anos_voldigoad_full": {
+      "name": "👿 True Demon King Anos",
+      "level": 96,
+      "hp": 2800,
+      "attack": 300,
+      "defense": 280,
+      "exp": 1800,
+      "drops": ["venuzdonoa", "silver_sea_core"]
+    },
+    "yogiri": {
+      "name": "💀 Yogiri Takatou",
+      "level": 99,
+      "hp": 3200,
+      "attack": 330,
+      "defense": 310,
+      "exp": 2200,
+      "drops": ["instant_death", "concept_eraser"]
+    },
+    "hajun": {
+      "name": "🌑 Hajun",
+      "level": 98,
+      "hp": 3000,
+      "attack": 320,
+      "defense": 300,
+      "exp": 2000,
+      "drops": ["mandala_blade", "demon_crown"]
+    },
+    "kami_tenchi": {
+      "name": "🌟 Kami Tenchi",
+      "level": 100,
+      "hp": 3500,
+      "attack": 350,
+      "defense": 330,
+      "exp": 2500,
+      "drops": ["creation_orb", "choushin_crown"]
+    },
+    "mercurius": {
+      "name": "⚜️ Mercurius",
+      "level": 97,
+      "hp": 2900,
+      "attack": 310,
+      "defense": 290,
+      "exp": 1900,
+      "drops": ["mercury_throne", "divine_spear"]
+    },
+    "elder_god_demonbane": {
+      "name": "🤖 Elder God Demonbane",
+      "level": 98,
+      "hp": 3100,
+      "attack": 325,
+      "defense": 305,
+      "exp": 2100,
+      "drops": ["elder_sign", "chaos_blade"]
+    },
+    "lambda_experience": {
+      "name": "🎲 Lambda Experience",
+      "level": 96,
+      "hp": 2800,
+      "attack": 300,
+      "defense": 280,
+      "exp": 1800,
+      "drops": ["certainty_dice", "miracle_crown"]
+    },
+    "kakashi_hatake": {
+      "name": "👑 Kakashi Hatake",
+      "level": 95,
+      "hp": 2600,
+      "attack": 290,
+      "defense": 260,
+      "exp": 1600,
+      "drops": ["shadow_clone", "kakashi_robe"]
+    },
+    "demon_lord": {
+      "name": "👿 Demon Lord",
+      "level": 100,
+      "hp": 3800,
+      "attack": 380,
+      "defense": 340,
+      "exp": 2800,
+      "drops": ["demon_sword", "hell_crystal"]
+    },
+    "ancient_golem": {
+      "name": "🗿 Ancient Golem",
+      "level": 110,
+      "hp": 4200,
+      "attack": 420,
+      "defense": 380,
+      "exp": 3000,
+      "drops": ["golem_core", "ancient_stone"]
+    },
+    "storm_dragon": {
+      "name": "⚡ Storm Dragon",
+      "level": 120,
+      "hp": 4600,
+      "attack": 460,
+      "defense": 420,
+      "exp": 3200,
+      "drops": ["lightning_scale", "storm_heart"]
+    },
+    "frost_giant": {
+      "name": "❄️ Frost Giant",
+      "level": 130,
+      "hp": 5000,
+      "attack": 500,
+      "defense": 460,
+      "exp": 3400,
+      "drops": ["frost_hammer", "ice_crystal"]
+    },
+    "shadow_assassin": {
+      "name": "🗡️ Shadow Assassin",
+      "level": 140,
+      "hp": 5400,
+      "attack": 540,
+      "defense": 500,
+      "exp": 3600,
+      "drops": ["shadow_dagger", "void_cloak"]
+    },
+    "phoenix_lord": {
+      "name": "🔥 Phoenix Lord",
+      "level": 150,
+      "hp": 5800,
+      "attack": 580,
+      "defense": 540,
+      "exp": 3800,
+      "drops": ["phoenix_feather", "eternal_flame"]
+    },
+    "celestial_warrior": {
+      "name": "⭐ Celestial Warrior",
+      "level": 160,
+      "hp": 6200,
+      "attack": 620,
+      "defense": 580,
+      "exp": 4000,
+      "drops": ["star_blade", "heaven_armor"]
+    },
+    "chaos_knight": {
+      "name": "🌪️ Chaos Knight",
+      "level": 170,
+      "hp": 6600,
+      "attack": 660,
+      "defense": 620,
+      "exp": 4200,
+      "drops": ["chaos_sword", "disorder_plate"]
+    },
+    "divine_beast": {
+      "name": "🦁 Divine Beast",
+      "level": 180,
+      "hp": 7000,
+      "attack": 700,
+      "defense": 660,
+      "exp": 4400,
+      "drops": ["divine_fang", "sacred_hide"]
+    },
+    "elder_lich": {
+      "name": "💀 Elder Lich",
+      "level": 190,
+      "hp": 7400,
+      "attack": 740,
+      "defense": 700,
+      "exp": 4600,
+      "drops": ["death_staff", "soul_crystal"]
+    },
+    "titan_warrior": {
+      "name": "🗡️ Titan Warrior",
+      "level": 200,
+      "hp": 7800,
+      "attack": 780,
+      "defense": 740,
+      "exp": 4800,
+      "drops": ["titan_blade", "giant_armor"]
+    },
+    "dragon_emperor": {
+      "name": "🐲 Dragon Emperor",
+      "level": 210,
+      "hp": 8200,
+      "attack": 820,
+      "defense": 780,
+      "exp": 5000,
+      "drops": ["emperor_scale", "dragon_crown"]
+    },
+    "void_mage": {
+      "name": "🌌 Void Mage",
+      "level": 220,
+      "hp": 8600,
+      "attack": 860,
+      "defense": 820,
+      "exp": 5200,
+      "drops": ["void_staff", "null_crystal"]
+    },
+    "demon_king": {
+      "name": "👑 Demon King",
+      "level": 230,
+      "hp": 9000,
+      "attack": 900,
+      "defense": 860,
+      "exp": 5400,
+      "drops": ["demon_crown", "hell_stone"]
+    },
+    "cosmic_entity": {
+      "name": "🌟 Cosmic Entity",
+      "level": 240,
+      "hp": 9400,
+      "attack": 940,
+      "defense": 900,
+      "exp": 5600,
+      "drops": ["cosmic_core", "star_essence"]
+    },
+    "world_destroyer": {
+      "name": "💥 World Destroyer",
+      "level": 250,
+      "hp": 9800,
+      "attack": 980,
+      "defense": 940,
+      "exp": 5800,
+      "drops": ["destruction_orb", "world_shard"]
+    },
+    "time_lord": {
+      "name": "⌛ Time Lord",
+      "level": 245,
+      "hp": 9600,
+      "attack": 960,
+      "defense": 920,
+      "exp": 5700,
+      "drops": ["time_crystal", "eternal_watch"]
+    },
+    "elemental_king": {
+      "name": "🌈 Elemental King",
+      "level": 235,
+      "hp": 9200,
+      "attack": 920,
+      "defense": 880,
+      "exp": 5500,
+      "drops": ["elemental_crown", "primal_essence"]
+    },
+    "death_knight": {
+      "name": "☠️ Death Knight",
+      "level": 225,
+      "hp": 8800,
+      "attack": 880,
+      "defense": 840,
+      "exp": 5300,
+      "drops": ["soul_blade", "death_armor"]
+    },
+    "storm_titan": {
+      "name": "⚡ Storm Titan",
+      "level": 215,
+      "hp": 8400,
+      "attack": 840,
+      "defense": 800,
+      "exp": 5100,
+      "drops": ["thunder_hammer", "storm_plate"]
+    },
+    "shadow_dragon": {
+      "name": "🐉 Shadow Dragon",
+      "level": 205,
+      "hp": 8000,
+      "attack": 800,
+      "defense": 760,
+      "exp": 4900,
+      "drops": ["shadow_scale", "dark_crystal"]
+    },
+    "frost_queen": {
+      "name": "❄️ Frost Queen",
+      "level": 195,
+      "hp": 7600,
+      "attack": 760,
+      "defense": 720,
+      "exp": 4700,
+      "drops": ["ice_crown", "frost_heart"]
+    },
+    "chaos_demon": {
+      "name": "😈 Chaos Demon",
+      "level": 185,
+      "hp": 7200,
+      "attack": 720,
+      "defense": 680,
+      "exp": 4500,
+      "drops": ["chaos_horn", "demon_core"]
+    },
+    "celestial_dragon": {
+      "name": "🐲 Celestial Dragon",
+      "level": 175,
+      "hp": 6800,
+      "attack": 680,
+      "defense": 640,
+      "exp": 4300,
+      "drops": ["celestial_scale", "star_core"]
+    },
+    "ancient_phoenix": {
+      "name": "🦅 Ancient Phoenix",
+      "level": 155,
+      "hp": 6000,
+      "attack": 600,
+      "defense": 560,
+      "exp": 3900,
+      "drops": ["ancient_feather", "rebirth_flame"]
+    },
+    "storm_lord": {
+      "name": "⚡ Storm Lord",
+      "level": 145,
+      "hp": 5600,
+      "attack": 560,
+      "defense": 520,
+      "exp": 3700,
+      "drops": ["lightning_crown", "storm_orb"]
+    },
+    "shadow_king": {
+      "name": "👑 Shadow King",
+      "level": 135,
+      "hp": 5200,
+      "attack": 520,
+      "defense": 480,
+      "exp": 3500,
+      "drops": ["shadow_crown", "dark_orb"]
+    },
+    "frost_dragon": {
+      "name": "🐉 Frost Dragon",
+      "level": 125,
+      "hp": 4800,
+      "attack": 480,
+      "defense": 440,
+      "exp": 3300,
+      "drops": ["frost_scale", "ice_heart"]
+    },
+    "demon_prince": {
+      "name": "😈 Demon Prince",
+      "level": 115,
+      "hp": 4400,
+      "attack": 440,
+      "defense": 400,
+      "exp": 3100,
+      "drops": ["demon_blade", "hell_heart"]
+    },
+    "ancient_titan": {
+      "name": "🗿 Ancient Titan",
+      "level": 105,
+      "hp": 4000,
+      "attack": 400,
+      "defense": 360,
+      "exp": 2900,
+      "drops": ["titan_core", "ancient_crown"]
+    },
+    "void_beast": {
+      "name": "🌌 Void Beast",
+      "level": 248,
+      "hp": 9700,
+      "attack": 970,
+      "defense": 930,
+      "exp": 5750,
+      "drops": ["void_fang", "null_essence"]
+    },
+    "chaos_dragon": {
+      "name": "🐲 Chaos Dragon",
+      "level": 242,
+      "hp": 9500,
+      "attack": 950,
+      "defense": 910,
+      "exp": 5650,
+      "drops": ["chaos_scale", "dragon_heart"]
+    },
+    "celestial_emperor": {
+      "name": "👑 Celestial Emperor",
+      "level": 238,
+      "hp": 9300,
+      "attack": 930,
+      "defense": 890,
+      "exp": 5550,
+      "drops": ["celestial_crown", "emperor_soul"]
+    },
+    "storm_god": {
+      "name": "⚡ Storm God",
+      "level": 232,
+      "hp": 9100,
+      "attack": 910,
+      "defense": 870,
+      "exp": 5450,
+      "drops": ["thunder_crown", "storm_soul"]
+    },
+    "shadow_titan": {
+      "name": "🌑 Shadow Titan",
+      "level": 228,
+      "hp": 8900,
+      "attack": 890,
+      "defense": 850,
+      "exp": 5350,
+      "drops": ["shadow_core", "dark_soul"]
+    },
+    "frost_lord": {
+      "name": "❄️ Frost Lord",
+      "level": 222,
+      "hp": 8700,
+      "attack": 870,
+      "defense": 830,
+      "exp": 5250,
+      "drops": ["frost_crown", "ice_soul"]
+    },
+    "demon_emperor": {
+      "name": "👿 Demon Emperor",
+      "level": 218,
+      "hp": 8500,
+      "attack": 850,
+      "defense": 810,
+      "exp": 5150,
+      "drops": ["demon_crown", "hell_soul"]
+    },
+    "ancient_dragon": {
+      "name": "🐉 Ancient Dragon",
+      "level": 212,
+      "hp": 8300,
+      "attack": 830,
+      "defense": 790,
+      "exp": 5050,
+      "drops": ["ancient_scale", "dragon_soul"]
+    },
+    "void_lord": {
+      "name": "🌌 Void Lord",
+      "level": 208,
+      "hp": 8100,
+      "attack": 810,
+      "defense": 770,
+      "exp": 4950,
+      "drops": ["void_crown", "null_soul"]
+    },
+    "phoenix_king": {
+      "name": "🔥 Phoenix King",
+      "level": 202,
+      "hp": 7900,
+      "attack": 790,
+      "defense": 750,
+      "exp": 4850,
+      "drops": ["phoenix_crown", "fire_soul"]
+    },
+    "celestial_beast": {
+      "name": "🦁 Celestial Beast",
+      "level": 198,
+      "hp": 7700,
+      "attack": 770,
+      "defense": 730,
+      "exp": 4750,
+      "drops": ["celestial_fang", "star_soul"]
+    },
+    "chaos_lord": {
+      "name": "🌪️ Chaos Lord",
+      "level": 192,
+      "hp": 7500,
+      "attack": 750,
+      "defense": 710,
+      "exp": 4650,
+      "drops": ["chaos_crown", "disorder_soul"]
+    },
+    "divine_dragon": {
+      "name": "🐲 Divine Dragon",
+      "level": 188,
+      "hp": 7300,
+      "attack": 730,
+      "defense": 690,
+      "exp": 4550,
+      "drops": ["divine_scale", "holy_soul"]
+    },
+    "elder_demon": {
+      "name": "👿 Elder Demon",
+      "level": 182,
+      "hp": 7100,
+      "attack": 710,
+      "defense": 670,
+      "exp": 4450,
+      "drops": ["elder_horn", "demon_soul"]
+    },
+    "titan_lord": {
+      "name": "🗿 Titan Lord",
+      "level": 178,
+      "hp": 6900,
+      "attack": 690,
+      "defense": 650,
+      "exp": 4350,
+      "drops": ["titan_crown", "giant_soul"]
+    },
+    "dragon_king": {
+      "name": "🐲 Dragon King",
+      "level": 172,
+      "hp": 6700,
+      "attack": 670,
+      "defense": 630,
+      "exp": 4250,
+      "drops": ["dragon_crown", "wyrm_soul"]
+    },
+    "void_dragon": {
+      "name": "🐉 Void Dragon",
+      "level": 168,
+      "hp": 6500,
+      "attack": 650,
+      "defense": 610,
+      "exp": 4150,
+      "drops": ["void_scale", "dragon_void"]
+    },
+    "demon_dragon": {
+      "name": "🐲 Demon Dragon",
+      "level": 162,
+      "hp": 6300,
+      "attack": 630,
+      "defense": 590,
+      "exp": 4050,
+      "drops": ["demon_scale", "hell_dragon"]
+    },
+    "ancient_demon": {
+      "name": "😈 Ancient Demon",
+      "level": 158,
+      "hp": 6100,
+      "attack": 610,
+      "defense": 570,
+      "exp": 3950,
+      "drops": ["ancient_horn", "demon_relic"]
+    },
+    "storm_demon": {
+      "name": "⚡ Storm Demon",
+      "level": 152,
+      "hp": 5900,
+      "attack": 590,
+      "defense": 550,
+      "exp": 3850,
+      "drops": ["storm_horn", "lightning_soul"]
+    },
+    "shadow_demon": {
+      "name": "👻 Shadow Demon",
+      "level": 148,
+      "hp": 5700,
+      "attack": 570,
+      "defense": 530,
+      "exp": 3750,
+      "drops": ["shadow_horn", "dark_demon"]
+    },
+    "frost_demon": {
+      "name": "❄️ Frost Demon",
+      "level": 142,
+      "hp": 5500,
+      "attack": 550,
+      "defense": 510,
+      "exp": 3650,
+      "drops": ["frost_horn", "ice_demon"]
+    },
+    "chaos_beast": {
+      "name": "🦁 Chaos Beast",
+      "level": 138,
+      "hp": 5300,
+      "attack": 530,
+      "defense": 490,
+      "exp": 3550,
+      "drops": ["chaos_fang", "beast_soul"]
+    },
+    "celestial_demon": {
+      "name": "👿 Celestial Demon",
+      "level": 132,
+      "hp": 5100,
+      "attack": 510,
+      "defense": 470,
+      "exp": 3450,
+      "drops": ["celestial_horn", "star_demon"]
+    },
+    "void_titan": {
+      "name": "🗿 Void Titan",
+      "level": 128,
+      "hp": 4900,
+      "attack": 490,
+      "defense": 450,
+      "exp": 3350,
+      "drops": ["void_core", "titan_void"]
+    },
+    "phoenix_demon": {
+      "name": "🔥 Phoenix Demon",
+      "level": 122,
+      "hp": 4700,
+      "attack": 470,
+      "defense": 430,
+      "exp": 3250,
+      "drops": ["phoenix_horn", "fire_demon"]
+    },
+    "divine_titan": {
+      "name": "🗿 Divine Titan",
+      "level": 118,
+      "hp": 4500,
+      "attack": 450,
+      "defense": 410,
+      "exp": 3150,
+      "drops": ["divine_core", "holy_titan"]
+    },
+    "elder_dragon": {
+      "name": "🐲 Elder Dragon",
+      "level": 112,
+      "hp": 4300,
+      "attack": 430,
+      "defense": 390,
+      "exp": 3050,
+      "drops": ["elder_scale", "ancient_wyrm"]
+    },
+    "titan_demon": {
+      "name": "👿 Titan Demon",
+      "level": 108,
+      "hp": 4100,
+      "attack": 410,
+      "defense": 370,
+      "exp": 2950,
+      "drops": ["titan_horn", "giant_demon"]
+    },
+    "dragon_demon": {
+      "name": "🐲 Dragon Demon",
+      "level": 102,
+      "hp": 3900,
+      "attack": 390,
+      "defense": 350,
+      "exp": 2850,
+      "drops": ["dragon_horn", "wyrm_demon"]
+    },
+    "omni_god": {
+      "name": "🌌 Omnipotent God",
+      "level": 1000,
+      "hp": 1000000,
+      "attack": 100000,
+      "defense": 90000,
+      "exp": 500000,
+      "drops": ["god_essence", "creation_core"]
+    },
+    "chaos_god": {
+      "name": "💫 Chaos God",
+      "level": 900,
+      "hp": 900000,
+      "attack": 90000,
+      "defense": 80000,
+      "exp": 450000,
+      "drops": ["chaos_essence", "entropy_heart"]
+    },
+    "eternal_dragon_god": {
+      "name": "🐉 Eternal Dragon God",
+      "level": 800,
+      "hp": 800000,
+      "attack": 80000,
+      "defense": 70000,
+      "exp": 400000,
+      "drops": ["dragon_god_scale", "eternity_core"]
+    },
+    "void_god": {
+      "name": "⚫ Void God",
+      "level": 750,
+      "hp": 750000,
+      "attack": 75000,
+      "defense": 65000,
+      "exp": 375000,
+      "drops": ["void_god_essence", "nothingness_heart"]
+    },
+    "cosmic_destroyer": {
+      "name": "🌠 Cosmic Destroyer",
+      "level": 700,
+      "hp": 700000,
+      "attack": 70000,
+      "defense": 60000,
+      "exp": 350000,
+      "drops": ["universe_breaker", "cosmic_core"]
+    },
+    "reality_warper": {
+      "name": "🎭 Reality Warper",
+      "level": 650,
+      "hp": 650000,
+      "attack": 65000,
+      "defense": 55000,
+      "exp": 325000,
+      "drops": ["reality_shard", "dimension_heart"]
+    },
+    "time_god": {
+      "name": "⌛ Time God",
+      "level": 600,
+      "hp": 600000,
+      "attack": 60000,
+      "defense": 50000,
+      "exp": 300000,
+      "drops": ["chronos_heart", "time_essence"]
+    },
+    "concept_eraser": {
+      "name": "❌ Concept Eraser",
+      "level": 950,
+      "hp": 950000,
+      "attack": 95000,
+      "defense": 85000,
+      "exp": 475000,
+      "drops": ["concept_nullifier", "erasure_core"]
+    },
+    "abstract_horror": {
+      "name": "👁️ Abstract Horror",
+      "level": 850,
+      "hp": 850000,
+      "attack": 85000,
+      "defense": 75000,
+      "exp": 425000,
+      "drops": ["horror_essence", "abstract_heart"]
+    },
+    "quantum_god": {
+      "name": "⚛️ Quantum God",
+      "level": 725,
+      "hp": 725000,
+      "attack": 72500,
+      "defense": 62500,
+      "exp": 362500,
+      "drops": ["quantum_core", "probability_heart"]
+    },
+    "infinity_titan": {
+      "name": "∞ Infinity Titan",
+      "level": 675,
+      "hp": 675000,
+      "attack": 67500,
+      "defense": 57500,
+      "exp": 337500,
+      "drops": ["infinity_stone", "limitless_core"]
+    },
+    "meta_entity": {
+      "name": "📚 Meta Entity",
+      "level": 625,
+      "hp": 625000,
+      "attack": 62500,
+      "defense": 52500,
+      "exp": 312500,
+      "drops": ["meta_crystal", "story_core"]
+    },
+    "absolute_being": {
+      "name": "👑 Absolute Being",
+      "level": 975,
+      "hp": 975000,
+      "attack": 97500,
+      "defense": 87500,
+      "exp": 487500,
+      "drops": ["absolute_crown", "supreme_core"]
+    },
+    "existence_ender": {
+      "name": "💀 Existence Ender",
+      "level": 925,
+      "hp": 925000,
+      "attack": 92500,
+      "defense": 82500,
+      "exp": 462500,
+      "drops": ["existence_eraser", "void_heart"]
+    },
+    "multiverse_titan": {
+      "name": "🌌 Multiverse Titan",
+      "level": 875,
+      "hp": 875000,
+      "attack": 87500,
+      "defense": 77500,
+      "exp": 437500,
+      "drops": ["multiverse_core", "reality_heart"]
+    },
+    "dimensional_horror": {
+      "name": "🕳️ Dimensional Horror",
+      "level": 825,
+      "hp": 825000,
+      "attack": 82500,
+      "defense": 72500,
+      "exp": 412500,
+      "drops": ["horror_dimension", "space_heart"]
+    },
+    "elder_god": {
+      "name": "👁️ Elder God",
+      "level": 775,
+      "hp": 775000,
+      "attack": 77500,
+      "defense": 67500,
+      "exp": 387500,
+      "drops": ["elder_essence", "ancient_heart"]
+    },
+    "chaos_lord_supreme": {
+      "name": "🌪️ Supreme Chaos Lord",
+      "level": 990,
+      "hp": 990000,
+      "attack": 99000,
+      "defense": 89000,
+      "exp": 495000,
+      "drops": ["supreme_chaos", "disorder_heart"]
+    },
+    "omega_dragon": {
+      "name": "🐉 Omega Dragon",
+      "level": 940,
+      "hp": 940000,
+      "attack": 94000,
+      "defense": 84000,
+      "exp": 470000,
+      "drops": ["omega_scale", "dragon_heart_supreme"]
+    },
+    "reality_king": {
+      "name": "👑 Reality King",
+      "level": 890,
+      "hp": 890000,
+      "attack": 89000,
+      "defense": 79000,
+      "exp": 445000,
+      "drops": ["reality_crown", "existence_core"]
+    },
+    "void_emperor": {
+      "name": "⚫ Void Emperor",
+      "level": 840,
+      "hp": 840000,
+      "attack": 84000,
+      "defense": 74000,
+      "exp": 420000,
+      "drops": ["void_crown", "emperor_core"]
+    },
+    "cosmic_horror": {
+      "name": "🌌 Cosmic Horror",
+      "level": 790,
+      "hp": 790000,
+      "attack": 79000,
+      "defense": 69000,
+      "exp": 395000,
+      "drops": ["cosmic_horror_essence", "universe_heart"]
+    },
+    "eternity_god": {
+      "name": "⌛ Eternity God",
+      "level": 740,
+      "hp": 740000,
+      "attack": 74000,
+      "defense": 64000,
+      "exp": 370000,
+      "drops": ["eternity_essence", "time_heart"]
+    },
+    "concept_lord": {
+      "name": "🎭 Concept Lord",
+      "level": 690,
+      "hp": 690000,
+      "attack": 69000,
+      "defense": 59000,
+      "exp": 345000,
+      "drops": ["concept_crown", "abstract_core"]
+    },
+    "quantum_horror": {
+      "name": "⚛️ Quantum Horror",
+      "level": 640,
+      "hp": 640000,
+      "attack": 64000,
+      "defense": 54000,
+      "exp": 320000,
+      "drops": ["quantum_horror_essence", "probability_core"]
+    },
+    "supreme_being": {
+      "name": "👑 Supreme Being",
+      "level": 1000,
+      "hp": 1500000,
+      "attack": 150000,
+      "defense": 140000,
+      "exp": 750000,
+      "drops": ["supreme_essence", "godly_core"]
+    },
+    "kronos_titan": {
+      "name": "⌛ Kronos the Time Devourer",
+      "level": 1500,
+      "hp": 2500000,
+      "attack": 250000,
+      "defense": 230000,
+      "exp": 1000000,
+      "drops": ["time_devourer_scythe", "primordial_essence"]
+    },
+    "zeus_almighty": {
+      "name": "⚡ Zeus the Sky Father",
+      "level": 1600,
+      "hp": 2800000,
+      "attack": 280000,
+      "defense": 260000,
+      "exp": 1200000,
+      "drops": ["master_thunderbolt", "olympian_crown"]
+    },
+    "odin_allfather": {
+      "name": "👁️ Odin the All-Father",
+      "level": 1700,
+      "hp": 3000000,
+      "attack": 300000,
+      "defense": 280000,
+      "exp": 1400000,
+      "drops": ["gungnir_spear", "wisdom_eye"]
+    },
+    "ra_sun_god": {
+      "name": "☀️ Ra the Sun God",
+      "level": 1800,
+      "hp": 3200000,
+      "attack": 320000,
+      "defense": 300000,
+      "exp": 1600000,
+      "drops": ["solar_staff", "divine_falcon"]
+    },
+    "shiva_destroyer": {
+      "name": "💫 Shiva the Destroyer",
+      "level": 1900,
+      "hp": 3500000,
+      "attack": 350000,
+      "defense": 330000,
+      "exp": 1800000,
+      "drops": ["trishula_divine", "third_eye"]
+    },
+    "amaterasu_supreme": {
+      "name": "🌞 Amaterasu the Supreme Light",
+      "level": 2000,
+      "hp": 3800000,
+      "attack": 380000,
+      "defense": 360000,
+      "exp": 2000000,
+      "drops": ["yata_mirror", "solar_regalia"]
+    },
+    "brahma_creator": {
+      "name": "🎭 Brahma the Creator",
+      "level": 2100,
+      "hp": 4000000,
+      "attack": 400000,
+      "defense": 380000,
+      "exp": 2200000,
+      "drops": ["creation_lotus", "universal_seed"]
+    },
+    "vishnu_preserver": {
+      "name": "🌀 Vishnu the Preserver",
+      "level": 2200,
+      "hp": 4200000,
+      "attack": 420000,
+      "defense": 400000,
+      "exp": 2400000,
+      "drops": ["chakra_disc", "preservation_essence"]
+    },
+    "izanagi_progenitor": {
+      "name": "⚔️ Izanagi the Progenitor",
+      "level": 2300,
+      "hp": 4500000,
+      "attack": 450000,
+      "defense": 430000,
+      "exp": 2600000,
+      "drops": ["creation_spear", "divine_mask"]
+    },
+    "thor_thundergod": {
+      "name": "🔨 Thor the Thunder God",
+      "level": 2400,
+      "hp": 4800000,
+      "attack": 480000,
+      "defense": 460000,
+      "exp": 2800000,
+      "drops": ["mjolnir_true", "storm_belt"]
+    },
+    "anubis_death": {
+      "name": "💀 Anubis the Death Judge",
+      "level": 2500,
+      "hp": 5000000,
+      "attack": 500000,
+      "defense": 480000,
+      "exp": 3000000,
+      "drops": ["judgment_scales", "afterlife_key"]
+    },
+    "hades_underworld": {
+      "name": "👻 Hades the Underworld King",
+      "level": 2600,
+      "hp": 5200000,
+      "attack": 520000,
+      "defense": 500000,
+      "exp": 3200000,
+      "drops": ["helm_darkness", "soul_bident"]
+    },
+    "quetzalcoatl_supreme": {
+      "name": "🐍 Quetzalcoatl the Feathered Serpent",
+      "level": 2700,
+      "hp": 5500000,
+      "attack": 550000,
+      "defense": 530000,
+      "exp": 3400000,
+      "drops": ["serpent_staff", "feather_crown"]
+    },
+    "ares_wargod": {
+      "name": "⚔️ Ares the War God",
+      "level": 2800,
+      "hp": 5800000,
+      "attack": 580000,
+      "defense": 560000,
+      "exp": 3600000,
+      "drops": ["war_chariot", "blood_spear"]
+    },
+    "tsukuyomi_moon": {
+      "name": "🌙 Tsukuyomi the Moon God",
+      "level": 2900,
+      "hp": 6000000,
+      "attack": 600000,
+      "defense": 580000,
+      "exp": 3800000,
+      "drops": ["lunar_blade", "night_mirror"]
+    },
+    "susanoo_storm": {
+      "name": "🌪️ Susanoo the Storm God",
+      "level": 3000,
+      "hp": 6200000,
+      "attack": 620000,
+      "defense": 600000,
+      "exp": 4000000,
+      "drops": ["storm_sword", "tempest_armor"]
+    },
+    "osiris_eternal": {
+      "name": "🌿 Osiris the Eternal",
+      "level": 3100,
+      "hp": 6500000,
+      "attack": 650000,
+      "defense": 630000,
+      "exp": 4200000,
+      "drops": ["resurrection_staff", "green_crown"]
+    },
+    "tyr_justice": {
+      "name": "⚖️ Tyr the Justice God",
+      "level": 3200,
+      "hp": 6800000,
+      "attack": 680000,
+      "defense": 660000,
+      "exp": 4400000,
+      "drops": ["justice_sword", "truth_hand"]
+    },
+    "heimdall_watcher": {
+      "name": "👁️ Heimdall the All-Seeing",
+      "level": 3300,
+      "hp": 7000000,
+      "attack": 700000,
+      "defense": 680000,
+      "exp": 4600000,
+      "drops": ["gjallarhorn", "bifrost_key"]
+    },
+    "set_chaos": {
+      "name": "🌪️ Set the Chaos Storm",
+      "level": 3400,
+      "hp": 7200000,
+      "attack": 720000,
+      "defense": 700000,
+      "exp": 4800000,
+      "drops": ["desert_spear", "chaos_crown"]
+    }
+  }
+}

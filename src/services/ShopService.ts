@@ -7,11 +7,11 @@ import {
   GameItem, 
   ITEMS, 
   RARITY_COLORS, 
-  ITEM_TYPE_EMOJIS 
+  ITEM_TYPE_EMOJIS,
+  Rarity 
 } from '../config/gameData';
 import {
   ItemType,
-  Rarity,
   Effect,
   EffectType,
   Stats,
@@ -70,6 +70,18 @@ interface BuyResult {
   success: boolean;
   message: string;
   embed?: EmbedBuilder;
+}
+
+interface InventoryItem {
+  id: string;
+  itemId: string;
+  name: string;
+  description: string;
+  type: string;
+  value: bigint;
+  quantity: number;
+  effect: any;
+  isEquipped: boolean;
 }
 
 // Type guard for EffectData
@@ -145,10 +157,131 @@ function convertGameItemToShopItem(id: string, gameItem: GameItem): ShopItem {
 
 // Create shop items map
 const shopItems: Map<string, ShopItem> = new Map(
-  Object.entries(ITEMS).map(
-    ([id, item]) => [id, convertGameItemToShopItem(id, item)]
-  )
+  Object.entries(ITEMS).map(([id, item]) => [id, convertGameItemToShopItem(id, item)])
 );
+
+// Update scalePrice function to handle large numbers
+function scalePrice(price: number): number {
+  // For prices above 1B, scale 1:1000
+  if (price >= 1000000000) { // 1 Billion+
+    return Math.floor(price / 1000);
+  }
+  // For prices 1M - 1B, scale 1:100
+  else if (price >= 1000000) { // 1 Million+
+    return Math.floor(price / 100);
+  }
+  return price;
+}
+
+// Update the findItemByName helper function
+async function findItemByName(prisma: PrismaClient, searchName: string): Promise<[string, GameItem] | null> {
+  // First try to find in ITEMS
+  const itemEntry = Object.entries(ITEMS).find(([_, item]) => {
+    const itemNameLower = item.name.toLowerCase();
+    const searchNameLower = searchName.toLowerCase();
+    
+    // Try exact match first
+    if (itemNameLower === searchNameLower) {
+      return true;
+    }
+    
+    // Try match without emojis
+    const cleanItemName = itemNameLower.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
+    const cleanSearchName = searchNameLower.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
+    
+    if (cleanItemName === cleanSearchName) {
+      return true;
+    }
+    
+    // Try partial match
+    return cleanItemName.includes(cleanSearchName) || cleanSearchName.includes(cleanItemName);
+  });
+
+  if (itemEntry) {
+    return itemEntry;
+  }
+
+  // If not found in ITEMS, try database
+  const dbItems = await prisma.item.findMany({
+    where: {
+      OR: [
+        { name: { contains: searchName.toLowerCase() } },
+        { name: { contains: searchName.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim().toLowerCase() } }
+      ]
+    }
+  });
+
+  if (dbItems.length > 0) {
+    const dbItem = dbItems[0];
+    return [dbItem.id, {
+      name: dbItem.name,
+      type: dbItem.type as ItemType,
+      description: dbItem.description,
+      price: Number(dbItem.value),
+      effect: validateAndConvertEffect(parseDbEffect(dbItem.effect)),
+      baseStats: dbItem.baseStats ? JSON.parse(dbItem.baseStats) : {},
+      upgradeStats: dbItem.upgradeStats ? JSON.parse(dbItem.upgradeStats) : {},
+      maxDurability: dbItem.maxDurability || undefined,
+      stackLimit: dbItem.stackLimit,
+      rarity: validateRarity(dbItem.rarity),
+      maxLevel: dbItem.maxLevel || undefined
+    } as GameItem];
+  }
+
+  return null;
+}
+
+// Helper function to validate and convert effect data
+function validateAndConvertEffect(effect: any): Effect {
+  if (!effect) return { type: 'EQUIP' as EffectType, stats: {} };
+  
+  // If effect is already a string, return it
+  if (typeof effect === 'string') return effect;
+  
+  try {
+    // Handle different effect types
+    if (effect.type === 'HEAL') {
+      return {
+        type: 'HEAL' as EffectType,
+        health: effect.health || 0
+      };
+    } else if (effect.type === 'BUFF') {
+      return {
+        type: 'BUFF' as EffectType,
+        stats: effect.stats || {},
+        duration: effect.duration || 0
+      };
+    } else if (effect.type === 'HEAL_AND_BUFF') {
+      return {
+        type: 'HEAL_AND_BUFF' as EffectType,
+        health: effect.health || 0,
+        stats: effect.stats || {},
+        duration: effect.duration || 0
+      };
+    } else if (effect.type === 'EQUIP') {
+      return {
+        type: 'EQUIP' as EffectType,
+        stats: effect.stats || {}
+      };
+    }
+    
+    return { type: 'EQUIP' as EffectType, stats: {} };
+  } catch (error) {
+    return { type: 'EQUIP' as EffectType, stats: {} };
+  }
+}
+
+// Helper function to validate rarity
+function validateRarity(rarity: string): Rarity {
+  const validRarities: Rarity[] = [
+    'COMMON', 'UNCOMMON', 'RARE', 'EPIC', 'LEGENDARY',
+    'MYTHICAL', 'DIVINE', 'TRANSCENDENT', 'CELESTIAL',
+    'PRIMORDIAL', 'ULTIMATE'
+  ];
+  
+  const upperRarity = rarity.toUpperCase() as Rarity;
+  return validRarities.includes(upperRarity) ? upperRarity : 'COMMON';
+}
 
 export class ShopService extends BaseService {
   private characterService: CharacterService;
@@ -205,7 +338,9 @@ export class ShopService extends BaseService {
       let fieldValue = '';
       
       for (const item of typeItems) {
-        let itemText = `${item.name} - 💰 ${item.price} coins\n${item.description}`;
+        const displayPrice = scalePrice(item.price);
+        let itemText = `${item.name} - 💰 ${item.price.toLocaleString()} coins`;
+        itemText += `\n${item.description}`;
 
         // Add stats if item has effect
         if (item.effect) {
@@ -230,7 +365,8 @@ export class ShopService extends BaseService {
           'DIVINE': '🟣',
           'TRANSCENDENT': '🟣',
           'CELESTIAL': '🟣',
-          'PRIMORDIAL': '🟣'
+          'PRIMORDIAL': '🟣',
+          'ULTIMATE': '🔴'
         }[item.rarity] || '⚪';
         
         itemText = `${rarityEmoji} ${itemText}`;
@@ -325,10 +461,11 @@ export class ShopService extends BaseService {
           dbItems.map(dbItem => [
             dbItem.id,
             {
+              id: dbItem.id,
               name: dbItem.name,
               type: dbItem.type,
               description: dbItem.description,
-              price: dbItem.value,
+              price: Number(dbItem.value),
               effect: parseDbEffect(dbItem.effect) || {},
               baseStats: dbItem.baseStats ? JSON.parse(dbItem.baseStats) : {},
               upgradeStats: dbItem.upgradeStats ? JSON.parse(dbItem.upgradeStats) : {},
@@ -348,6 +485,33 @@ export class ShopService extends BaseService {
           id,
           ...item
         } as GameItem));
+
+      // Add some default items if shop is empty
+      if (itemsArray.length === 0) {
+        itemsArray = ([
+          {
+            id: 'health_potion',
+            name: '❤️ Health Potion',
+            type: 'CONSUMABLE',
+            description: 'Restores 100 HP',
+            price: 1000,
+            effect: { type: 'HEAL', health: 100 },
+            stackLimit: 99,
+            rarity: 'COMMON'
+          },
+          {
+            id: 'wooden_sword',
+            name: '⚔️ Wooden Sword',
+            type: 'WEAPON',
+            description: 'A basic training sword',
+            price: 2000,
+            effect: { type: 'EQUIP', stats: { attack: 5 } },
+            stackLimit: 1,
+            rarity: 'COMMON',
+            maxDurability: 100
+          }
+        ] as unknown) as GameItem[];
+      }
 
       // Filter by type if argument is provided
       if (args && args.length > 0) {
@@ -374,7 +538,7 @@ export class ShopService extends BaseService {
         if (a.type !== b.type) {
           return a.type.localeCompare(b.type);
         }
-        return a.price - b.price;
+        return Number(a.price - b.price);
       });
 
       const totalPages = Math.ceil(itemsArray.length / ITEMS_PER_PAGE);
@@ -401,6 +565,10 @@ export class ShopService extends BaseService {
       // Create filter buttons
       const filterRow = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
+          new ButtonBuilder()
+            .setCustomId('filter_LATEST')
+            .setLabel('🆕 Latest')
+            .setStyle(ButtonStyle.Secondary),
           new ButtonBuilder()
             .setCustomId('filter_WEAPON')
             .setLabel(`${ITEM_TYPE_EMOJIS.WEAPON} Weapon`)
@@ -539,7 +707,7 @@ export class ShopService extends BaseService {
 
         // Handle filter buttons
         if (interaction.customId.startsWith('filter_')) {
-          const filterType = interaction.customId.replace('filter_', '') as ItemType | 'ALL' | 'DEVIL_FRUIT';
+          const filterType = interaction.customId.replace('filter_', '') as ItemType | 'ALL' | 'DEVIL_FRUIT' | 'LATEST';
           
           // Get items from database again to ensure fresh data
           const dbItems = await this.prisma.item.findMany();
@@ -554,7 +722,7 @@ export class ShopService extends BaseService {
                   name: dbItem.name,
                   type: dbItem.type,
                   description: dbItem.description,
-                  price: dbItem.value,
+                  price: Number(dbItem.value),
                   effect: parseDbEffect(dbItem.effect) || {},
                   baseStats: dbItem.baseStats ? JSON.parse(dbItem.baseStats) : {},
                   upgradeStats: dbItem.upgradeStats ? JSON.parse(dbItem.upgradeStats) : {},
@@ -577,7 +745,7 @@ export class ShopService extends BaseService {
               } as GameItem))
               .sort((a, b) => {
                 if (a.type !== b.type) return a.type.localeCompare(b.type);
-                return a.price - b.price;
+                return Number(a.price - b.price);
               });
           } else if (filterType === 'DEVIL_FRUIT') {
             // Filter Devil Fruit items
@@ -588,7 +756,38 @@ export class ShopService extends BaseService {
                 ...item
               } as GameItem))
               .filter(item => item.name.toLowerCase().includes('no mi'))
-              .sort((a, b) => a.price - b.price);
+              .sort((a, b) => Number(a.price - b.price));
+          } else if (filterType === 'LATEST') {
+            // Get the latest 20 items
+            itemsArray = Object.entries(mergedItems)
+              .filter(isShopItemTuple)
+              .map(([id, item]) => ({
+                id,
+                ...item
+              } as GameItem))
+              .sort((a, b) => {
+                // Sort by rarity first (higher rarity first)
+                const rarityOrder = {
+                  'ULTIMATE': 10,
+                  'PRIMORDIAL': 9,
+                  'CELESTIAL': 8,
+                  'TRANSCENDENT': 7,
+                  'DIVINE': 6,
+                  'MYTHICAL': 5,
+                  'LEGENDARY': 4,
+                  'EPIC': 3,
+                  'RARE': 2,
+                  'UNCOMMON': 1,
+                  'COMMON': 0
+                };
+                const rarityDiff = (rarityOrder[b.rarity as keyof typeof rarityOrder] || 0) - 
+                                 (rarityOrder[a.rarity as keyof typeof rarityOrder] || 0);
+                if (rarityDiff !== 0) return rarityDiff;
+                
+                // Then by price (higher price first)
+                return b.price - a.price;
+              })
+              .slice(0, 20); // Take only the top 20 items
           } else {
             // Filter items by type using ItemType enum
             itemsArray = Object.entries(mergedItems)
@@ -598,7 +797,7 @@ export class ShopService extends BaseService {
                 ...item
               } as GameItem))
               .filter(item => item.type === filterType)
-              .sort((a, b) => a.price - b.price);
+              .sort((a, b) => Number(a.price - b.price));
           }
 
           currentPage = 0;
@@ -608,6 +807,8 @@ export class ShopService extends BaseService {
           const newEmbed = this.createShopEmbed(itemsArray, currentPage, totalPages, balance.coins);
           if (filterType === 'DEVIL_FRUIT') {
             newEmbed.setTitle('🛍️ A4A CLAN Shop - 🍎 Devil Fruits');
+          } else if (filterType === 'LATEST') {
+            newEmbed.setTitle('🛍️ A4A CLAN Shop - 🆕 Latest Items');
           } else if (filterType !== 'ALL') {
             newEmbed.setTitle(`🛍️ A4A CLAN Shop - ${ITEM_TYPE_EMOJIS[filterType as keyof typeof ITEM_TYPE_EMOJIS] || '📦'} ${filterType}`);
           }
@@ -682,52 +883,59 @@ export class ShopService extends BaseService {
     }
   }
 
-  private async processPurchase(characterId: string, itemId: string, quantity: number, item: GameItem) {
-    await this.prisma.$transaction(async (tx) => {
-      // Remove coins
-      const totalPrice = item.price * quantity;
-      await tx.character.update({
-        where: { id: characterId },
-        data: { coins: { decrement: totalPrice } }
-      });
+  private async processPurchase(characterId: string, itemId: string, quantity: number, item: GameItem): Promise<BuyResult> {
+    try {
+      // Calculate total cost
+      const totalCost = item.price * quantity;
 
-      // Add item to inventory
-      await tx.inventory.upsert({
-        where: {
-          characterId_itemId: {
-            characterId: characterId,
-            itemId
-          }
-        },
-        create: {
-          characterId,
-          itemId,
-          quantity,
-          durability: item.type === 'WEAPON' || item.type === 'ARMOR' ? 100 : null,
-          maxDurability: item.maxDurability || null,
-          effect: JSON.stringify(item.effect || {}),
-          stats: JSON.stringify(item.baseStats || {})
-        },
-        update: {
-          quantity: { increment: quantity }
-        }
-      });
+      // Get character's current balance
+      const balance = await this.characterService.getBalance(characterId);
 
-      // Create transaction record
-      await tx.transaction.create({
-        data: {
-          characterId,
-          type: 'SHOP_PURCHASE',
-          amount: -totalPrice,
-          description: `Bought ${quantity}x ${item.name}`
-        }
-      });
-    });
+      // Check if character has enough coins
+      if (balance.coins < totalCost) {
+        return {
+          success: false,
+          message: `❌ Uang tidak cukup! Kamu butuh ${totalCost} coins untuk membeli ${quantity}x ${item.name}.`
+        };
+      }
+
+      // Check stack limit
+      const currentInventory = await this.inventoryService.getInventory(characterId) as InventoryItem[];
+      const existingItem = currentInventory.find(i => i.itemId === itemId);
+      
+      if (existingItem && existingItem.quantity + quantity > item.stackLimit) {
+        return {
+          success: false,
+          message: `❌ Tidak bisa membeli lebih banyak, stack limit tercapai!`
+        };
+      }
+
+      // Process the purchase
+      await this.characterService.removeCoins(
+        characterId, 
+        totalCost,
+        'SHOP_PURCHASE',
+        `Bought ${quantity}x ${item.name}`
+      );
+
+      // Add items to inventory
+      await this.inventoryService.addItems(characterId, itemId, quantity);
+
+      return {
+        success: true,
+        message: `✅ Berhasil membeli ${quantity}x ${item.name} seharga ${scalePrice(totalCost)} coins!`
+      };
+    } catch (error) {
+      this.logger.error('Error in processPurchase:', error);
+      return {
+        success: false,
+        message: '❌ Terjadi kesalahan saat memproses pembelian.'
+      };
+    }
   }
 
   async handleBuyCommand(message: Message, args: string[] | string) {
     try {
-      // Ensure args is array
       const argArray = Array.isArray(args) ? args : args.split(/\s+/);
       
       if (!argArray || argArray.length === 0) {
@@ -735,7 +943,6 @@ export class ShopService extends BaseService {
       }
 
       const character = await this.characterService.getCharacterByDiscordId(message.author.id);
-      
       if (!character) {
         return message.reply('❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.');
       }
@@ -752,212 +959,85 @@ export class ShopService extends BaseService {
         itemName = argArray.join(' ').toLowerCase();
       }
 
-      this.logger.debug('Searching for item:', {
-        searchName: itemName,
-        quantity: quantity,
-        args: argArray
-      });
-
-      // Find item by name
-      const itemEntry = Object.entries(ITEMS)
-        .find(([_, item]) => {
-          // Keep emojis in the comparison
-          const itemNameLower = item.name.toLowerCase();
-          const searchNameLower = itemName.toLowerCase();
-          
-          // Try exact match first (with emojis)
-          if (itemNameLower === searchNameLower) {
-            return true;
-          }
-          
-          // Try exact match without emojis
-          const cleanItemName = itemNameLower.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
-          const cleanSearchName = searchNameLower.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
-          
-          if (cleanItemName === cleanSearchName) {
-            return true;
-          }
-          
-          // Try partial match without special characters
-          const alphaNumItemName = cleanItemName.replace(/[^a-z0-9]/g, '');
-          const alphaNumSearchName = cleanSearchName.replace(/[^a-z0-9]/g, '');
-          
-          return alphaNumItemName.includes(alphaNumSearchName) || alphaNumSearchName.includes(alphaNumItemName);
-        });
-
-      if (!itemEntry) {
-        this.logger.debug('Item not found:', {
-          searchName: itemName,
-          cleanSearchName: itemName.toLowerCase().replace(/[^a-z0-9]/g, ''),
-          availableItems: Object.entries(ITEMS).map(([_, item]) => ({
-            name: item.name,
-            cleanName: item.name.toLowerCase().replace(/[^a-z0-9]/g, '')
-          }))
-        });
-        return message.reply(`❌ Item "${args[0]}" tidak ditemukan di shop!`);
+      // Find item in both ITEMS and database
+      const itemResult = await findItemByName(this.prisma, itemName);
+      if (!itemResult) {
+        return message.reply('❌ Item tidak ditemukan!');
       }
 
-      const [itemId, item] = itemEntry as [string, ShopItem];
+      const [itemId, item] = itemResult;
+
+      // Check stack limit
+      const currentInventory = await this.inventoryService.getInventory(character.id) as InventoryItem[];
+      const existingItem = currentInventory.find(i => i.itemId === itemId);
       
-      this.logger.debug('Found item:', {
-        itemId,
-        itemName: item.name,
-        type: item.type,
-        price: item.price
-      });
-
-      // Check if item exists in database
-      const dbItem = await this.prisma.item.findUnique({
-        where: { id: itemId }
-      });
-
-      if (!dbItem) {
-        // Create item in database if it doesn't exist
-        try {
-          this.logger.debug('Creating item in database:', {
-            itemId,
-            itemName: item.name
-          });
-
-          await this.prisma.item.create({
-            data: {
-              id: itemId,
-              name: item.name,
-              description: item.description,
-              type: item.type,
-              value: item.price,
-              effect: effectToDbString(item.effect),
-              maxDurability: item.maxDurability,
-              rarity: item.rarity,
-              baseStats: item.baseStats || '{}',
-              upgradeStats: item.upgradeStats || '{}',
-              maxLevel: item.maxLevel
-            }
-          });
-        } catch (error) {
-          this.logger.error('Error creating item in database:', {
-            error,
-            itemId,
-            itemName: item.name
-          });
-          return message.reply('❌ Terjadi kesalahan saat membeli item. Silakan coba lagi.');
-        }
+      if (existingItem && existingItem.quantity + quantity > item.stackLimit) {
+        return message.reply('❌ Tidak bisa membeli lebih banyak, stack limit tercapai!');
       }
 
-      const totalPrice = item.price * quantity;
+      // Process the purchase
+      const result = await this.processPurchase(character.id, itemId, quantity, item);
 
-      // Check if character has enough coins
-      const balance = await this.characterService.getBalance(character.id);
-      if (balance.coins < totalPrice) {
-        return message.reply(`❌ Uang tidak cukup! Kamu butuh ${totalPrice} coins untuk membeli ${quantity}x ${item.name}.`);
+      if (!result.success) {
+        return message.reply(result.message);
       }
-
-      this.logger.debug('Processing purchase:', {
-        characterId: character.id,
-        itemId,
-        quantity,
-        totalPrice,
-        currentBalance: balance.coins
-      });
-
-      // Process purchase in transaction
-      await this.prisma.$transaction(async (tx) => {
-        // Remove coins
-        await tx.character.update({
-          where: { id: character.id },
-          data: { coins: { decrement: totalPrice } }
-        });
-
-        // Add item to inventory
-        await tx.inventory.upsert({
-          where: {
-            characterId_itemId: {
-              characterId: character.id,
-              itemId
-            }
-          },
-          create: {
-            characterId: character.id,
-            itemId,
-            quantity,
-            durability: item.type === 'WEAPON' || item.type === 'ARMOR' ? 100 : null,
-            maxDurability: item.maxDurability || null,
-            effect: JSON.stringify(item.effect || {}),
-            stats: JSON.stringify(item.baseStats || {})
-          },
-          update: {
-            quantity: { increment: quantity }
-          }
-        });
-
-        // Create transaction record
-        await tx.transaction.create({
-          data: {
-            characterId: character.id,
-            type: 'SHOP_PURCHASE',
-            amount: -totalPrice,
-            description: `Bought ${quantity}x ${item.name}`
-          }
-        });
-      });
-
-      this.logger.debug('Purchase successful:', {
-        characterId: character.id,
-        itemId,
-        quantity,
-        totalPrice,
-        newBalance: balance.coins - totalPrice
-      });
 
       // Create success embed
       const embed = new EmbedBuilder()
         .setTitle('🛍️ Pembelian Berhasil!')
         .setColor('#00ff00')
-        .setDescription(`Kamu telah membeli ${quantity}x ${item.name} seharga ${totalPrice} coins.`)
+        .setDescription(result.message)
         .addFields(
-          { name: '💰 Sisa Uang', value: `${balance.coins - totalPrice} coins`, inline: true },
           { name: '📦 Item', value: `${item.name}\n${item.description}`, inline: true }
         );
 
-      // Add effect info based on item type
+      // Add effect info
       if (item.effect) {
-        try {
-          const effect = getEffectData(item.effect);
-          if (effect) {
-            if (effect.type === 'HEAL') {
-              const healValue = effect.health || 0;
-              const healText = healValue < 0 ? '❤️ Memulihkan HP ke maksimum' : `❤️ Memulihkan ${healValue} HP`;
-              embed.addFields({
-                name: '💫 Efek',
-                value: healText,
-                inline: true
-              });
-            } else if (effect.stats) {
-              const statsText = Object.entries(effect.stats)
-                .map(([stat, value]) => `${stat === 'attack' ? '⚔️' : '🛡️'} ${stat.toUpperCase()}: ${formatStatValue(value)}`)
-                .join('\n');
-              
-              embed.addFields({
-                name: '📊 Stats',
-                value: statsText,
-                inline: true
-              });
-            }
+        const effect = getEffectData(item.effect);
+        if (effect) {
+          if (effect.type === 'HEAL') {
+            const healValue = effect.health || 0;
+            const healText = healValue < 0 ? '❤️ Memulihkan HP ke maksimum' : `❤️ Memulihkan ${healValue} HP`;
+            embed.addFields({
+              name: '💫 Efek',
+              value: healText,
+              inline: true
+            });
+          } else if (effect.stats) {
+            const statsText = Object.entries(effect.stats)
+              .map(([stat, value]) => `${stat === 'attack' ? '⚔️' : '🛡️'} ${stat.toUpperCase()}: ${formatStatValue(value)}`)
+              .join('\n');
+            
+            embed.addFields({
+              name: '📊 Stats',
+              value: statsText,
+              inline: true
+            });
           }
-        } catch (error) {
-          this.logger.error('Error parsing item effect:', error);
         }
       }
 
       return message.reply({ embeds: [embed] });
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Error in buy command:', error);
-      return message.reply('❌ Terjadi kesalahan saat membeli item.');
+      
+      if (error.message?.includes('stack limit')) {
+        return message.reply('❌ Tidak bisa membeli lebih banyak, stack limit tercapai!');
+      }
+      if (error.message?.includes('Insufficient funds')) {
+        return message.reply('❌ Uang tidak cukup!');
+      }
+      
+      return message.reply('❌ Terjadi kesalahan saat membeli item. Silakan coba lagi.');
     }
   }
 
-  // Add new method for slash command buying
+  async handleSellCommand(message: Message, args: string[] | string) {
+    // TODO: Implement sell command
+    return message.reply('❌ Fitur ini belum tersedia.');
+  }
+
   async buyItemSlash(interaction: ChatInputCommandInteraction, itemId: string): Promise<{
     success: boolean;
     message: string;
@@ -972,69 +1052,24 @@ export class ShopService extends BaseService {
         };
       }
 
-      // Find item in shop
-      const item = ITEMS[itemId];
+      // Try to find item by ID first
+      let item = ITEMS[itemId];
+      
+      // If not found by ID, try to find by name
       if (!item) {
-        return {
-          success: false,
-          message: `❌ Item "${itemId}" tidak ditemukan di shop!`
-        };
+        const itemResult = await findItemByName(this.prisma, itemId);
+        if (!itemResult) {
+          return {
+            success: false,
+            message: `❌ Item "${itemId}" tidak ditemukan di shop!`
+          };
+        }
+        [itemId, item] = itemResult;
       }
 
-      // Check if character has enough coins
-      const balance = await this.characterService.getBalance(character.id);
-      if (balance.coins < item.price) {
-        return {
-          success: false,
-          message: `❌ Uang tidak cukup! Kamu butuh ${item.price} coins untuk membeli ${item.name}.`
-        };
-      }
-
-      // Process purchase in transaction
-      await this.prisma.$transaction(async (tx) => {
-        // Remove coins
-        await tx.character.update({
-          where: { id: character.id },
-          data: { coins: { decrement: item.price } }
-        });
-
-        // Add item to inventory
-        await tx.inventory.upsert({
-          where: {
-            characterId_itemId: {
-              characterId: character.id,
-              itemId
-            }
-          },
-          create: {
-            characterId: character.id,
-            itemId,
-            quantity: 1,
-            durability: item.type === 'WEAPON' || item.type === 'ARMOR' ? 100 : null,
-            maxDurability: item.maxDurability || null,
-            effect: JSON.stringify(item.effect || {}),
-            stats: JSON.stringify(item.baseStats || {})
-          },
-          update: {
-            quantity: { increment: 1 }
-          }
-        });
-
-        // Create transaction record
-        await tx.transaction.create({
-          data: {
-            characterId: character.id,
-            type: 'SHOP_PURCHASE',
-            amount: -item.price,
-            description: `Bought ${item.name}`
-          }
-        });
-      });
-
-      return {
-        success: true,
-        message: `✅ Berhasil membeli ${item.name} seharga ${item.price} coins!`
-      };
+      // Process the purchase
+      const result = await this.processPurchase(character.id, itemId, 1, item);
+      return result;
 
     } catch (error) {
       this.logger.error('Error in buyItemSlash:', error);
@@ -1042,77 +1077,6 @@ export class ShopService extends BaseService {
         success: false,
         message: '❌ Terjadi kesalahan saat membeli item.'
       };
-    }
-  }
-
-  async handleSellCommand(message: Message, args: string[] | string) {
-    try {
-      // Ensure args is array
-      const argArray = Array.isArray(args) ? args : args.split(' ');
-      
-      if (!argArray || argArray.length === 0) {
-        return message.reply('❌ Format: `a sell [nama_item] [jumlah]`\nContoh: `a sell potion 5`');
-      }
-
-      const character = await this.characterService.getCharacterByDiscordId(message.author.id);
-      
-      if (!character) {
-        return message.reply('❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.');
-      }
-
-      // Parse quantity from last argument if it's a number
-      let quantity = 1;
-      let itemName = '';
-      
-      const lastArg = argArray[argArray.length - 1];
-      if (!isNaN(parseInt(lastArg))) {
-        quantity = Math.max(1, parseInt(lastArg)); // Ensure minimum 1
-        itemName = argArray.slice(0, -1).join(' ');
-      } else {
-        itemName = argArray.join(' ');
-      }
-
-      // Get user's inventory items first
-      const inventoryItems = await this.prisma.inventory.findMany({
-        where: { 
-          characterId: character.id,
-          quantity: { gte: 1 }
-        },
-        include: { item: true }
-      });
-
-      // Find matching item from inventory
-      const inventoryItem = inventoryItems.find(inv => {
-        const itemNameLower = inv.item.name.toLowerCase();
-        const searchNameLower = itemName.toLowerCase();
-        
-        // Try exact match first
-        if (itemNameLower === searchNameLower) {
-          return true;
-        }
-        
-        // Try match without emojis
-        const cleanItemName = itemNameLower.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
-        const cleanSearchName = searchNameLower.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
-        
-        if (cleanItemName === cleanSearchName) {
-          return true;
-        }
-        
-        // Try partial match
-        return cleanItemName.includes(cleanSearchName) || cleanSearchName.includes(cleanItemName);
-      });
-
-      if (!inventoryItem) {
-        return message.reply(`❌ Item "${itemName}" tidak ditemukan di inventory!`);
-      }
-
-      // Use inventory service to handle the sale
-      return await this.inventoryService.handleSellItem(message, inventoryItem.itemId, quantity);
-
-    } catch (error) {
-      this.logger.error('Error in sell command:', error);
-      return message.reply('❌ Terjadi kesalahan saat menjual item.');
     }
   }
 } 

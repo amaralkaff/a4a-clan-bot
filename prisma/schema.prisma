@@ -211,3 +211,22 @@ model Duel {
   @@index([challengerId, status])
   @@index([challengedId, status])
 }
+
+model Monster {
+  id          String   @id
+  name        String
+  level       Int
+  health      Int
+  maxHealth   Int
+  attack      Int
+  defense     Int
+  exp         Int
+  coins       Int
+  drops       String   @default("[]")
+  description String
+  location    String   @default("[]")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([level])
+}

@@ -838,5 +838,565 @@
     "rarity": "PRIMORDIAL",
     "stackLimit": 1,
     "maxDurability": 400000
+  },
+  "genesis_sovereign_armor": {
+    "name": "🌟 Genesis Sovereign Armor",
+    "type": "ARMOR",
+    "description": "🌌 Armor yang memegang kekuatan penciptaan absolut",
+    "price": 5000000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 50000,
+        "attack": 25000,
+        "speed": 10000
+      }
+    },
+    "baseStats": {
+      "defense": 50000,
+      "attack": 25000,
+      "speed": 10000
+    },
+    "upgradeStats": {
+      "defense": 10000,
+      "attack": 5000,
+      "speed": 2000
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 500000
+  },
+  "omniversal_destroyer_armor": {
+    "name": "💫 Omniversal Destroyer Armor",
+    "type": "ARMOR",
+    "description": "🌌 Armor yang dapat menghancurkan seluruh omniverse",
+    "price": 4800000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 48000,
+        "attack": 24000,
+        "speed": 9600
+      }
+    },
+    "baseStats": {
+      "defense": 48000,
+      "attack": 24000,
+      "speed": 9600
+    },
+    "upgradeStats": {
+      "defense": 9600,
+      "attack": 4800,
+      "speed": 1920
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 480000
+  },
+  "reality_sovereign_armor": {
+    "name": "🎭 Reality Sovereign Armor",
+    "type": "ARMOR",
+    "description": "🌌 Armor yang mengendalikan matriks realitas",
+    "price": 4500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 45000,
+        "attack": 22500,
+        "speed": 9000
+      }
+    },
+    "baseStats": {
+      "defense": 45000,
+      "attack": 22500,
+      "speed": 9000
+    },
+    "upgradeStats": {
+      "defense": 9000,
+      "attack": 4500,
+      "speed": 1800
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 450000
+  },
+  "infinity_paradigm_armor": {
+    "name": "♾️ Infinity Paradigm Armor",
+    "type": "ARMOR",
+    "description": "🌌 Armor yang melampaui konsep ketidakterbatasan",
+    "price": 4200000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 42000,
+        "attack": 21000,
+        "speed": 8400
+      }
+    },
+    "baseStats": {
+      "defense": 42000,
+      "attack": 21000,
+      "speed": 8400
+    },
+    "upgradeStats": {
+      "defense": 8400,
+      "attack": 4200,
+      "speed": 1680
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 420000
+  },
+  "quantum_absolute_armor": {
+    "name": "⚛️ Quantum Absolute Armor",
+    "type": "ARMOR",
+    "description": "🌌 Armor yang menguasai seluruh kemungkinan kuantum",
+    "price": 4000000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 40000,
+        "attack": 20000,
+        "speed": 8000
+      }
+    },
+    "baseStats": {
+      "defense": 40000,
+      "attack": 20000,
+      "speed": 8000
+    },
+    "upgradeStats": {
+      "defense": 8000,
+      "attack": 4000,
+      "speed": 1600
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 400000
+  },
+  "cosmic_authority_armor": {
+    "name": "🌠 Cosmic Authority Armor",
+    "type": "ARMOR",
+    "description": "🌌 Armor dengan otoritas kosmik absolut",
+    "price": 3800000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 38000,
+        "attack": 19000,
+        "speed": 7600
+      }
+    },
+    "baseStats": {
+      "defense": 38000,
+      "attack": 19000,
+      "speed": 7600
+    },
+    "upgradeStats": {
+      "defense": 7600,
+      "attack": 3800,
+      "speed": 1520
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 380000
+  },
+  "eternal_dominion_armor": {
+    "name": "👑 Eternal Dominion Armor",
+    "type": "ARMOR",
+    "description": "🌌 Armor penguasa keabadian mutlak",
+    "price": 3500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 35000,
+        "attack": 17500,
+        "speed": 7000
+      }
+    },
+    "baseStats": {
+      "defense": 35000,
+      "attack": 17500,
+      "speed": 7000
+    },
+    "upgradeStats": {
+      "defense": 7000,
+      "attack": 3500,
+      "speed": 1400
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 350000
+  },
+  "void_supremacy_armor": {
+    "name": "⚫ Void Supremacy Armor",
+    "type": "ARMOR",
+    "description": "🌌 Armor dengan supremasi kekosongan absolut",
+    "price": 3200000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 32000,
+        "attack": 16000,
+        "speed": 6400
+      }
+    },
+    "baseStats": {
+      "defense": 32000,
+      "attack": 16000,
+      "speed": 6400
+    },
+    "upgradeStats": {
+      "defense": 6400,
+      "attack": 3200,
+      "speed": 1280
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 320000
+  },
+  "dimensional_apex_armor": {
+    "name": "🌀 Dimensional Apex Armor",
+    "type": "ARMOR",
+    "description": "🌌 Armor puncak dimensi",
+    "price": 3000000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 30000,
+        "attack": 15000,
+        "speed": 6000
+      }
+    },
+    "baseStats": {
+      "defense": 30000,
+      "attack": 15000,
+      "speed": 6000
+    },
+    "upgradeStats": {
+      "defense": 6000,
+      "attack": 3000,
+      "speed": 1200
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 300000
+  },
+  "chaos_absolute_armor": {
+    "name": "🌪️ Chaos Absolute Armor",
+    "type": "ARMOR",
+    "description": "🌌 Armor kekacauan mutlak",
+    "price": 2800000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 28000,
+        "attack": 14000,
+        "speed": 5600
+      }
+    },
+    "baseStats": {
+      "defense": 28000,
+      "attack": 14000,
+      "speed": 5600
+    },
+    "upgradeStats": {
+      "defense": 5600,
+      "attack": 2800,
+      "speed": 1120
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 280000
+  },
+  "celestial_zenith_armor": {
+    "name": "🌟 Celestial Zenith Armor",
+    "type": "ARMOR",
+    "description": "🌌 Armor puncak surgawi",
+    "price": 2500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 25000,
+        "attack": 12500,
+        "speed": 5000
+      }
+    },
+    "baseStats": {
+      "defense": 25000,
+      "attack": 12500,
+      "speed": 5000
+    },
+    "upgradeStats": {
+      "defense": 5000,
+      "attack": 2500,
+      "speed": 1000
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 250000
+  },
+  "astral_dominance_armor": {
+    "name": "✨ Astral Dominance Armor",
+    "type": "ARMOR",
+    "description": "🌌 Armor dominasi astral",
+    "price": 2300000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 23000,
+        "attack": 11500,
+        "speed": 4600
+      }
+    },
+    "baseStats": {
+      "defense": 23000,
+      "attack": 11500,
+      "speed": 4600
+    },
+    "upgradeStats": {
+      "defense": 4600,
+      "attack": 2300,
+      "speed": 920
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 230000
+  },
+  "divine_ascendance_armor": {
+    "name": "🏆 Divine Ascendance Armor",
+    "type": "ARMOR",
+    "description": "🌌 Armor kenaikan ilahi",
+    "price": 2100000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 21000,
+        "attack": 10500,
+        "speed": 4200
+      }
+    },
+    "baseStats": {
+      "defense": 21000,
+      "attack": 10500,
+      "speed": 4200
+    },
+    "upgradeStats": {
+      "defense": 4200,
+      "attack": 2100,
+      "speed": 840
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 210000
+  },
+  "ethereal_sovereign_armor": {
+    "name": "🌈 Ethereal Sovereign Armor",
+    "type": "ARMOR",
+    "description": "🌌 Armor kedaulatan ethereal",
+    "price": 1900000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 19000,
+        "attack": 9500,
+        "speed": 3800
+      }
+    },
+    "baseStats": {
+      "defense": 19000,
+      "attack": 9500,
+      "speed": 3800
+    },
+    "upgradeStats": {
+      "defense": 3800,
+      "attack": 1900,
+      "speed": 760
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 190000
+  },
+  "primordial_might_armor": {
+    "name": "🌋 Primordial Might Armor",
+    "type": "ARMOR",
+    "description": "🌌 Armor kekuatan primordial",
+    "price": 1700000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 17000,
+        "attack": 8500,
+        "speed": 3400
+      }
+    },
+    "baseStats": {
+      "defense": 17000,
+      "attack": 8500,
+      "speed": 3400
+    },
+    "upgradeStats": {
+      "defense": 3400,
+      "attack": 1700,
+      "speed": 680
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 170000
+  },
+  "transcendent_authority_armor": {
+    "name": "🎯 Transcendent Authority Armor",
+    "type": "ARMOR",
+    "description": "🌌 Armor otoritas transenden",
+    "price": 1500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 15000,
+        "attack": 7500,
+        "speed": 3000
+      }
+    },
+    "baseStats": {
+      "defense": 15000,
+      "attack": 7500,
+      "speed": 3000
+    },
+    "upgradeStats": {
+      "defense": 3000,
+      "attack": 1500,
+      "speed": 600
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 150000
+  },
+  "omega_dominion_armor": {
+    "name": "Ω Omega Dominion Armor",
+    "type": "ARMOR",
+    "description": "🌌 Armor dominasi omega",
+    "price": 1300000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 13000,
+        "attack": 6500,
+        "speed": 2600
+      }
+    },
+    "baseStats": {
+      "defense": 13000,
+      "attack": 6500,
+      "speed": 2600
+    },
+    "upgradeStats": {
+      "defense": 2600,
+      "attack": 1300,
+      "speed": 520
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 130000
+  },
+  "quantum_sovereign_armor": {
+    "name": "⚛️ Quantum Sovereign Armor",
+    "type": "ARMOR",
+    "description": "🌌 Armor kedaulatan kuantum",
+    "price": 1100000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 11000,
+        "attack": 5500,
+        "speed": 2200
+      }
+    },
+    "baseStats": {
+      "defense": 11000,
+      "attack": 5500,
+      "speed": 2200
+    },
+    "upgradeStats": {
+      "defense": 2200,
+      "attack": 1100,
+      "speed": 440
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 110000
+  },
+  "reality_sovereign_armor_supreme": {
+    "name": "🎭 Reality Sovereign Armor Supreme",
+    "type": "ARMOR",
+    "description": "🌌 Armor kedaulatan realitas tertinggi",
+    "price": 900000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 9000,
+        "attack": 4500,
+        "speed": 1800
+      }
+    },
+    "baseStats": {
+      "defense": 9000,
+      "attack": 4500,
+      "speed": 1800
+    },
+    "upgradeStats": {
+      "defense": 1800,
+      "attack": 900,
+      "speed": 360
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 90000
+  },
+  "void_emperor_armor_absolute": {
+    "name": "⚫ Void Emperor Armor Absolute",
+    "type": "ARMOR",
+    "description": "🌌 Armor kaisar kekosongan absolut",
+    "price": 700000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 7000,
+        "attack": 3500,
+        "speed": 1400
+      }
+    },
+    "baseStats": {
+      "defense": 7000,
+      "attack": 3500,
+      "speed": 1400
+    },
+    "upgradeStats": {
+      "defense": 1400,
+      "attack": 700,
+      "speed": 280
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 70000
   }
 }

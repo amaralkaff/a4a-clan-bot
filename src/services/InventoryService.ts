@@ -298,7 +298,7 @@ export class InventoryService extends BaseService {
           description: inv.description,
           quantity: inv.quantity,
           type: inv.type,
-          value: inv.value || 0,
+          value: Number(inv.value),
           isEquipped: inv.isEquipped
         });
         return acc;
@@ -438,7 +438,7 @@ export class InventoryService extends BaseService {
       }
 
       // Calculate sell price (70% of original price)
-      const sellPrice = Math.floor((inventory.item.value * quantity) * 0.7);
+      const sellPrice = Math.floor((Number(inventory.item.value) * quantity) * 0.7);
 
       // Process sale in transaction
       await this.prisma.$transaction(async (tx) => {
@@ -610,6 +610,42 @@ export class InventoryService extends BaseService {
         content: `❌ ${message}`,
         ephemeral: source instanceof ChatInputCommandInteraction
       });
+    }
+  }
+
+  async addItems(characterId: string, itemId: string, quantity: number): Promise<void> {
+    try {
+      const item = await this.prisma.item.findUnique({
+        where: { id: itemId }
+      });
+
+      if (!item) {
+        throw new Error('Item not found');
+      }
+
+      await this.prisma.inventory.upsert({
+        where: {
+          characterId_itemId: {
+            characterId,
+            itemId
+          }
+        },
+        create: {
+          characterId,
+          itemId,
+          quantity,
+          durability: item.type === 'WEAPON' || item.type === 'ARMOR' ? 100 : null,
+          maxDurability: item.maxDurability || null,
+          effect: item.effect,
+          stats: item.baseStats || '{}'
+        },
+        update: {
+          quantity: { increment: quantity }
+        }
+      });
+    } catch (error) {
+      this.logger.error('Error in addItems:', error);
+      throw error;
     }
   }
 }

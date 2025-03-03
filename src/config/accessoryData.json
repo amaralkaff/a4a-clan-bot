@@ -278,5 +278,285 @@
     "rarity": "PRIMORDIAL",
     "stackLimit": 1,
     "maxDurability": 50000
+  },
+  "genesis_sovereign_crown": {
+    "name": "🌟 Genesis Sovereign Crown",
+    "type": "ACCESSORY",
+    "description": "🌌 Mahkota yang memegang kekuatan penciptaan absolut",
+    "price": 5000000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 25000,
+        "defense": 25000,
+        "speed": 10000
+      }
+    },
+    "baseStats": {
+      "attack": 25000,
+      "defense": 25000,
+      "speed": 10000
+    },
+    "upgradeStats": {
+      "attack": 5000,
+      "defense": 5000,
+      "speed": 2000
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 500000
+  },
+  "omniversal_destroyer_necklace": {
+    "name": "💫 Omniversal Destroyer Necklace",
+    "type": "ACCESSORY",
+    "description": "🌌 Kalung yang dapat menghancurkan seluruh omniverse",
+    "price": 4800000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 24000,
+        "defense": 24000,
+        "speed": 9600
+      }
+    },
+    "baseStats": {
+      "attack": 24000,
+      "defense": 24000,
+      "speed": 9600
+    },
+    "upgradeStats": {
+      "attack": 4800,
+      "defense": 4800,
+      "speed": 1920
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 480000
+  },
+  "reality_sovereign_ring": {
+    "name": "🎭 Reality Sovereign Ring",
+    "type": "ACCESSORY",
+    "description": "🌌 Cincin yang mengendalikan matriks realitas",
+    "price": 4500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 22500,
+        "defense": 22500,
+        "speed": 9000
+      }
+    },
+    "baseStats": {
+      "attack": 22500,
+      "defense": 22500,
+      "speed": 9000
+    },
+    "upgradeStats": {
+      "attack": 4500,
+      "defense": 4500,
+      "speed": 1800
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 450000
+  },
+  "infinity_paradigm_bracelet": {
+    "name": "♾️ Infinity Paradigm Bracelet",
+    "type": "ACCESSORY",
+    "description": "🌌 Gelang yang melampaui konsep ketidakterbatasan",
+    "price": 4200000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 21000,
+        "defense": 21000,
+        "speed": 8400
+      }
+    },
+    "baseStats": {
+      "attack": 21000,
+      "defense": 21000,
+      "speed": 8400
+    },
+    "upgradeStats": {
+      "attack": 4200,
+      "defense": 4200,
+      "speed": 1680
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 420000
+  },
+  "quantum_absolute_earring": {
+    "name": "⚛️ Quantum Absolute Earring",
+    "type": "ACCESSORY", 
+    "description": "🌌 Anting-anting yang menguasai seluruh kemungkinan kuantum",
+    "price": 4000000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 20000,
+        "defense": 20000,
+        "speed": 8000
+      }
+    },
+    "baseStats": {
+      "attack": 20000,
+      "defense": 20000,
+      "speed": 8000
+    },
+    "upgradeStats": {
+      "attack": 4000,
+      "defense": 4000,
+      "speed": 1600
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 400000
+  },
+  "cosmic_authority_talisman": {
+    "name": "🌠 Cosmic Authority Talisman",
+    "type": "ACCESSORY",
+    "description": "🌌 Jimat dengan otoritas kosmik absolut",
+    "price": 3800000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 19000,
+        "defense": 19000,
+        "speed": 7600
+      }
+    },
+    "baseStats": {
+      "attack": 19000,
+      "defense": 19000,
+      "speed": 7600
+    },
+    "upgradeStats": {
+      "attack": 3800,
+      "defense": 3800,
+      "speed": 1520
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 380000
+  },
+  "eternal_dominion_emblem": {
+    "name": "👑 Eternal Dominion Emblem",
+    "type": "ACCESSORY",
+    "description": "🌌 Emblem penguasa keabadian mutlak",
+    "price": 3500000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 17500,
+        "defense": 17500,
+        "speed": 7000
+      }
+    },
+    "baseStats": {
+      "attack": 17500,
+      "defense": 17500,
+      "speed": 7000
+    },
+    "upgradeStats": {
+      "attack": 3500,
+      "defense": 3500,
+      "speed": 1400
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 350000
+  },
+  "void_supremacy_pendant": {
+    "name": "⚫ Void Supremacy Pendant",
+    "type": "ACCESSORY",
+    "description": "🌌 Liontin dengan supremasi kekosongan absolut",
+    "price": 3200000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 16000,
+        "defense": 16000,
+        "speed": 6400
+      }
+    },
+    "baseStats": {
+      "attack": 16000,
+      "defense": 16000,
+      "speed": 6400
+    },
+    "upgradeStats": {
+      "attack": 3200,
+      "defense": 3200,
+      "speed": 1280
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 320000
+  },
+  "dimensional_apex_amulet": {
+    "name": "🌀 Dimensional Apex Amulet",
+    "type": "ACCESSORY",
+    "description": "🌌 Jimat puncak dimensi",
+    "price": 3000000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 15000,
+        "defense": 15000,
+        "speed": 6000
+      }
+    },
+    "baseStats": {
+      "attack": 15000,
+      "defense": 15000,
+      "speed": 6000
+    },
+    "upgradeStats": {
+      "attack": 3000,
+      "defense": 3000,
+      "speed": 1200
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 300000
+  },
+  "chaos_absolute_ring": {
+    "name": "🌪️ Chaos Absolute Ring",
+    "type": "ACCESSORY",
+    "description": "🌌 Cincin kekacauan mutlak",
+    "price": 2800000000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 14000,
+        "defense": 14000,
+        "speed": 5600
+      }
+    },
+    "baseStats": {
+      "attack": 14000,
+      "defense": 14000,
+      "speed": 5600
+    },
+    "upgradeStats": {
+      "attack": 2800,
+      "defense": 2800,
+      "speed": 1120
+    },
+    "maxLevel": 200,
+    "rarity": "ULTIMATE",
+    "stackLimit": 1,
+    "maxDurability": 280000
   }
 }
