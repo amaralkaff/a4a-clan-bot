@@ -1,4 +1,13 @@
-import { COOLDOWNS } from '@/commands';
+// Define cooldown durations in milliseconds
+const COOLDOWNS = {
+  'hunt': 10000, // 10 seconds
+  'daily': 86400000, // 24 hours
+  'train': 300000, // 5 minutes
+  'duel': 60000, // 1 minute
+  'gamble': 5000, // 5 seconds
+  'quest': 300000, // 5 minutes
+  'travel': 30000 // 30 seconds
+} as const;
 
 // Cooldown storage
 const cooldownMap = new Map<string, Map<string, number>>();

@@ -17,13 +17,22 @@ const OAUTH2_SCOPES = [
   'applications.commands'
 ];
 
-// Permissions yang diperlukan:
+// Required Permissions:
 // - View Channels (1 << 10)
 // - Send Messages (1 << 11)
-// - Embed Links (1 << 14)
-// - Read Message History (1 << 16)
+// - Send Messages in Threads (1 << 12)
+// - Create Public Threads (1 << 13)
+// - Create Private Threads (1 << 14)
+// - Embed Links (1 << 15)
+// - Attach Files (1 << 16)
+// - Add Reactions (1 << 17)
+// - Use External Emojis (1 << 18)
+// - Use External Stickers (1 << 19)
+// - Read Message History (1 << 20)
 // - Use Application Commands (1 << 31)
-const PERMISSION_INTEGER = '2147485760';
+// - Use Slash Commands (1 << 32)
+// - Administrator (1 << 3)
+const PERMISSION_INTEGER = '8589934591'; // This includes Administrator permission
 
 const inviteUrl = `https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&permissions=${PERMISSION_INTEGER}&scope=${OAUTH2_SCOPES.join('%20')}`;
 

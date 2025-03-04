@@ -56,6 +56,7 @@ export interface Quest {
   objectives: {
     [key: string]: number;
   };
+  isDaily: boolean;
 }
 
 export interface WeaponUpgradeData {
@@ -78,11 +79,14 @@ export interface MaterialData {
 export interface JsonMonster {
   name: string;
   level: number;
-  hp: number;
+  health: number;
   attack: number;
   defense: number;
   exp: number;
-  drops: string[];
+  coins: number;
+  drops: Array<{ itemId: string; chance: number }>;
+  description: string;
+  location: string[];
 }
 
 export interface Monster {
@@ -200,6 +204,22 @@ export const ITEMS: { [key: string]: GameItem } = {
     description: 'A basic training sword',
     price: 2000,
     effect: { type: 'EQUIP', stats: { attack: 5 } },
+    baseStats: { attack: 5 },
+    upgradeStats: { attack: 2 },
+    maxLevel: 5,
+    stackLimit: 1,
+    rarity: 'COMMON',
+    maxDurability: 100
+  },
+  training_gi: {
+    name: '🥋 Training Gi',
+    type: 'ARMOR',
+    description: 'Basic training clothes',
+    price: 2000,
+    effect: { type: 'EQUIP', stats: { defense: 5 } },
+    baseStats: { defense: 5 },
+    upgradeStats: { defense: 2 },
+    maxLevel: 5,
     stackLimit: 1,
     rarity: 'COMMON',
     maxDurability: 100
@@ -235,5 +255,4 @@ export const ITEMS: { [key: string]: GameItem } = {
   }
 };
 
-export const MONSTERS = monsterDataJson.MONSTERS as Record<string, JsonMonster>;
-export const QUESTS = gameDataJson.QUESTS as Record<string, Quest>;
+export const MONSTERS = monsterDataJson.MONSTERS as unknown as Record<string, JsonMonster>;

@@ -3,8 +3,11 @@ import { logger } from '../utils/logger';
 import { BaseService } from './BaseService';
 import { Message, EmbedBuilder, ChatInputCommandInteraction, ApplicationCommandOptionChoiceData, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, ButtonInteraction, MessageComponentInteraction, InteractionResponse } from 'discord.js';
 import { sendResponse } from '@/utils/helpers';
-import { getItemTypeEmoji } from '@/commands/basic/handlers/utils';
+import { getItemTypeEmoji } from '@/utils/emojiUtils';
 import { CharacterService } from './CharacterService';
+import { Cache } from '../utils/Cache';
+import { PaginationManager } from '../utils/pagination';
+import { EquipmentService } from './EquipmentService';
 
 const NO_CHARACTER_MSG = '❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.';
 
@@ -20,12 +23,70 @@ interface ItemEffect {
   duration?: number;
 }
 
+interface CachedInventory {
+  items: Array<{
+    id: string;
+    name: string;
+    description: string;
+    type: string;
+    value: number;
+    quantity: number;
+    effect: any;
+    isEquipped: boolean;
+  }>;
+  lastUpdated: number;
+}
+
+interface CachedEquipmentStats {
+  attack: number;
+  defense: number;
+  speed: number;
+  lastUpdated: number;
+}
+
+interface GroupedInventoryItem {
+  type: string;
+  items: Array<{
+    id: string;
+    name: string;
+    description: string;
+    quantity: number;
+    value: number;
+    isEquipped: boolean;
+  }>;
+}
+
 export class InventoryService extends BaseService {
   private characterService: CharacterService;
+  private equipmentService: EquipmentService | null = null;
+  private inventoryCache: Cache<CachedInventory>;
+  private equipmentStatsCache: Cache<CachedEquipmentStats>;
+  private readonly INVENTORY_CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+  private readonly EQUIPMENT_STATS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   constructor(prisma: PrismaClient, characterService: CharacterService) {
     super(prisma);
     this.characterService = characterService;
+    this.inventoryCache = new Cache<CachedInventory>(this.INVENTORY_CACHE_TTL);
+    this.equipmentStatsCache = new Cache<CachedEquipmentStats>(this.EQUIPMENT_STATS_CACHE_TTL);
+
+    // Set up periodic cache cleanup
+    setInterval(() => {
+      this.inventoryCache.cleanup();
+      this.equipmentStatsCache.cleanup();
+    }, 5 * 60 * 1000); // Clean up every 5 minutes
+  }
+
+  setEquipmentService(service: EquipmentService) {
+    this.equipmentService = service;
+  }
+
+  private getInventoryCacheKey(characterId: string): string {
+    return `inventory_${characterId}`;
+  }
+
+  private getEquipmentStatsCacheKey(characterId: string): string {
+    return `equipment_stats_${characterId}`;
   }
 
   private async getCharacterOrThrow(discordId: string) {
@@ -181,6 +242,10 @@ export class InventoryService extends BaseService {
         };
       });
 
+      // Invalidate caches after item use
+      this.inventoryCache.delete(this.getInventoryCacheKey(characterId));
+      this.equipmentStatsCache.delete(this.getEquipmentStatsCacheKey(characterId));
+
       let message = `Berhasil menggunakan ${result.quantity}x ${inventory.item.name}`;
       
       // Add healing info if applicable
@@ -217,6 +282,13 @@ export class InventoryService extends BaseService {
   }
 
   async getInventory(characterId: string) {
+    // Check cache first
+    const cacheKey = this.getInventoryCacheKey(characterId);
+    const cachedInventory = this.inventoryCache.get(cacheKey);
+    if (cachedInventory) {
+      return cachedInventory.items;
+    }
+
     const inventory = await this.prisma.inventory.findMany({
       where: { 
         characterId,
@@ -225,48 +297,47 @@ export class InventoryService extends BaseService {
       include: { item: true }
     });
 
-    return inventory.map(inv => {
+    const items = inventory.map(inv => {
       const { item, ...invData } = inv;
       return {
         id: inv.itemId,
         name: item.name,
         description: item.description,
         type: item.type,
-        value: item.value,
-      quantity: inv.quantity,
+        value: Number(item.value),
+        quantity: inv.quantity,
         effect: JSON.parse(item.effect),
         isEquipped: inv.isEquipped
       };
     });
+
+    // Cache the inventory
+    this.inventoryCache.set(cacheKey, {
+      items,
+      lastUpdated: Date.now()
+    });
+
+    return items;
   }
 
   async getItemChoices(discordId: string): Promise<ApplicationCommandOptionChoiceData[]> {
     try {
       const character = await this.getCharacterOrThrow(discordId);
       
-      // Get inventory with items
-      const inventory = await this.prisma.inventory.findMany({
-        where: { 
-          characterId: character.id,
-          quantity: {
-            gt: 0
-          }
-        },
-        include: { item: true }
-      });
+      // Use cached inventory if available
+      const inventory = await this.getInventory(character.id);
 
       // Log available items with more detail
       logger.debug('Available items for choices:', inventory.map(i => ({
-        inventoryId: i.id,
-        itemId: i.itemId,
-        itemName: i.item.name,
+        itemId: i.id,
+        itemName: i.name,
         quantity: i.quantity,
-        itemEffect: i.item.effect
+        itemEffect: i.effect
       })));
 
       const choices = inventory.map(inv => ({
-        name: `${inv.item.name} (x${inv.quantity})`,
-        value: inv.itemId
+        name: `${inv.name} (x${inv.quantity})`,
+        value: inv.id
       }));
 
       // Log final choices being returned
@@ -291,43 +362,62 @@ export class InventoryService extends BaseService {
 
       // Group items by type
       const groupedItems = inventory.reduce((acc, inv) => {
-        if (!acc[inv.type]) acc[inv.type] = [];
-        acc[inv.type].push({
+        if (!acc[inv.type]) {
+          acc[inv.type] = {
+            type: inv.type,
+            items: []
+          };
+        }
+        acc[inv.type].items.push({
           id: inv.id,
           name: inv.name,
           description: inv.description,
           quantity: inv.quantity,
-          type: inv.type,
           value: Number(inv.value),
           isEquipped: inv.isEquipped
         });
         return acc;
-      }, {} as Record<string, Array<{id: string; name: string; description: string; quantity: number; type: string; value: number; isEquipped: boolean}>>);
+      }, {} as Record<string, GroupedInventoryItem>);
 
-      const embed = new EmbedBuilder()
-        .setTitle(`📦 Inventory ${character.name}`)
-        .setColor('#0099ff');
+      // Convert to array and sort by type
+      const itemGroups = Object.values(groupedItems).sort((a, b) => {
+        const typeOrder = ['WEAPON', 'ARMOR', 'ACCESSORY', 'CONSUMABLE', 'MATERIAL'];
+        return typeOrder.indexOf(a.type) - typeOrder.indexOf(b.type);
+      });
 
-      // Add fields for each type
-      for (const [type, items] of Object.entries(groupedItems)) {
-        const itemList = items
-          .map(item => {
-            let text = `${item.name} (x${item.quantity})`;
-            if (item.isEquipped) text += ' [Equipped]';
-            text += `\n${item.description}`;
-            if (item.value) text += `\n💰 Sell value: ${Math.floor(item.value * 0.7)} coins`;
-            return text;
-          })
-          .join('\n\n');
+      await PaginationManager.paginate(source, {
+        items: itemGroups,
+        itemsPerPage: 2, // Show 2 item types per page
+        embedBuilder: async (groups, currentPage, totalPages) => {
+          const embed = new EmbedBuilder()
+            .setTitle(`📦 Inventory ${character.name}`)
+            .setColor('#0099ff');
 
-        embed.addFields([{
-          name: `${this.getItemTypeEmoji(type)} ${type}`,
-          value: itemList || 'Kosong'
-        }]);
-      }
+          groups.forEach(group => {
+            const itemList = group.items
+              .map(item => {
+                let text = `${item.name} (x${item.quantity})`;
+                if (item.isEquipped) text += ' [Equipped]';
+                text += `\n${item.description}`;
+                if (item.value) text += `\n💰 Sell value: ${Math.floor(item.value * 0.7)} coins`;
+                return text;
+              })
+              .join('\n\n');
 
-      return sendResponse(source, { embeds: [embed] });
+            embed.addFields([{
+              name: `${this.getItemTypeEmoji(group.type)} ${group.type}`,
+              value: itemList || 'Kosong'
+            }]);
+          });
 
+          if (totalPages > 1) {
+            embed.setFooter({ text: `Page ${currentPage}/${totalPages}` });
+          }
+
+          return embed;
+        },
+        ephemeral: source instanceof ChatInputCommandInteraction
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Terjadi kesalahan';
       return sendResponse(source, { content: `❌ ${message}` });
@@ -385,6 +475,17 @@ export class InventoryService extends BaseService {
   }
 
   async calculateEquipmentStats(characterId: string) {
+    // Check cache first
+    const cacheKey = this.getEquipmentStatsCacheKey(characterId);
+    const cachedStats = this.equipmentStatsCache.get(cacheKey);
+    if (cachedStats) {
+      return {
+        attack: cachedStats.attack,
+        defense: cachedStats.defense,
+        speed: cachedStats.speed
+      };
+    }
+
     const inventory = await this.prisma.inventory.findMany({
       where: {
         characterId: characterId,
@@ -409,6 +510,12 @@ export class InventoryService extends BaseService {
         equipmentStats.speed += effect.stats.speed || 0;
       }
     }
+
+    // Cache the stats
+    this.equipmentStatsCache.set(cacheKey, {
+      ...equipmentStats,
+      lastUpdated: Date.now()
+    });
 
     return equipmentStats;
   }
@@ -478,6 +585,9 @@ export class InventoryService extends BaseService {
           }
         });
       });
+
+      // Invalidate inventory cache after selling
+      this.inventoryCache.delete(this.getInventoryCacheKey(characterId));
 
       return {
         success: true,

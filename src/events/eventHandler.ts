@@ -1,8 +1,10 @@
-import { Client, Events, Interaction, ChatInputCommandInteraction, AutocompleteInteraction, MessageFlags } from 'discord.js';
-import { PrismaClient } from '@prisma/client';
+import { Client, Events, Interaction, Collection } from 'discord.js';
 import { logger } from '../utils/logger';
 import { ServiceContainer } from '@/services';
-import { commandList } from '@/commands/commandList';
+import { loadCommands } from '@/utils/commandLoader';
+import { CommandHandler } from '@/types/commands';
+import { handleMessageCommand } from '../utils/messageHandler';
+import { ErrorUtils } from '@/utils/errorUtils';
 
 interface Quest {
   id: string;
@@ -14,55 +16,69 @@ interface Quest {
 }
 
 export async function setupEventHandlers(client: Client, services: ServiceContainer) {
+  // Load commands
+  const commands = await loadCommands(client);
+
+  // Handle slash commands
   client.on(Events.InteractionCreate, async (interaction: Interaction) => {
     try {
-      // Handle slash commands
-      if (interaction.isChatInputCommand()) {
-        const command = commandList[interaction.commandName];
-        if (!command) {
-          return interaction.reply({
-            content: '❌ Command tidak ditemukan!',
+      if (!interaction.isChatInputCommand()) return;
+
+      logger.info(`Received command: ${interaction.commandName} from ${interaction.user.tag}`);
+
+      const command = commands.get(interaction.commandName);
+
+      if (!command) {
+        logger.warn(`No command matching ${interaction.commandName} was found.`);
+        await interaction.reply({ 
+          content: '❌ Command tidak ditemukan. Gunakan `/help` untuk melihat daftar command.',
+          ephemeral: true 
+        });
+        return;
+      }
+
+      try {
+        logger.info(`Executing command: ${interaction.commandName} by ${interaction.user.tag}`);
+        await command.execute(interaction, services);
+      } catch (error) {
+        logger.error(`Error executing command ${interaction.commandName}:`, error);
+        
+        // Handle different error states
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({
+            content: '❌ Terjadi kesalahan saat menjalankan command.',
             ephemeral: true
           });
-        }
-
-        try {
-          await command.execute(interaction, services);
-        } catch (error) {
-          logger.error('Error executing command:', error);
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          
-          if (interaction.replied || interaction.deferred) {
-            await interaction.followUp({
-              content: `❌ Error: ${errorMessage}`,
-              ephemeral: true
-            });
-          } else {
-            await interaction.reply({
-              content: `❌ Error: ${errorMessage}`,
-              ephemeral: true
-            });
-          }
-        }
-      }
-      
-      // Handle autocomplete interactions
-      if (interaction.isAutocomplete()) {
-        try {
-          const command = interaction.commandName;
-          const subcommand = interaction.options.getSubcommand();
-          const focusedOption = interaction.options.getFocused(true);
-
-          if (command === 'a' && subcommand === 'u' && focusedOption.name === 'item') {
-            const choices = await services.inventory.getItemChoices(interaction.user.id);
-            await interaction.respond(choices);
-          }
-        } catch (error) {
-          logger.error('Error handling autocomplete:', error);
+        } else if (interaction.deferred) {
+          await interaction.editReply({
+            content: '❌ Terjadi kesalahan saat menjalankan command.'
+          });
+        } else {
+          await interaction.followUp({
+            content: '❌ Terjadi kesalahan saat menjalankan command.',
+            ephemeral: true
+          });
         }
       }
     } catch (error) {
       logger.error('Error handling interaction:', error);
+    }
+  });
+
+  // Handle message commands (legacy)
+  client.on(Events.MessageCreate, async (message) => {
+    if (message.author.bot) return;
+    if (!message.content.toLowerCase().startsWith('a ')) return;
+    
+    try {
+      await handleMessageCommand(message, services);
+    } catch (error) {
+      logger.error('Error handling message command:', error);
+      await ErrorUtils.handleError({
+        context: 'COMMAND',
+        error: '❌ Terjadi kesalahan saat menjalankan command.',
+        source: message
+      });
     }
   });
 
@@ -71,11 +87,13 @@ export async function setupEventHandlers(client: Client, services: ServiceContai
     logger.warn('Rate limit hit:', rateLimitInfo);
   });
 
-  client.on(Events.ClientReady, () => {
-    logger.info(`Logged in as ${client.user?.tag}`);
-    logger.info('Bot is ready!');
+  // Handle ready event
+  client.once(Events.ClientReady, () => {
+    logger.info(`Logged in as ${client.user?.tag}!`);
+    logger.info('Registered commands:', Array.from(commands.keys()).join(', '));
   });
 
+  // Handle errors
   client.on(Events.Error, (error) => {
     logger.error('Discord client error:', error);
   });
@@ -88,12 +106,15 @@ export async function setupEventHandlers(client: Client, services: ServiceContai
     logger.debug('Discord client debug:', info);
   });
 
-  // Handle guild join
+  // Handle guild join/leave
   client.on(Events.GuildCreate, guild => {
     logger.info(`Joined new guild: ${guild.name} (${guild.id})`);
+    // Re-register commands for new guild
+    loadCommands(client).catch(error => {
+      logger.error(`Failed to register commands for new guild ${guild.id}:`, error);
+    });
   });
 
-  // Handle guild leave
   client.on(Events.GuildDelete, guild => {
     logger.info(`Left guild: ${guild.name} (${guild.id})`);
   });

@@ -3,15 +3,47 @@ import { BaseService } from './BaseService';
 import { Message, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
 import { TransactionType } from '@/types/game';
 import { CharacterService } from './CharacterService';
+import { Cache } from '../utils/Cache';
 
 const NO_CHARACTER_MSG = '❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.';
 
+interface CachedBalance {
+  coins: number;
+  bank: number;
+  lastUpdated: number;
+}
+
+interface CachedTransactions {
+  transactions: any[];
+  lastUpdated: number;
+}
+
 export class EconomyService extends BaseService {
   private characterService: CharacterService;
+  private balanceCache: Cache<CachedBalance>;
+  private transactionCache: Cache<CachedTransactions>;
+  private readonly BALANCE_CACHE_TTL = 1 * 60 * 1000; // 1 minute
+  private readonly TRANSACTION_CACHE_TTL = 2 * 60 * 1000; // 2 minutes
 
   constructor(prisma: PrismaClient, characterService: CharacterService) {
     super(prisma);
     this.characterService = characterService;
+    this.balanceCache = new Cache<CachedBalance>(this.BALANCE_CACHE_TTL);
+    this.transactionCache = new Cache<CachedTransactions>(this.TRANSACTION_CACHE_TTL);
+
+    // Set up periodic cache cleanup
+    setInterval(() => {
+      this.balanceCache.cleanup();
+      this.transactionCache.cleanup();
+    }, 5 * 60 * 1000); // Clean up every 5 minutes
+  }
+
+  private getBalanceCacheKey(characterId: string): string {
+    return `balance_${characterId}`;
+  }
+
+  private getTransactionCacheKey(characterId: string): string {
+    return `transactions_${characterId}`;
   }
 
   async addCoins(characterId: string, amount: number, type: TransactionType, description: string) {
@@ -30,6 +62,10 @@ export class EconomyService extends BaseService {
           }
         })
       ]);
+
+      // Invalidate caches
+      this.balanceCache.delete(this.getBalanceCacheKey(characterId));
+      this.transactionCache.delete(this.getTransactionCacheKey(characterId));
     } catch (error) {
       return this.handleError(error, 'AddCoins');
     }
@@ -42,7 +78,7 @@ export class EconomyService extends BaseService {
       });
 
       if (!character) throw new Error('Character not found');
-      if (character.coins < amount) throw new Error('Insufficient coins');
+      if (Number(character.coins) < amount) throw new Error('Insufficient coins');
 
       await this.prisma.$transaction([
         this.prisma.character.update({
@@ -58,6 +94,10 @@ export class EconomyService extends BaseService {
           }
         })
       ]);
+
+      // Invalidate caches
+      this.balanceCache.delete(this.getBalanceCacheKey(characterId));
+      this.transactionCache.delete(this.getTransactionCacheKey(characterId));
     } catch (error) {
       return this.handleError(error, 'RemoveCoins');
     }
@@ -74,7 +114,7 @@ export class EconomyService extends BaseService {
         throw new Error('One or both characters not found');
       }
 
-      if (sender.coins < amount) {
+      if (Number(sender.coins) < amount) {
         throw new Error('Insufficient coins');
       }
 
@@ -105,6 +145,12 @@ export class EconomyService extends BaseService {
         })
       ]);
 
+      // Invalidate caches for both sender and receiver
+      this.balanceCache.delete(this.getBalanceCacheKey(senderId));
+      this.balanceCache.delete(this.getBalanceCacheKey(receiverId));
+      this.transactionCache.delete(this.getTransactionCacheKey(senderId));
+      this.transactionCache.delete(this.getTransactionCacheKey(receiverId));
+
       return {
         success: true,
         message: `Successfully transferred ${amount} coins from ${sender.name} to ${receiver.name}`
@@ -121,7 +167,7 @@ export class EconomyService extends BaseService {
       });
 
       if (!character) throw new Error('Character not found');
-      if (character.coins < amount) throw new Error('Insufficient coins');
+      if (Number(character.coins) < amount) throw new Error('Insufficient coins');
 
       await this.prisma.$transaction([
         this.prisma.character.update({
@@ -140,6 +186,10 @@ export class EconomyService extends BaseService {
           }
         })
       ]);
+
+      // Invalidate caches
+      this.balanceCache.delete(this.getBalanceCacheKey(characterId));
+      this.transactionCache.delete(this.getTransactionCacheKey(characterId));
     } catch (error) {
       return this.handleError(error, 'DepositToBank');
     }
@@ -152,7 +202,7 @@ export class EconomyService extends BaseService {
       });
 
       if (!character) throw new Error('Character not found');
-      if (character.bank < amount) throw new Error('Insufficient bank balance');
+      if (Number(character.bank) < amount) throw new Error('Insufficient bank balance');
 
       await this.prisma.$transaction([
         this.prisma.character.update({
@@ -171,6 +221,10 @@ export class EconomyService extends BaseService {
           }
         })
       ]);
+
+      // Invalidate caches
+      this.balanceCache.delete(this.getBalanceCacheKey(characterId));
+      this.transactionCache.delete(this.getTransactionCacheKey(characterId));
     } catch (error) {
       return this.handleError(error, 'WithdrawFromBank');
     }
@@ -178,6 +232,16 @@ export class EconomyService extends BaseService {
 
   async getBalance(characterId: string): Promise<{ coins: number; bank: number }> {
     try {
+      // Check cache first
+      const cacheKey = this.getBalanceCacheKey(characterId);
+      const cachedBalance = this.balanceCache.get(cacheKey);
+      if (cachedBalance) {
+        return {
+          coins: cachedBalance.coins,
+          bank: cachedBalance.bank
+        };
+      }
+
       const character = await this.prisma.character.findUnique({
         where: { id: characterId },
         select: { coins: true, bank: true }
@@ -185,10 +249,18 @@ export class EconomyService extends BaseService {
 
       if (!character) throw new Error('Character not found');
 
-      return {
-        coins: character.coins,
-        bank: character.bank
+      const balance = {
+        coins: Number(character.coins),
+        bank: Number(character.bank)
       };
+
+      // Cache the balance
+      this.balanceCache.set(cacheKey, {
+        ...balance,
+        lastUpdated: Date.now()
+      });
+
+      return balance;
     } catch (error) {
       return this.handleError(error, 'GetBalance');
     }
@@ -196,11 +268,26 @@ export class EconomyService extends BaseService {
 
   async getTransactionHistory(characterId: string, limit: number = 10): Promise<any[]> {
     try {
-      return await this.prisma.transaction.findMany({
+      // Check cache first
+      const cacheKey = this.getTransactionCacheKey(characterId);
+      const cachedTransactions = this.transactionCache.get(cacheKey);
+      if (cachedTransactions && cachedTransactions.transactions.length >= limit) {
+        return cachedTransactions.transactions.slice(0, limit);
+      }
+
+      const transactions = await this.prisma.transaction.findMany({
         where: { characterId },
         orderBy: { createdAt: 'desc' },
         take: limit
       });
+
+      // Cache the transactions
+      this.transactionCache.set(cacheKey, {
+        transactions,
+        lastUpdated: Date.now()
+      });
+
+      return transactions;
     } catch (error) {
       return this.handleError(error, 'GetTransactionHistory');
     }

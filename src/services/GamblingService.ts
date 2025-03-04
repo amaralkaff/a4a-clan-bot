@@ -4,6 +4,7 @@ import { CharacterService } from './CharacterService';
 import { Message, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
 import { createEphemeralReply } from '@/utils/helpers';
 import { logger } from '@/utils/logger';
+import { Cache } from '../utils/Cache';
 
 const COOLDOWN_TIME = 10000; // 10 seconds
 const MIN_BET = 100;
@@ -14,6 +15,19 @@ interface SlotSymbol {
   name: string;
   multiplier: number;
   weight: number;
+}
+
+interface CachedGamblingStats {
+  totalGambled: number;
+  totalWon: number;
+  wins: number;
+  losses: number;
+  lastUpdated: number;
+}
+
+interface CachedCooldown {
+  lastGambleTime: number;
+  lastUpdated: number;
 }
 
 const SLOT_SYMBOLS: SlotSymbol[] = [
@@ -33,11 +47,30 @@ const ANIMATIONS = [
 
 export class GamblingService extends BaseService {
   private characterService: CharacterService;
-  private lastGambleTime: Map<string, number> = new Map();
+  private gamblingStatsCache: Cache<CachedGamblingStats>;
+  private cooldownCache: Cache<CachedCooldown>;
+  private readonly STATS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  private readonly COOLDOWN_CACHE_TTL = 30 * 1000; // 30 seconds
 
   constructor(prisma: PrismaClient, characterService: CharacterService) {
     super(prisma);
     this.characterService = characterService;
+    this.gamblingStatsCache = new Cache<CachedGamblingStats>(this.STATS_CACHE_TTL);
+    this.cooldownCache = new Cache<CachedCooldown>(this.COOLDOWN_CACHE_TTL);
+
+    // Set up periodic cache cleanup
+    setInterval(() => {
+      this.gamblingStatsCache.cleanup();
+      this.cooldownCache.cleanup();
+    }, 5 * 60 * 1000); // Clean up every 5 minutes
+  }
+
+  private getStatsCacheKey(characterId: string): string {
+    return `gambling_stats_${characterId}`;
+  }
+
+  private getCooldownCacheKey(userId: string): string {
+    return `gambling_cooldown_${userId}`;
   }
 
   private getRandomSymbol(): SlotSymbol {
@@ -55,14 +88,93 @@ export class GamblingService extends BaseService {
   }
 
   private async checkCooldown(userId: string): Promise<{ canGamble: boolean; timeLeft: number }> {
-    const lastTime = this.lastGambleTime.get(userId) || 0;
+    // Check cache first
+    const cacheKey = this.getCooldownCacheKey(userId);
+    const cachedCooldown = this.cooldownCache.get(cacheKey);
     const now = Date.now();
-    const timeLeft = Math.max(0, COOLDOWN_TIME - (now - lastTime));
-    
+
+    if (cachedCooldown) {
+      const timeLeft = Math.max(0, COOLDOWN_TIME - (now - cachedCooldown.lastGambleTime));
+      return {
+        canGamble: timeLeft === 0,
+        timeLeft: Math.ceil(timeLeft / 1000)
+      };
+    }
+
+    // If not in cache, assume cooldown has expired
     return {
-      canGamble: timeLeft === 0,
-      timeLeft: Math.ceil(timeLeft / 1000)
+      canGamble: true,
+      timeLeft: 0
     };
+  }
+
+  private async updateCooldown(userId: string) {
+    const cacheKey = this.getCooldownCacheKey(userId);
+    this.cooldownCache.set(cacheKey, {
+      lastGambleTime: Date.now(),
+      lastUpdated: Date.now()
+    });
+  }
+
+  private async getGamblingStats(characterId: string): Promise<CachedGamblingStats> {
+    const cacheKey = this.getStatsCacheKey(characterId);
+    const cachedStats = this.gamblingStatsCache.get(cacheKey);
+    if (cachedStats) {
+      return cachedStats;
+    }
+
+    const character = await this.prisma.character.findUnique({
+      where: { id: characterId },
+      select: {
+        totalGambled: true,
+        totalWon: true,
+        wins: true,
+        losses: true
+      }
+    });
+
+    if (!character) {
+      throw new Error('Character not found');
+    }
+
+    const stats = {
+      totalGambled: Number(character.totalGambled || 0),
+      totalWon: Number(character.totalWon || 0),
+      wins: character.wins || 0,
+      losses: character.losses || 0,
+      lastUpdated: Date.now()
+    };
+
+    this.gamblingStatsCache.set(cacheKey, stats);
+    return stats;
+  }
+
+  private async updateGamblingStats(characterId: string, betAmount: number, won: boolean, winAmount?: number) {
+    const cacheKey = this.getStatsCacheKey(characterId);
+    
+    // Update database
+    await this.prisma.character.update({
+      where: { id: characterId },
+      data: {
+        totalGambled: { increment: betAmount },
+        totalWon: won && winAmount ? { increment: winAmount } : undefined,
+        wins: won ? { increment: 1 } : undefined,
+        losses: !won ? { increment: 1 } : undefined
+      }
+    });
+
+    // Update cache
+    const currentStats = await this.getGamblingStats(characterId);
+    const updatedStats = {
+      ...currentStats,
+      totalGambled: currentStats.totalGambled + betAmount,
+      totalWon: won && winAmount ? currentStats.totalWon + winAmount : currentStats.totalWon,
+      wins: won ? currentStats.wins + 1 : currentStats.wins,
+      losses: !won ? currentStats.losses + 1 : currentStats.losses,
+      lastUpdated: Date.now()
+    };
+
+    this.gamblingStatsCache.set(cacheKey, updatedStats);
   }
 
   private async animateSlots(message: Message | ChatInputCommandInteraction, bet: number): Promise<{
@@ -141,16 +253,16 @@ export class GamblingService extends BaseService {
       const { symbols, multiplier, won } = await this.animateSlots(source, betAmount);
       
       // Process result
+      const winAmount = won ? betAmount * multiplier : 0;
       if (won) {
-        const winAmount = betAmount * multiplier;
         await this.characterService.addCoins(character.id, winAmount, 'GAMBLE_WIN', 'Slot machine win');
       }
       
-      // Update gambling stats
-      await this.characterService.updateGamblingStats(character.id, betAmount, won);
+      // Update gambling stats with win amount
+      await this.updateGamblingStats(character.id, betAmount, won, winAmount);
       
-      // Set cooldown
-      this.lastGambleTime.set(userId, Date.now());
+      // Update cooldown
+      await this.updateCooldown(userId);
       
     } catch (error) {
       logger.error('Error in handleSlots:', error);

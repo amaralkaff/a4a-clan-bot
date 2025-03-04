@@ -6,8 +6,8 @@
   "scripts": {
     "start": "bun dist/index.js",
     "build": "bun build ./src/index.ts --outdir ./dist --target node",
-    "dev": "bun run src/index.ts",
-    "deploy": "bun run src/deploy-commands.ts",
+    "dev": "bun --watch src/index.ts",
+    "deploy": "bun build ./src/scripts/deploy-commands.ts --outdir ./dist/scripts --target node && node dist/scripts/deploy-commands.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "prisma db seed"
@@ -16,15 +16,16 @@
     "seed": "bun prisma/seed.ts"
   },
   "dependencies": {
-    "@prisma/client": "^6.4.1",
+    "@prisma/client": "^5.10.2",
     "discord.js": "^14.14.1",
-    "dotenv": "^16.4.1",
+    "dotenv": "^16.4.5",
     "reflect-metadata": "^0.2.2",
-    "tsyringe": "^4.8.0"
+    "tsyringe": "^4.8.0",
+    "winston": "^3.11.0"
   },
   "devDependencies": {
-    "@types/node": "^20.11.17",
-    "prisma": "^6.4.1",
+    "@types/node": "^20.11.20",
+    "prisma": "^5.10.2",
     "typescript": "^5.3.3"
   },
   "type": "module"

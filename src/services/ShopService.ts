@@ -1,8 +1,10 @@
 import { PrismaClient } from '@prisma/client';
 import { BaseService } from './BaseService';
-import { Message, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } from 'discord.js';
+import { Message, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, ChatInputCommandInteraction, APIEmbedField } from 'discord.js';
 import { CharacterService } from './CharacterService';
 import { InventoryService } from './InventoryService';
+import { Cache } from '../utils/Cache';
+import { createEphemeralReply } from '../utils/helpers';
 import { 
   GameItem, 
   ITEMS, 
@@ -17,72 +19,24 @@ import {
   Stats,
   EffectData
 } from '../types/game';
-import { ChatInputCommandInteraction } from 'discord.js';
+import {
+  ItemStats,
+  ItemEffect,
+  DbItem,
+  ShopItem,
+  BuyResult,
+  CachedShopItems,
+  CachedDbItems,
+  ShopItemTuple
+} from '../types/shop';
+import { EmbedFactory } from '../utils/embedBuilder';
+import { DataCache } from './DataCache';
+import { PaginationManager } from '../utils/pagination';
+import { ErrorHandler, CharacterError, ShopError } from '../utils/errors';
+import { logger } from '../utils/logger';
+import { EquipmentService } from './EquipmentService';
 
 const ITEMS_PER_PAGE = 10;
-
-type ShopItemTuple = [string, GameItem];
-
-interface ItemStats extends Stats {
-  [key: string]: number | undefined;
-}
-
-interface ItemEffect {
-  type: EffectType;
-  stats?: ItemStats;
-  durability?: number;
-  maxDurability?: number;
-  duration?: number;
-  health?: number;
-}
-
-interface DbItem {
-  id: string;
-  name: string;
-  type: ItemType;
-  description: string;
-  value: number;
-  effect: string;
-  maxDurability?: number | null;
-  stackLimit: number;
-  rarity: Rarity;
-  baseStats: string | null;
-  upgradeStats: string | null;
-  maxLevel?: number | null;
-}
-
-interface ShopItem {
-  id: string;
-  name: string;
-  description: string;
-  type: string;
-  price: number;
-  effect: Effect;
-  baseStats?: string;
-  upgradeStats?: string;
-  maxDurability?: number | null;
-  stackLimit: number;
-  rarity: string;
-  maxLevel?: number | null;
-}
-
-interface BuyResult {
-  success: boolean;
-  message: string;
-  embed?: EmbedBuilder;
-}
-
-interface InventoryItem {
-  id: string;
-  itemId: string;
-  name: string;
-  description: string;
-  type: string;
-  value: bigint;
-  quantity: number;
-  effect: any;
-  isEquipped: boolean;
-}
 
 // Type guard for EffectData
 function isEffectData(effect: unknown): effect is EffectData {
@@ -123,7 +77,7 @@ function formatStatValue(value: number | undefined): string {
   return value > 0 ? `+${value}` : `${value}`;
 }
 
-// Type guard untuk memvalidasi item tuple
+// Type guard for validating item tuple
 function isShopItemTuple(tuple: [string, any]): tuple is ShopItemTuple {
   const [_, item] = tuple;
   return (
@@ -171,64 +125,6 @@ function scalePrice(price: number): number {
     return Math.floor(price / 100);
   }
   return price;
-}
-
-// Update the findItemByName helper function
-async function findItemByName(prisma: PrismaClient, searchName: string): Promise<[string, GameItem] | null> {
-  // First try to find in ITEMS
-  const itemEntry = Object.entries(ITEMS).find(([_, item]) => {
-    const itemNameLower = item.name.toLowerCase();
-    const searchNameLower = searchName.toLowerCase();
-    
-    // Try exact match first
-    if (itemNameLower === searchNameLower) {
-      return true;
-    }
-    
-    // Try match without emojis
-    const cleanItemName = itemNameLower.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
-    const cleanSearchName = searchNameLower.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
-    
-    if (cleanItemName === cleanSearchName) {
-      return true;
-    }
-    
-    // Try partial match
-    return cleanItemName.includes(cleanSearchName) || cleanSearchName.includes(cleanItemName);
-  });
-
-  if (itemEntry) {
-    return itemEntry;
-  }
-
-  // If not found in ITEMS, try database
-  const dbItems = await prisma.item.findMany({
-    where: {
-      OR: [
-        { name: { contains: searchName.toLowerCase() } },
-        { name: { contains: searchName.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim().toLowerCase() } }
-      ]
-    }
-  });
-
-  if (dbItems.length > 0) {
-    const dbItem = dbItems[0];
-    return [dbItem.id, {
-      name: dbItem.name,
-      type: dbItem.type as ItemType,
-      description: dbItem.description,
-      price: Number(dbItem.value),
-      effect: validateAndConvertEffect(parseDbEffect(dbItem.effect)),
-      baseStats: dbItem.baseStats ? JSON.parse(dbItem.baseStats) : {},
-      upgradeStats: dbItem.upgradeStats ? JSON.parse(dbItem.upgradeStats) : {},
-      maxDurability: dbItem.maxDurability || undefined,
-      stackLimit: dbItem.stackLimit,
-      rarity: validateRarity(dbItem.rarity),
-      maxLevel: dbItem.maxLevel || undefined
-    } as GameItem];
-  }
-
-  return null;
 }
 
 // Helper function to validate and convert effect data
@@ -283,603 +179,224 @@ function validateRarity(rarity: string): Rarity {
   return validRarities.includes(upperRarity) ? upperRarity : 'COMMON';
 }
 
+interface ShopCategory {
+  type: ItemType;
+  items: Array<{
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    rarity: string;
+    effect: any;
+  }>;
+}
+
 export class ShopService extends BaseService {
   private characterService: CharacterService;
   private inventoryService: InventoryService;
+  private equipmentService: EquipmentService | null = null;
+  private shopItemsCache: Cache<CachedShopItems>;
+  private dbItemsCache: Cache<CachedDbItems>;
+  private readonly SHOP_ITEMS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  private readonly DB_ITEMS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  private readonly dataCache: DataCache;
+  private readonly shopCache: Cache<Record<string, GameItem>>;
+  private readonly ITEMS_PER_PAGE = 2; // Number of item categories per page
 
-  constructor(prisma: PrismaClient, characterService: CharacterService) {
+  constructor(
+    prisma: PrismaClient,
+    characterService: CharacterService,
+    inventoryService: InventoryService
+  ) {
     super(prisma);
     this.characterService = characterService;
-    this.inventoryService = new InventoryService(prisma, characterService);
+    this.inventoryService = inventoryService;
+    this.shopItemsCache = new Cache<CachedShopItems>();
+    this.dbItemsCache = new Cache<CachedDbItems>(this.DB_ITEMS_CACHE_TTL);
+    this.dataCache = DataCache.getInstance();
+    this.shopCache = new Cache<Record<string, GameItem>>(this.SHOP_ITEMS_CACHE_TTL);
+
+    // Set up periodic cache cleanup
+    setInterval(() => {
+      this.shopItemsCache.cleanup();
+      this.dbItemsCache.cleanup();
+      this.shopCache.cleanup();
+    }, 5 * 60 * 1000); // Clean up every 5 minutes
   }
 
-  private createShopEmbed(items: GameItem[], page: number, totalPages: number, balance: number) {
-    const embed = new EmbedBuilder()
-      .setTitle('🛍️ A4A CLAN Shop')
-      .setColor('#ffd700')
-      .setDescription(`💰 Uangmu: ${balance} coins`)
-      .setFooter({ text: `Halaman ${page + 1}/${totalPages}` });
-
-    // Group items by type for current page
-    const groupedItems: Record<string, GameItem[]> = {};
-    const startIdx = page * ITEMS_PER_PAGE;
-    const endIdx = Math.min(startIdx + ITEMS_PER_PAGE, items.length);
-    
-    // Check if we have items for this page
-    if (startIdx >= items.length) {
-      // If we're past the last item, go back to the last valid page
-      page = Math.max(0, Math.ceil(items.length / ITEMS_PER_PAGE) - 1);
-      const newStartIdx = page * ITEMS_PER_PAGE;
-      const newEndIdx = Math.min(newStartIdx + ITEMS_PER_PAGE, items.length);
-      
-      // Update items for the corrected page
-      for (let i = newStartIdx; i < newEndIdx; i++) {
-        const item = items[i];
-        const type = item.type;
-        if (!groupedItems[type]) {
-          groupedItems[type] = [];
-        }
-        groupedItems[type].push(item);
-      }
-    } else {
-      // Normal case - process items for current page
-      for (let i = startIdx; i < endIdx; i++) {
-        const item = items[i];
-        const type = item.type;
-        if (!groupedItems[type]) {
-          groupedItems[type] = [];
-        }
-        groupedItems[type].push(item);
-      }
-    }
-
-    // Add fields for each type
-    for (const [type, typeItems] of Object.entries(groupedItems)) {
-      let fieldValue = '';
-      
-      for (const item of typeItems) {
-        const displayPrice = scalePrice(item.price);
-        let itemText = `${item.name} - 💰 ${item.price.toLocaleString()} coins`;
-        itemText += `\n${item.description}`;
-
-        // Add stats if item has effect
-        if (item.effect) {
-          const effectData = getEffectData(item.effect);
-          if (effectData?.stats) {
-            const stats = Object.entries(effectData.stats)
-              .map(([stat, value]) => `${stat === 'attack' ? '⚔️' : '🛡️'} ${stat.toUpperCase()}: ${formatStatValue(value)}`)
-              .join(', ');
-            if (stats) {
-              itemText += `\n${stats}`;
-            }
-          }
-        }
-
-        const rarityEmoji = {
-          'COMMON': '⚪',
-          'UNCOMMON': '🟢',
-          'RARE': '🔵',
-          'EPIC': '🟣',
-          'LEGENDARY': '🟡',
-          'MYTHICAL': '🟣',
-          'DIVINE': '🟣',
-          'TRANSCENDENT': '🟣',
-          'CELESTIAL': '🟣',
-          'PRIMORDIAL': '🟣',
-          'ULTIMATE': '🔴'
-        }[item.rarity] || '⚪';
-        
-        itemText = `${rarityEmoji} ${itemText}`;
-
-        // Check if adding this item would exceed Discord's limit
-        if ((fieldValue + '\n\n' + itemText).length > 1024) {
-          // If it would exceed, create a new field
-          const typeEmoji = ITEM_TYPE_EMOJIS[type as keyof typeof ITEM_TYPE_EMOJIS] || '📦';
-          embed.addFields({
-            name: `${typeEmoji} ${type} (Lanjutan)`,
-            value: fieldValue
-          });
-          fieldValue = itemText;
-        } else {
-          fieldValue += (fieldValue ? '\n\n' : '') + itemText;
-        }
-      }
-
-      // Add the last field for this type
-      if (fieldValue) {
-        const typeEmoji = ITEM_TYPE_EMOJIS[type as keyof typeof ITEM_TYPE_EMOJIS] || '📦';
-        embed.addFields({
-          name: `${typeEmoji} ${type}`,
-          value: fieldValue
-        });
-      }
-    }
-
-    // If no items were added, add a message
-    if (embed.data.fields?.length === 0) {
-      embed.addFields({
-        name: '❌ Tidak ada item',
-        value: 'Tidak ada item yang ditemukan di halaman ini.'
-      });
-    }
-
-    return embed;
+  setEquipmentService(service: EquipmentService) {
+    this.equipmentService = service;
   }
 
-  private createBuyButtons(items: GameItem[], startIdx: number, endIdx: number) {
-    const rows: ActionRowBuilder<ButtonBuilder>[] = [];
-    let currentRow = new ActionRowBuilder<ButtonBuilder>();
-    let buttonCount = 0;
-
-    for (let i = startIdx; i < endIdx; i++) {
-      const item = items[i];
-      if (!item) continue;
-
-      // Create buy button for item using array index
-      const button = new ButtonBuilder()
-        .setCustomId(`buy_${i}_1`) // Use array index instead of item.id
-        .setLabel(`Buy ${item.name}`)
-        .setStyle(ButtonStyle.Success)
-        .setEmoji('🛒');
-
-      // Discord allows max 5 buttons per row
-      if (buttonCount % 5 === 0 && buttonCount !== 0) {
-        rows.push(currentRow);
-        currentRow = new ActionRowBuilder<ButtonBuilder>();
-      }
-
-      currentRow.addComponents(button);
-      buttonCount++;
-    }
-
-    // Add the last row if it has any buttons
-    if (currentRow.components.length > 0) {
-      rows.push(currentRow);
-    }
-
-    return rows;
+  private getShopItemsCacheKey(): string {
+    return 'shop_items';
   }
 
-  async handleShop(message: Message, args?: string[]) {
-    try {
-      const character = await this.characterService.getCharacterByDiscordId(message.author.id);
+  private getDbItemsCacheKey(): string {
+    return 'db_items';
+  }
+
+  private getShopCacheKey(): string {
+    return 'shop_items';
+  }
+
+  private async getShopItems(): Promise<Record<string, GameItem>> {
+    const cacheKey = this.getShopCacheKey();
+    const cachedItems = this.shopCache.get(cacheKey);
+    if (cachedItems) {
+      return cachedItems;
+    }
+
+    const items = this.dataCache.getItems();
+    this.shopCache.set(cacheKey, items);
+    return items;
+  }
+
+  private async getDbItems(): Promise<DbItem[]> {
+    // Check cache first
+    const cacheKey = this.getDbItemsCacheKey();
+    const cachedItems = this.dbItemsCache.get(cacheKey);
+    if (cachedItems) {
+      return cachedItems.items;
+    }
+
+    // Get items from database
+    const dbItems = await this.prisma.item.findMany();
+
+    // Convert types to match DbItem interface
+    const convertedItems: DbItem[] = dbItems.map(item => ({
+      id: item.id,
+      name: item.name,
+      type: item.type as ItemType,
+      description: item.description,
+      value: Number(item.value),
+      effect: item.effect,
+      maxDurability: item.maxDurability,
+      stackLimit: item.stackLimit,
+      rarity: item.rarity as Rarity,
+      baseStats: item.baseStats,
+      upgradeStats: item.upgradeStats,
+      maxLevel: item.maxLevel
+    }));
+
+    // Cache the items
+    this.dbItemsCache.set(cacheKey, {
+      items: convertedItems,
+      lastUpdated: Date.now()
+    });
+
+    return convertedItems;
+  }
+
+  private async createShopEmbed(userId: string) {
+    const character = await this.characterService.getCharacterByDiscordId(userId);
       
       if (!character) {
-        return message.reply('❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.');
+      throw new Error('❌ Kamu harus membuat karakter terlebih dahulu dengan `/start`');
       }
 
-      // Get character balance
       const balance = await this.characterService.getBalance(character.id);
 
-      // Get items from database
-      const dbItems = await this.prisma.item.findMany();
-      
-      // Convert DB items to GameItem format and merge with ITEMS
-      const mergedItems = {
-        ...ITEMS,
-        ...Object.fromEntries(
-          dbItems.map(dbItem => [
-            dbItem.id,
-            {
-              id: dbItem.id,
-              name: dbItem.name,
-              type: dbItem.type,
-              description: dbItem.description,
-              price: Number(dbItem.value),
-              effect: parseDbEffect(dbItem.effect) || {},
-              baseStats: dbItem.baseStats ? JSON.parse(dbItem.baseStats) : {},
-              upgradeStats: dbItem.upgradeStats ? JSON.parse(dbItem.upgradeStats) : {},
-              maxDurability: dbItem.maxDurability || undefined,
-              stackLimit: dbItem.stackLimit,
-              rarity: dbItem.rarity,
-              maxLevel: dbItem.maxLevel || undefined
-            } as GameItem
-          ])
-        )
-      };
-
-      // Convert items to array and sort by type and price
-      let itemsArray = Object.entries(mergedItems)
-        .filter(isShopItemTuple)
-        .map(([id, item]) => ({
-          id,
-          ...item
-        } as GameItem));
-
-      // Add some default items if shop is empty
-      if (itemsArray.length === 0) {
-        itemsArray = ([
-          {
-            id: 'health_potion',
-            name: '❤️ Health Potion',
-            type: 'CONSUMABLE',
-            description: 'Restores 100 HP',
-            price: 1000,
-            effect: { type: 'HEAL', health: 100 },
-            stackLimit: 99,
-            rarity: 'COMMON'
-          },
-          {
-            id: 'wooden_sword',
-            name: '⚔️ Wooden Sword',
-            type: 'WEAPON',
-            description: 'A basic training sword',
-            price: 2000,
-            effect: { type: 'EQUIP', stats: { attack: 5 } },
-            stackLimit: 1,
-            rarity: 'COMMON',
-            maxDurability: 100
-          }
-        ] as unknown) as GameItem[];
+    // Group items by type and rarity
+    const groupedItems: Record<string, Record<string, ShopItem[]>> = {};
+    const items = this.dataCache.getItems();
+    
+    Object.entries(items).forEach(([id, item]) => {
+      if (!groupedItems[item.type]) {
+        groupedItems[item.type] = {};
       }
-
-      // Filter by type if argument is provided
-      if (args && args.length > 0) {
-        const filterType = args[0].toUpperCase();
-        const validTypes: ItemType[] = ['WEAPON', 'ARMOR', 'ACCESSORY', 'CONSUMABLE', 'MATERIAL'];
-        
-        if (!validTypes.includes(filterType as ItemType) && filterType !== 'DEVIL_FRUIT') {
-          return message.reply('❌ Tipe item tidak valid! Gunakan: weapon, armor, accessory, consumable, material, atau devil_fruit');
-        }
-
-        if (filterType === 'DEVIL_FRUIT') {
-          itemsArray = itemsArray.filter(item => item.name.toLowerCase().includes('no mi'));
-        } else {
-          itemsArray = itemsArray.filter(item => item.type === filterType as ItemType);
-        }
-        
-        if (itemsArray.length === 0) {
-          return message.reply(`❌ Tidak ada item dengan tipe ${filterType.toLowerCase()} di shop!`);
-        }
+      if (!groupedItems[item.type][item.rarity]) {
+        groupedItems[item.type][item.rarity] = [];
       }
-
-      // Sort by type and price
-      itemsArray.sort((a, b) => {
-        if (a.type !== b.type) {
-          return a.type.localeCompare(b.type);
-        }
-        return Number(a.price - b.price);
+      groupedItems[item.type][item.rarity].push({
+        id,
+        name: item.name,
+        description: item.description,
+        type: item.type,
+        price: item.price,
+        effect: item.effect,
+        baseStats: JSON.stringify(item.baseStats || {}),
+        upgradeStats: JSON.stringify(item.upgradeStats || {}),
+        maxDurability: item.maxDurability || null,
+        stackLimit: item.stackLimit,
+        rarity: item.rarity,
+        maxLevel: item.maxLevel || null
       });
+    });
 
-      const totalPages = Math.ceil(itemsArray.length / ITEMS_PER_PAGE);
-      let currentPage = 0;
+    return EmbedFactory.buildShopEmbed(balance.coins, groupedItems);
+  }
 
-      // Create initial embed
-      const embed = this.createShopEmbed(itemsArray, currentPage, totalPages, balance.coins);
-
-      // Create navigation and filter buttons
-      const navigationRow = new ActionRowBuilder<ButtonBuilder>()
-        .addComponents(
-          new ButtonBuilder()
-            .setCustomId('prev')
-            .setLabel('◀️ Previous')
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(true),
-          new ButtonBuilder()
-            .setCustomId('next')
-            .setLabel('Next ▶️')
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(totalPages <= 1)
-        );
-
-      // Create filter buttons
-      const filterRow = new ActionRowBuilder<ButtonBuilder>()
-        .addComponents(
-          new ButtonBuilder()
-            .setCustomId('filter_LATEST')
-            .setLabel('🆕 Latest')
-            .setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder()
-            .setCustomId('filter_WEAPON')
-            .setLabel(`${ITEM_TYPE_EMOJIS.WEAPON} Weapon`)
-            .setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder()
-            .setCustomId('filter_ARMOR')
-            .setLabel(`${ITEM_TYPE_EMOJIS.ARMOR} Armor`)
-            .setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder()
-            .setCustomId('filter_ACCESSORY')
-            .setLabel(`${ITEM_TYPE_EMOJIS.ACCESSORY} Accessory`)
-            .setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder()
-            .setCustomId('filter_CONSUMABLE')
-            .setLabel(`${ITEM_TYPE_EMOJIS.CONSUMABLE} Consumable`)
-            .setStyle(ButtonStyle.Secondary)
-        );
-
-      // Create buy buttons for current page
-      const buyButtonRows = this.createBuyButtons(
-        itemsArray,
-        currentPage * ITEMS_PER_PAGE,
-        Math.min((currentPage + 1) * ITEMS_PER_PAGE, itemsArray.length)
-      );
-
-      // Combine all button rows
-      const allComponents = [filterRow, ...buyButtonRows, navigationRow];
-
-      // Send initial message with buttons
-      const shopMessage = await message.reply({
-        embeds: [embed],
-        components: allComponents
-      });
-
-      // Create button collector
-      const collector = shopMessage.createMessageComponentCollector({
-        componentType: ComponentType.Button,
-        time: 300000 // 5 minutes
-      });
-
-      collector.on('collect', async (interaction) => {
-        if (interaction.user.id !== message.author.id) {
-          await interaction.reply({
-            content: '❌ Kamu tidak bisa menggunakan tombol ini!',
-            ephemeral: true
-          });
-          return;
-        }
-
-        let allComponents: ActionRowBuilder<ButtonBuilder>[];
-
-        // Handle buy buttons
-        if (interaction.customId.startsWith('buy_')) {
-          const [_, indexStr, quantityStr] = interaction.customId.split('_');
-          const index = parseInt(indexStr);
-          const quantity = parseInt(quantityStr);
-          
-          // Get item from array using index
-          const item = itemsArray[index];
-          if (!item) {
-            await interaction.reply({
-              content: '❌ Item tidak ditemukan!',
-              ephemeral: true
-            });
-            return;
-          }
-
-          // Get fresh character data
-          const updatedCharacter = await this.characterService.getCharacterByDiscordId(interaction.user.id);
-          if (!updatedCharacter) {
-            await interaction.reply({
-              content: '❌ Character tidak ditemukan!',
-              ephemeral: true
-            });
-            return;
-          }
-          
-          const updatedBalance = await this.characterService.getBalance(updatedCharacter.id);
-
-          // Check if character has enough coins
-          if (updatedBalance.coins < item.price * quantity) {
-            await interaction.reply({
-              content: `❌ Uang tidak cukup! Kamu butuh ${item.price * quantity} coins untuk membeli ${quantity}x ${item.name}.`,
-              ephemeral: true
-            });
-            return;
-          }
-
-          try {
-            // Find item ID from original ITEMS object
-            const itemId = Object.entries(ITEMS).find(([_, i]) => i.name === item.name)?.[0];
-            if (!itemId) {
-              await interaction.reply({
-                content: '❌ Item tidak ditemukan di database!',
-                ephemeral: true
-              });
-              return;
-            }
-
-            // Process purchase
-            await this.processPurchase(updatedCharacter.id, itemId, quantity, item);
-
-            // Send success message
-            await interaction.reply({
-              content: `✅ Berhasil membeli ${quantity}x ${item.name} seharga ${item.price * quantity} coins!`,
-              ephemeral: true
-            });
-
-            // Update shop embed with new balance
-            const newBalance = await this.characterService.getBalance(updatedCharacter.id);
-            const updatedEmbed = this.createShopEmbed(itemsArray, currentPage, totalPages, newBalance.coins);
-
-            // Create new buy buttons for current page
-            const buyButtonRows = this.createBuyButtons(
-              itemsArray,
-              currentPage * ITEMS_PER_PAGE,
-              Math.min((currentPage + 1) * ITEMS_PER_PAGE, itemsArray.length)
-            );
-
-            // Combine all button rows
-            allComponents = [filterRow, ...buyButtonRows, navigationRow];
-
-            await shopMessage.edit({
-              embeds: [updatedEmbed],
-              components: allComponents
-            });
-          } catch (error) {
-            this.logger.error('Error processing purchase:', error);
-            await interaction.reply({
-              content: '❌ Terjadi kesalahan saat membeli item.',
-              ephemeral: true
-            });
-          }
-          return;
-        }
-
-        // Handle filter buttons
-        if (interaction.customId.startsWith('filter_')) {
-          const filterType = interaction.customId.replace('filter_', '') as ItemType | 'ALL' | 'DEVIL_FRUIT' | 'LATEST';
-          
-          // Get items from database again to ensure fresh data
-          const dbItems = await this.prisma.item.findMany();
-          
-          // Convert DB items to GameItem format and merge with ITEMS
-          const mergedItems = {
-            ...ITEMS,
-            ...Object.fromEntries(
-              dbItems.map(dbItem => [
-                dbItem.id,
-                {
-                  name: dbItem.name,
-                  type: dbItem.type,
-                  description: dbItem.description,
-                  price: Number(dbItem.value),
-                  effect: parseDbEffect(dbItem.effect) || {},
-                  baseStats: dbItem.baseStats ? JSON.parse(dbItem.baseStats) : {},
-                  upgradeStats: dbItem.upgradeStats ? JSON.parse(dbItem.upgradeStats) : {},
-                  maxDurability: dbItem.maxDurability || undefined,
-                  stackLimit: dbItem.stackLimit,
-                  rarity: dbItem.rarity,
-                  maxLevel: dbItem.maxLevel || undefined
-                } as GameItem
-              ])
-            )
-          };
-
-          // Reset to original array for "Show All"
-          if (filterType === 'ALL') {
-            itemsArray = Object.entries(mergedItems)
-              .filter(isShopItemTuple)
-              .map(([id, item]) => ({
-                id,
-                ...item
-              } as GameItem))
-              .sort((a, b) => {
-                if (a.type !== b.type) return a.type.localeCompare(b.type);
-                return Number(a.price - b.price);
-              });
-          } else if (filterType === 'DEVIL_FRUIT') {
-            // Filter Devil Fruit items
-            itemsArray = Object.entries(mergedItems)
-              .filter(isShopItemTuple)
-              .map(([id, item]) => ({
-                id,
-                ...item
-              } as GameItem))
-              .filter(item => item.name.toLowerCase().includes('no mi'))
-              .sort((a, b) => Number(a.price - b.price));
-          } else if (filterType === 'LATEST') {
-            // Get the latest 20 items
-            itemsArray = Object.entries(mergedItems)
-              .filter(isShopItemTuple)
-              .map(([id, item]) => ({
-                id,
-                ...item
-              } as GameItem))
-              .sort((a, b) => {
-                // Sort by rarity first (higher rarity first)
-                const rarityOrder = {
-                  'ULTIMATE': 10,
-                  'PRIMORDIAL': 9,
-                  'CELESTIAL': 8,
-                  'TRANSCENDENT': 7,
-                  'DIVINE': 6,
-                  'MYTHICAL': 5,
-                  'LEGENDARY': 4,
-                  'EPIC': 3,
-                  'RARE': 2,
-                  'UNCOMMON': 1,
-                  'COMMON': 0
-                };
-                const rarityDiff = (rarityOrder[b.rarity as keyof typeof rarityOrder] || 0) - 
-                                 (rarityOrder[a.rarity as keyof typeof rarityOrder] || 0);
-                if (rarityDiff !== 0) return rarityDiff;
-                
-                // Then by price (higher price first)
-                return b.price - a.price;
-              })
-              .slice(0, 20); // Take only the top 20 items
-          } else {
-            // Filter items by type using ItemType enum
-            itemsArray = Object.entries(mergedItems)
-              .filter(isShopItemTuple)
-              .map(([id, item]) => ({
-                id,
-                ...item
-              } as GameItem))
-              .filter(item => item.type === filterType)
-              .sort((a, b) => Number(a.price - b.price));
-          }
-
-          currentPage = 0;
-          const totalPages = Math.ceil(itemsArray.length / ITEMS_PER_PAGE);
-          
-          // Update embed
-          const newEmbed = this.createShopEmbed(itemsArray, currentPage, totalPages, balance.coins);
-          if (filterType === 'DEVIL_FRUIT') {
-            newEmbed.setTitle('🛍️ A4A CLAN Shop - 🍎 Devil Fruits');
-          } else if (filterType === 'LATEST') {
-            newEmbed.setTitle('🛍️ A4A CLAN Shop - 🆕 Latest Items');
-          } else if (filterType !== 'ALL') {
-            newEmbed.setTitle(`🛍️ A4A CLAN Shop - ${ITEM_TYPE_EMOJIS[filterType as keyof typeof ITEM_TYPE_EMOJIS] || '📦'} ${filterType}`);
-          }
-
-          // Update button states
-          const buttons = navigationRow.components;
-          buttons[0].setDisabled(true);
-          buttons[1].setDisabled(totalPages <= 1);
-
-          // Create new buy buttons for filtered items
-          const buyButtonRows = this.createBuyButtons(
-            itemsArray,
-            currentPage * ITEMS_PER_PAGE,
-            Math.min((currentPage + 1) * ITEMS_PER_PAGE, itemsArray.length)
-          );
-
-          // Combine all button rows
-          allComponents = [filterRow, ...buyButtonRows, navigationRow];
-
-          await interaction.update({
-            embeds: [newEmbed],
-            components: allComponents
-          });
-          return;
-        }
-
-        // Handle navigation buttons
-        if (interaction.customId === 'prev') {
-          if (currentPage > 0) {
-            currentPage--;
-          }
-        } else if (interaction.customId === 'next') {
-          if (currentPage < totalPages - 1) {
-            currentPage++;
-          }
-        }
-
-        // Update button states
-        const buttons = navigationRow.components;
-        buttons[0].setDisabled(currentPage === 0);
-        buttons[1].setDisabled(currentPage === totalPages - 1);
-
-        // Create new embed for current page
-        const newEmbed = this.createShopEmbed(itemsArray, currentPage, totalPages, balance.coins);
-
-        // Create new buy buttons for current page
-        const buyButtonRows = this.createBuyButtons(
-          itemsArray,
-          currentPage * ITEMS_PER_PAGE,
-          Math.min((currentPage + 1) * ITEMS_PER_PAGE, itemsArray.length)
-        );
-
-        // Combine all button rows
-        allComponents = [filterRow, ...buyButtonRows, navigationRow];
-
-        // Update message
-        await interaction.update({
-          embeds: [newEmbed],
-          components: allComponents
-        });
-      });
-
-      collector.on('end', () => {
-        shopMessage.edit({
-          components: []
-        }).catch(() => {});
-      });
-
+  async handleShopInteraction(interaction: ChatInputCommandInteraction): Promise<void> {
+    try {
+      const embed = await this.createShopEmbed(interaction.user.id);
+      await interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (error) {
-      this.logger.error('Error in shop handler:', error);
-      return message.reply('❌ Terjadi kesalahan saat membuka shop.');
+      await interaction.reply(createEphemeralReply({
+        content: error instanceof Error ? error.message : '❌ An error occurred'
+      }));
+    }
+  }
+
+  async handleShopMessage(message: Message): Promise<void> {
+    try {
+      const embed = await this.createShopEmbed(message.author.id);
+      await message.reply({ embeds: [embed] });
+          } catch (error) {
+      await message.reply(error instanceof Error ? error.message : '❌ An error occurred');
+    }
+  }
+
+  async handleShop(source: Message | ChatInputCommandInteraction): Promise<void> {
+    try {
+      const userId = source instanceof Message ? source.author.id : source.user.id;
+      const character = await this.characterService.getCharacterByDiscordId(userId);
+      
+      if (!character) {
+        throw new Error('❌ Kamu harus membuat karakter terlebih dahulu dengan `a start`');
+      }
+
+      const balance = await this.characterService.getBalance(character.id);
+      const categories = await this.getShopCategories();
+
+      await PaginationManager.paginate(source, {
+        items: categories,
+        itemsPerPage: this.ITEMS_PER_PAGE,
+        embedBuilder: async (categories, currentPage, totalPages) => {
+          const embed = new EmbedBuilder()
+            .setTitle('🛍️ A4A CLAN Shop')
+            .setDescription(`💰 Uangmu: ${balance.coins} coins\nGunakan \`a buy <item>\` untuk membeli item.`)
+            .setColor('#ffd700');
+
+          categories.forEach(category => {
+            const itemList = category.items
+              .map(item => {
+                const effectDesc = this.formatEffectDescription(item.effect);
+                let text = `${ITEM_TYPE_EMOJIS[category.type]} ${item.name}\n`;
+                text += `💰 ${item.price.toLocaleString()} coins\n`;
+                text += `📝 ${item.description}\n`;
+                if (effectDesc) text += `${effectDesc}\n`;
+                return text;
+              })
+              .join('\n');
+
+            embed.addFields({
+              name: `${ITEM_TYPE_EMOJIS[category.type]} ${category.type}`,
+              value: itemList || 'Tidak ada item',
+              inline: false
+            });
+          });
+
+          if (totalPages > 1) {
+            embed.setFooter({ text: `Halaman ${currentPage}/${totalPages} • Gunakan a buy <item> untuk membeli` });
+          }
+
+          return embed;
+        },
+        ephemeral: source instanceof ChatInputCommandInteraction
+      });
+    } catch (error) {
+      await ErrorHandler.handle(error, source);
     }
   }
 
@@ -900,8 +417,8 @@ export class ShopService extends BaseService {
       }
 
       // Check stack limit
-      const currentInventory = await this.inventoryService.getInventory(characterId) as InventoryItem[];
-      const existingItem = currentInventory.find(i => i.itemId === itemId);
+      const currentInventory = await this.inventoryService.getInventory(characterId);
+      const existingItem = currentInventory.find(i => i.id === itemId);
       
       if (existingItem && existingItem.quantity + quantity > item.stackLimit) {
         return {
@@ -934,17 +451,17 @@ export class ShopService extends BaseService {
     }
   }
 
-  async handleBuyCommand(message: Message, args: string[] | string) {
+  async handleBuyCommand(message: Message, args: string[] | string): Promise<void> {
     try {
       const argArray = Array.isArray(args) ? args : args.split(/\s+/);
       
       if (!argArray || argArray.length === 0) {
-        return message.reply('❌ Format: `a buy [nama_item] [jumlah]`\nContoh: `a buy potion 5`');
+        throw ShopError.invalidFormat();
       }
 
       const character = await this.characterService.getCharacterByDiscordId(message.author.id);
       if (!character) {
-        return message.reply('❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.');
+        throw CharacterError.notFound(message.author.id);
       }
 
       // Parse quantity from last argument if it's a number
@@ -960,76 +477,25 @@ export class ShopService extends BaseService {
       }
 
       // Find item in both ITEMS and database
-      const itemResult = await findItemByName(this.prisma, itemName);
+      const itemResult = await this.findItemByName(itemName);
       if (!itemResult) {
-        return message.reply('❌ Item tidak ditemukan!');
+        throw ShopError.itemNotFound(itemName);
       }
 
       const [itemId, item] = itemResult;
 
       // Check stack limit
-      const currentInventory = await this.inventoryService.getInventory(character.id) as InventoryItem[];
-      const existingItem = currentInventory.find(i => i.itemId === itemId);
+      const currentInventory = await this.inventoryService.getInventory(character.id);
+      const existingItem = currentInventory.find(i => i.id === itemId);
       
       if (existingItem && existingItem.quantity + quantity > item.stackLimit) {
-        return message.reply('❌ Tidak bisa membeli lebih banyak, stack limit tercapai!');
+        throw ShopError.stackLimitReached(itemId, item.name, existingItem.quantity, item.stackLimit);
       }
 
       // Process the purchase
-      const result = await this.processPurchase(character.id, itemId, quantity, item);
-
-      if (!result.success) {
-        return message.reply(result.message);
-      }
-
-      // Create success embed
-      const embed = new EmbedBuilder()
-        .setTitle('🛍️ Pembelian Berhasil!')
-        .setColor('#00ff00')
-        .setDescription(result.message)
-        .addFields(
-          { name: '📦 Item', value: `${item.name}\n${item.description}`, inline: true }
-        );
-
-      // Add effect info
-      if (item.effect) {
-        const effect = getEffectData(item.effect);
-        if (effect) {
-          if (effect.type === 'HEAL') {
-            const healValue = effect.health || 0;
-            const healText = healValue < 0 ? '❤️ Memulihkan HP ke maksimum' : `❤️ Memulihkan ${healValue} HP`;
-            embed.addFields({
-              name: '💫 Efek',
-              value: healText,
-              inline: true
-            });
-          } else if (effect.stats) {
-            const statsText = Object.entries(effect.stats)
-              .map(([stat, value]) => `${stat === 'attack' ? '⚔️' : '🛡️'} ${stat.toUpperCase()}: ${formatStatValue(value)}`)
-              .join('\n');
-            
-            embed.addFields({
-              name: '📊 Stats',
-              value: statsText,
-              inline: true
-            });
-          }
-        }
-      }
-
-      return message.reply({ embeds: [embed] });
-
-    } catch (error: any) {
-      this.logger.error('Error in buy command:', error);
-      
-      if (error.message?.includes('stack limit')) {
-        return message.reply('❌ Tidak bisa membeli lebih banyak, stack limit tercapai!');
-      }
-      if (error.message?.includes('Insufficient funds')) {
-        return message.reply('❌ Uang tidak cukup!');
-      }
-      
-      return message.reply('❌ Terjadi kesalahan saat membeli item. Silakan coba lagi.');
+      await this.handleBuyItem(message, itemId, quantity);
+    } catch (error) {
+      await ErrorHandler.handle(error, message);
     }
   }
 
@@ -1057,7 +523,7 @@ export class ShopService extends BaseService {
       
       // If not found by ID, try to find by name
       if (!item) {
-        const itemResult = await findItemByName(this.prisma, itemId);
+        const itemResult = await this.findItemByName(itemId);
         if (!itemResult) {
           return {
             success: false,
@@ -1077,6 +543,153 @@ export class ShopService extends BaseService {
         success: false,
         message: '❌ Terjadi kesalahan saat membeli item.'
       };
+    }
+  }
+
+  private async findItemByName(name: string): Promise<[string, GameItem] | null> {
+    const items = this.dataCache.getItems();
+    const normalizedName = name.toLowerCase();
+      
+      // Try exact match first
+    for (const [id, item] of Object.entries(items)) {
+      if (item.name.toLowerCase() === normalizedName) {
+        return [id, item];
+      }
+    }
+
+    // Try partial match
+    for (const [id, item] of Object.entries(items)) {
+      if (item.name.toLowerCase().includes(normalizedName)) {
+        return [id, item];
+      }
+    }
+
+    return null;
+  }
+
+  private formatEffectDescription(effect: any): string {
+    if (!effect) return '';
+
+    let description = '';
+    if (effect.type === 'HEAL') {
+      description = `❤️ Heal ${effect.health} HP`;
+    } else if (effect.stats) {
+      const stats = Object.entries(effect.stats)
+        .map(([stat, value]) => {
+          const statValue = value as number;
+          return `${stat === 'attack' ? '⚔️' : stat === 'defense' ? '🛡️' : '💨'} ${stat.toUpperCase()}: ${statValue > 0 ? '+' : ''}${statValue}`;
+        })
+        .join('\n');
+      description = stats;
+      if (effect.duration) {
+        description += `\n⏳ Duration: ${effect.duration / 60} minutes`;
+      }
+    }
+    return description;
+  }
+
+  private async getShopCategories(): Promise<ShopCategory[]> {
+    const items = await this.getShopItems();
+    const categories: Record<ItemType, ShopCategory> = {} as Record<ItemType, ShopCategory>;
+
+    // Group items by type
+    Object.entries(items).forEach(([id, item]) => {
+      if (!categories[item.type]) {
+        categories[item.type] = {
+          type: item.type,
+          items: []
+        };
+      }
+
+      categories[item.type].items.push({
+        id,
+        name: item.name,
+        description: item.description,
+        price: item.price,
+        rarity: item.rarity,
+        effect: item.effect
+      });
+    });
+
+    // Sort categories by type
+    const typeOrder: ItemType[] = ['WEAPON', 'ARMOR', 'ACCESSORY', 'CONSUMABLE', 'MATERIAL'];
+    return Object.values(categories).sort((a, b) => 
+      typeOrder.indexOf(a.type) - typeOrder.indexOf(b.type)
+    );
+  }
+
+  async handleBuyItem(source: Message | ChatInputCommandInteraction, itemId: string, quantity: number = 1): Promise<void> {
+    try {
+      const userId = source instanceof Message ? source.author.id : source.user.id;
+      const character = await this.characterService.getCharacterByDiscordId(userId);
+      
+      if (!character) {
+        throw CharacterError.notFound(userId);
+      }
+
+      // Get item from shop
+      const items = await this.getShopItems();
+      const item = items[itemId];
+      if (!item) {
+        throw ShopError.itemNotFound(itemId);
+      }
+
+      // Check if quantity is valid
+      if (quantity < 1) {
+        throw ShopError.invalidQuantity(quantity);
+      }
+
+      // Check if player has enough coins
+      const totalCost = item.price * quantity;
+      const balance = await this.characterService.getBalance(character.id);
+      if (balance.coins < totalCost) {
+        throw ShopError.insufficientFunds(item.name, quantity, totalCost, balance.coins);
+      }
+
+      // Check stack limit
+      const inventory = await this.inventoryService.getInventory(character.id);
+      const existingItem = inventory.find(i => i.id === itemId);
+      if (existingItem && existingItem.quantity + quantity > item.stackLimit) {
+        throw ShopError.stackLimitReached(itemId, item.name, existingItem.quantity, item.stackLimit);
+      }
+
+      // Process purchase in transaction
+      await this.prisma.$transaction(async (tx) => {
+        // Remove coins
+        await tx.character.update({
+          where: { id: character.id },
+          data: { coins: { decrement: totalCost } }
+        });
+
+        // Add item to inventory
+        await this.inventoryService.addItems(character.id, itemId, quantity);
+
+        // Create transaction record
+        await tx.transaction.create({
+          data: {
+            characterId: character.id,
+            type: 'SHOP_PURCHASE',
+            amount: -totalCost,
+            description: `Bought ${quantity}x ${item.name}`
+          }
+        });
+      });
+
+      // Create success embed
+      const embed = new EmbedBuilder()
+        .setTitle('✅ Purchase Successful!')
+        .setDescription(`Berhasil membeli ${quantity}x ${item.name} seharga ${totalCost} coins!`)
+        .setColor('#00ff00');
+
+      // Add effect info if applicable
+      const effectDesc = this.formatEffectDescription(item.effect);
+      if (effectDesc) {
+        embed.addFields({ name: '💫 Effect', value: effectDesc });
+      }
+
+      await source.reply({ embeds: [embed], ephemeral: source instanceof ChatInputCommandInteraction });
+    } catch (error) {
+      await ErrorHandler.handle(error, source);
     }
   }
 } 

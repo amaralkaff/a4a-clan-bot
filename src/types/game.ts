@@ -2,6 +2,23 @@
 
 import { EmbedBuilder } from 'discord.js';
 
+// Monster Types
+export interface CachedMonster {
+  id: string;
+  name: string;
+  level: number;
+  health: number;
+  maxHealth: number;
+  attack: number;
+  defense: number;
+  exp: number;
+  coins: number;
+  drops: Array<{ itemId: string; chance: number }>;
+  description: string;
+  location: string[];
+  cacheKey: string;
+}
+
 // Basic Types
 export type EffectType = 'EQUIP' | 'HEAL' | 'BUFF' | 'HEAL_AND_BUFF';
 
@@ -360,7 +377,7 @@ export interface QuestReward {
 }
 
 export interface Quest {
-  id: string;
+  id?: string;
   name: string;
   description: string;
   type: QuestType;
@@ -381,5 +398,20 @@ export interface Quest {
   completedAt?: Date;
   expiresAt?: Date;
   mentor?: string;
-  isDaily?: boolean;
+  isDaily: boolean;
+  updatedAt?: Date;
+}
+
+export interface CharacterWithEquipment {
+  id: string;
+  name: string;
+  level: number;
+  health: number;
+  maxHealth: number;
+  attack: number;
+  defense: number;
+  huntStreak?: number;
+  equipment?: any;
+  mentor?: string | null;
+  speed?: number;
 }

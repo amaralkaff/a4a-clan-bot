@@ -1,11 +1,14 @@
-import { BaseService } from './BaseService';
 import { PrismaClient, Duel } from '@prisma/client';
-import { Message, ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from 'discord.js';
-import { BattleService } from './combat/BattleService';
+import { Message, ChatInputCommandInteraction } from 'discord.js';
 import { checkCooldown, setCooldown } from '@/utils/cooldown';
 import { createEphemeralReply, createErrorReply } from '@/utils/helpers';
-import { CharacterService } from './CharacterService';
-import { Cache } from '../utils/Cache';
+import { CharacterService } from '../CharacterService';
+import { BattleService } from './BattleService';
+import { Cache } from '../../utils/Cache';
+import { BaseCombatService, CombatantFactory } from './BaseCombatService';
+import { CombatParticipant } from '@/types/combat';
+import { EmbedFactory } from '@/utils/embedBuilder';
+import { CharacterWithEquipment } from '@/types/game';
 
 interface CachedDuel extends Duel {
   challenger: {
@@ -16,15 +19,13 @@ interface CachedDuel extends Duel {
   };
 }
 
-export class DuelService extends BaseService {
-  private battleService: BattleService | null = null;
-  private characterService: CharacterService;
+export class DuelService extends BaseCombatService {
   private duelCache: Cache<CachedDuel>;
   private readonly DUEL_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  private battleService: BattleService | null = null;
 
-  constructor(prisma: PrismaClient) {
-    super(prisma);
-    this.characterService = new CharacterService(prisma);
+  constructor(prisma: PrismaClient, characterService?: CharacterService) {
+    super(prisma, characterService);
     this.duelCache = new Cache<CachedDuel>(this.DUEL_CACHE_TTL);
 
     // Set up periodic cache cleanup
@@ -33,8 +34,8 @@ export class DuelService extends BaseService {
     }, 5 * 60 * 1000); // Clean up every 5 minutes
   }
 
-  setBattleService(battleService: BattleService) {
-    this.battleService = battleService;
+  setBattleService(service: BattleService) {
+    this.battleService = service;
   }
 
   private getDuelCacheKey(characterId: string): string {
@@ -133,19 +134,18 @@ export class DuelService extends BaseService {
       // Set cooldown
       setCooldown(userId, 'duel');
 
-      const embed = new EmbedBuilder()
-        .setTitle('⚔️ Tantangan Duel!')
-        .setColor('#ff9900')
-        .setDescription(`${challenger.name} menantang ${challenged.name} untuk duel!\nGunakan \`a accept\` untuk menerima atau \`a reject\` untuk menolak.`)
-        .addFields([
-          { name: '👤 Penantang', value: challenger.name, inline: true },
-          { name: '👥 Ditantang', value: challenged.name, inline: true }
-        ]);
+      const embed = EmbedFactory.buildSuccessEmbed(
+        '⚔️ Tantangan Duel!',
+        `${challenger.name} menantang ${challenged.name} untuk duel!\nGunakan \`a accept\` untuk menerima atau \`a reject\` untuk menolak.`
+      ).addFields([
+        { name: '👤 Penantang', value: challenger.name, inline: true },
+        { name: '👥 Ditantang', value: challenged.name, inline: true }
+      ]);
 
       return source.reply({ embeds: [embed] });
     } catch (error) {
       console.error('Error in handleDuel:', error);
-      return source.reply('❌ Terjadi kesalahan saat membuat duel.');
+      return source.reply({ embeds: [EmbedFactory.buildErrorEmbed('❌ Terjadi kesalahan saat membuat duel.')] });
     }
   }
 
@@ -156,14 +156,14 @@ export class DuelService extends BaseService {
       });
 
       if (!character) {
-        return createErrorReply(interaction, 'Character not found.');
+        return interaction.reply({ embeds: [EmbedFactory.buildErrorEmbed('Character not found.')] });
       }
 
       // Find pending duel from cache or database
       const duel = await this.findPendingDuel(character.id);
 
       if (!duel) {
-        return createErrorReply(interaction, 'No pending duel found.');
+        return interaction.reply({ embeds: [EmbedFactory.buildErrorEmbed('No pending duel found.')] });
       }
 
       // Update duel status to IN_PROGRESS
@@ -176,33 +176,78 @@ export class DuelService extends BaseService {
       this.duelCache.delete(this.getDuelCacheKey(duel.challengerId));
       this.duelCache.delete(this.getDuelCacheKey(duel.challengedId));
 
-      if (!this.battleService) {
-        throw new Error('Battle service not initialized');
+      // Get both characters with their equipment and mentors
+      const [challenger, challenged] = await Promise.all([
+        this.prisma.character.findUnique({
+          where: { id: duel.challengerId }
+        }) as Promise<CharacterWithEquipment>,
+        this.prisma.character.findUnique({
+          where: { id: duel.challengedId }
+        }) as Promise<CharacterWithEquipment>
+      ]);
+
+      if (!challenger || !challenged) {
+        throw new Error('One or both duel participants not found');
       }
 
-      const battleResult = await this.battleService.processPvPBattle(duel.challengerId, duel.challengedId);
+      // Convert characters to CombatParticipants
+      const player1 = CombatantFactory.fromCharacter(challenger);
+      const player2 = CombatantFactory.fromCharacter(challenged);
+
+      // Initialize battle states
+      const [player1State, player2State] = await Promise.all([
+        this.initBattleState(player1.id),
+        this.initBattleState(player2.id)
+      ]);
+
+      const battleLog: string[] = [];
+      let player1Health = player1.health;
+      let player2Health = player2.health;
+      let turn = 1;
+
+      // Battle loop
+      while (player1Health > 0 && player2Health > 0) {
+        const roundResult = await this.processCombatRound(
+          { first: player1, second: player2 },
+          { firstState: player1State, secondState: player2State },
+          { firstHealth: player1Health, secondHealth: player2Health },
+          turn
+        );
+
+        player1Health = roundResult.newFirstHealth;
+        player2Health = roundResult.newSecondHealth;
+        battleLog.push(...roundResult.roundLog);
+
+        turn++;
+      }
+
+      const won = player2Health <= 0;
+
+      // Update character health
+      await this.updateCombatResults(
+        { first: player1, second: player2 },
+        { firstHealth: player1Health, secondHealth: player2Health }
+      );
 
       // Update duel with results
       await this.prisma.duel.update({
         where: { id: duel.id },
         data: {
           status: 'COMPLETED',
-          winner: battleResult.won ? duel.challengedId : duel.challengerId,
+          winner: won ? duel.challengedId : duel.challengerId,
           completedAt: new Date()
         }
       });
 
-      // Create embed for battle results
-      const embed = new EmbedBuilder()
-        .setTitle('⚔️ Duel Results')
-        .setDescription(battleResult.battleLog.join('\n\n'))
-        .setColor(battleResult.won ? '#00ff00' : '#ff0000')
-        .setTimestamp();
-
+      const embed = EmbedFactory.buildDuelResultEmbed(
+        battleLog,
+        won ? player2 : player1,
+        won ? player1 : player2
+      );
       return interaction.reply({ embeds: [embed] });
     } catch (error) {
       this.logger.error('Error in handleAccept:', error);
-      return createErrorReply(interaction, 'An error occurred while processing the duel.');
+      return interaction.reply({ embeds: [EmbedFactory.buildErrorEmbed('An error occurred while processing the duel.')] });
     }
   }
 
@@ -216,14 +261,14 @@ export class DuelService extends BaseService {
       });
 
       if (!character) {
-        return source.reply('❌ Kamu belum memiliki karakter!');
+        return source.reply({ embeds: [EmbedFactory.buildErrorEmbed('❌ Kamu belum memiliki karakter!')] });
       }
 
       // Find pending duel from cache or database
       const pendingDuel = await this.findPendingDuel(character.id);
 
       if (!pendingDuel) {
-        return source.reply('❌ Tidak ada tantangan duel yang pending!');
+        return source.reply({ embeds: [EmbedFactory.buildErrorEmbed('❌ Tidak ada tantangan duel yang pending!')] });
       }
 
       // Update duel status
@@ -239,15 +284,14 @@ export class DuelService extends BaseService {
       this.duelCache.delete(this.getDuelCacheKey(pendingDuel.challengerId));
       this.duelCache.delete(this.getDuelCacheKey(pendingDuel.challengedId));
 
-      const embed = new EmbedBuilder()
-        .setTitle('❌ Duel Ditolak')
-        .setColor('#ff0000')
-        .setDescription(`${character.name} menolak tantangan duel dari ${pendingDuel.challenger.name}!`);
+      const embed = EmbedFactory.buildErrorEmbed(
+        `${character.name} menolak tantangan duel dari ${pendingDuel.challenger.name}!`
+      );
 
       return source.reply({ embeds: [embed] });
     } catch (error) {
       console.error('Error in handleReject:', error);
-      return source.reply('❌ Terjadi kesalahan saat menolak duel.');
+      return source.reply({ embeds: [EmbedFactory.buildErrorEmbed('❌ Terjadi kesalahan saat menolak duel.')] });
     }
   }
 } 

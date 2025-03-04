@@ -158,8 +158,8 @@ function convertMonsterToDbMonster(id: string, monster: JsonMonster) {
     id,
     name: monster.name,
     level: monster.level,
-    health: monster.hp,
-    maxHealth: monster.hp,
+    health: monster.health,
+    maxHealth: monster.health,
     attack: monster.attack,
     defense: monster.defense,
     exp: monster.exp,
@@ -291,25 +291,102 @@ async function seedMonsters() {
   }
 }
 
-async function main() {
-  try {
-    console.log('Starting database seeding...\n');
-    
-    // Seed both items and monsters
-    await seedItems();
-    await seedMonsters();
-    
-    console.log('\nDatabase seeding completed successfully! 🎉');
-  } catch (error) {
-    console.error('Fatal error during seeding:', error);
-    throw error;
-  } finally {
-    await prisma.$disconnect();
+async function seedLocations() {
+  console.log('\nSeeding locations...');
+  
+  const locations = [
+    {
+      id: 'starter_island',
+      name: '🏝️ Starter Island',
+      description: 'Pulau pertama dalam petualanganmu',
+      level: 1
+    },
+    {
+      id: 'foosha',
+      name: '🌅 Foosha Village',
+      description: 'Desa kecil tempat Luffy dibesarkan',
+      level: 1
+    },
+    {
+      id: 'syrup_village',
+      name: '🏘️ Syrup Village',
+      description: 'Desa tempat tinggal Usopp',
+      level: 5
+    },
+    {
+      id: 'baratie',
+      name: '🚢 Baratie',
+      description: 'Restoran terapung milik Zeff',
+      level: 10
+    },
+    {
+      id: 'arlong_park',
+      name: '🏰 Arlong Park',
+      description: 'Markas bajak laut Arlong',
+      level: 15
+    },
+    {
+      id: 'loguetown',
+      name: '🌆 Loguetown',
+      description: 'Kota terakhir sebelum Grand Line',
+      level: 20
+    },
+    {
+      id: 'drum_island',
+      name: '❄️ Drum Island',
+      description: 'Pulau musim dingin tempat Chopper tinggal',
+      level: 25
+    },
+    {
+      id: 'cocoyashi',
+      name: '🎣 Cocoyashi Village',
+      description: 'Desa tempat tinggal Nami',
+      level: 30
+    }
+  ];
+
+  let processed = 0;
+  let skipped = 0;
+
+  for (const location of locations) {
+    try {
+      await prisma.location.upsert({
+        where: { id: location.id },
+        create: location,
+        update: location
+      });
+      processed++;
+    } catch (error) {
+      console.error(`Error seeding location ${location.id}:`, error);
+      skipped++;
+    }
   }
+
+  console.log('\nLocation Seeding Summary:');
+  console.log(`✨ Total Locations Created/Updated: ${processed}`);
+  console.log(`⚠️ Total Locations Skipped: ${skipped}`);
+}
+
+async function main() {
+  console.log('Starting database seeding...\n');
+
+  // Seed locations first since they are referenced by characters
+  await seedLocations();
+
+  // Seed items
+  await seedItems();
+
+  // Seed monsters
+  await seedMonsters();
+
+  console.log('\nDatabase seeding completed successfully! 🎉');
 }
 
 main()
   .catch((e) => {
-    console.error('Seeding failed:', e);
+    console.error(e);
     process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
   });

@@ -10,28 +10,19 @@ import {
   ActiveBuff,
   StatusEffects,
   ActiveBuffs,
-  TransactionType
+  TransactionType,
+  CharacterWithEquipment
 } from '@/types/game';
-import { Message, EmbedBuilder, ChatInputCommandInteraction, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType, StringSelectMenuInteraction, ButtonInteraction } from 'discord.js';
+import { Message, EmbedBuilder, ChatInputCommandInteraction, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType, StringSelectMenuInteraction, ButtonInteraction, ModalBuilder, TextInputBuilder, TextInputStyle, ModalSubmitInteraction } from 'discord.js';
 import { checkCooldown, setCooldown, getRemainingCooldown } from '@/utils/cooldown';
-import { createEphemeralReply } from '@/utils/helpers';
-import { getMentorEmoji } from '@/commands/basic/handlers/utils';
-import { BattleService } from './BattleService';
+import { EmbedFactory } from '@/utils/embedBuilder';
+import { ErrorUtils } from '@/utils/errorUtils';
+import { BattleService } from './combat/BattleService';
 import { InventoryService } from './InventoryService';
+import { Cache } from '../utils/Cache';
+import { BattleState } from '@/types/combat';
 
-export type InteractionHandler = (source: Message | ChatInputCommandInteraction) => Promise<unknown>;
-
-export interface ICharacterService {
-  handleProfile: InteractionHandler;
-  handleBalance: InteractionHandler;
-  handleHunt: InteractionHandler;
-  handleDaily: InteractionHandler;
-  handleHelp: InteractionHandler;
-  handleSell: (source: Message | ChatInputCommandInteraction, args?: string[]) => Promise<unknown>;
-  handleLeaderboard: (source: Message | ChatInputCommandInteraction, type?: string) => Promise<unknown>;
-}
-
-// Update BuffType interface
+// Add back the BuffType interface at the top with other interfaces
 interface BuffType {
   type: string;
   stats?: {
@@ -50,118 +41,252 @@ interface BuffType {
   expiresAt: number;
 }
 
+export type InteractionHandler = (source: Message | ChatInputCommandInteraction) => Promise<unknown>;
+
+export interface ICharacterService {
+  handleProfile: InteractionHandler;
+  handleBalance: InteractionHandler;
+  handleHunt: InteractionHandler;
+  handleDaily: InteractionHandler;
+  handleHelp: InteractionHandler;
+  handleSell: (source: Message | ChatInputCommandInteraction, args?: string[]) => Promise<unknown>;
+  handleLeaderboard: (source: Message | ChatInputCommandInteraction, type?: string) => Promise<unknown>;
+  handleStart: (source: Message | ChatInputCommandInteraction) => Promise<unknown>;
+}
+
+// Character Factory for creating and converting character data
+export class CharacterFactory {
+  static createInitialStats(mentor: MentorType): {
+    attack: number;
+    defense: number;
+    health: number;
+    speed: number;
+  } {
+    // Base stats with newbie bonus
+    let attack = CONFIG.STARTER_STATS.ATTACK + 15;
+    let defense = CONFIG.STARTER_STATS.DEFENSE + 20;
+    let health = CONFIG.STARTER_STATS.HEALTH + 50;
+    let speed = CONFIG.STARTER_STATS.SPEED + 10;
+    
+    switch(mentor) {
+      case 'YB': // Luffy
+        attack = Math.floor(attack * 1.15); // +15% Attack
+        defense = Math.floor(defense * 0.9); // -10% Defense
+        health = Math.floor(health * 1.1); // +10% Health
+        speed = Math.floor(speed * 1.2); // +20% Speed
+        break;
+      case 'Tierison': // Zoro
+        attack = Math.floor(attack * 1.1); // +10% Attack
+        defense = Math.floor(defense * 1.1); // +10% Defense
+        speed = Math.floor(speed * 1.1); // +10% Speed
+        break;
+      case 'LYuka': // Usopp
+        attack = Math.floor(attack * 0.9); // -10% Attack
+        defense = Math.floor(defense * 1.2); // +20% Defense
+        health = Math.floor(health * 1.05); // +5% Health
+        speed = Math.floor(speed * 1.15); // +15% Speed
+        break;
+      case 'GarryAng': // Sanji
+        attack = Math.floor(attack * 1.05); // +5% Attack
+        defense = Math.floor(defense * 1.15); // +15% Defense
+        health = Math.floor(health * 1.1); // +10% Health
+        speed = Math.floor(speed * 1.3); // +30% Speed
+        break;
+    }
+
+    return { attack, defense, health, speed };
+  }
+
+  static toCharacterStats(character: Character): CharacterStats {
+    return {
+      level: character.level,
+      experience: Number(character.experience),
+      health: character.health,
+      maxHealth: character.maxHealth,
+      attack: character.attack,
+      defense: character.defense,
+      speed: character.speed,
+      mentor: character.mentor as MentorType,
+      statusEffects: character.statusEffects ? JSON.parse(character.statusEffects) : { effects: [] },
+      activeBuffs: character.activeBuffs ? JSON.parse(character.activeBuffs) : { buffs: [] },
+      lastHealTime: character.lastHealTime || undefined,
+      lastDailyReset: character.lastDailyReset || undefined,
+      coins: Number(character.coins),
+      bank: Number(character.bank),
+      totalGambled: Number(character.totalGambled),
+      totalWon: Number(character.totalWon),
+      lastGambleTime: character.lastGambleTime || undefined,
+      wins: character.wins,
+      losses: character.losses,
+      huntStreak: character.huntStreak,
+      highestHuntStreak: character.highestHuntStreak,
+      winStreak: character.winStreak,
+      highestStreak: character.highestStreak,
+      location: character.currentIsland as LocationId,
+      luffyProgress: character.luffyProgress,
+      zoroProgress: character.zoroProgress,
+      usoppProgress: character.usoppProgress,
+      sanjiProgress: character.sanjiProgress,
+      combo: character.combo,
+      questPoints: character.questPoints,
+      explorationPoints: character.explorationPoints,
+      dailyHealCount: character.dailyHealCount
+    };
+  }
+
+  static toCharacterWithEquipment(character: Character): CharacterWithEquipment {
+    return {
+      id: character.id,
+      name: character.name,
+      level: character.level,
+      health: character.health,
+      maxHealth: character.maxHealth,
+      attack: character.attack,
+      defense: character.defense,
+      mentor: character.mentor,
+      speed: character.speed,
+      huntStreak: character.huntStreak
+    };
+  }
+}
+
+// Utility class for character progression calculations
+export class ProgressionUtils {
+  static calculateExpNeeded(level: number): number {
+    const baseExp = 1000;
+    const expScaling = 1.15;
+    const powerScaling = 1.1;
+    
+    let expNeeded = baseExp * Math.pow(expScaling, level);
+    
+    if (level > 50) expNeeded *= Math.pow(powerScaling, level - 50);
+    if (level > 100) expNeeded *= Math.pow(1.2, level - 100);
+    if (level > 200) expNeeded *= Math.pow(1.3, level - 200);
+    if (level > 500) expNeeded *= Math.pow(1.5, level - 500);
+
+    return Math.floor(expNeeded);
+  }
+
+  static calculateStatGains(currentLevel: number, levelsGained: number): {
+    attack: number;
+    defense: number;
+    maxHealth: number;
+    speed: number;
+  } {
+    const baseGain = 2;
+    let multiplier = 1;
+
+    if (currentLevel > 50) multiplier *= 1.2;
+    if (currentLevel > 100) multiplier *= 1.3;
+    if (currentLevel > 200) multiplier *= 1.4;
+    if (currentLevel > 500) multiplier *= 1.5;
+
+    const levelScaling = Math.pow(1.02, currentLevel);
+    const finalGain = Math.floor(baseGain * multiplier * levelScaling);
+
+    return {
+      attack: finalGain * levelsGained,
+      defense: finalGain * levelsGained,
+      maxHealth: finalGain * 5 * levelsGained,
+      speed: Math.floor(finalGain * 0.5 * levelsGained)
+    };
+  }
+
+  static calculateMaxHealth(level: number): number {
+    return 100 + (level * 10);
+  }
+}
+
 export class CharacterService extends BaseService implements ICharacterService {
   private battleService: BattleService | null = null;
   private inventoryService: InventoryService | null = null;
+  private characterCache: Cache<Character>;
+  private statsCache: Cache<CharacterStats>;
+  private balanceCache: Cache<{ coins: number; bank: number }>;
+  protected battleStatesCache: Cache<BattleState> | null = null;
+  private readonly CHARACTER_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  private readonly STATS_CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+  private readonly BALANCE_CACHE_TTL = 1 * 60 * 1000; // 1 minute
 
   constructor(prisma: PrismaClient) {
     super(prisma);
     this.inventoryService = new InventoryService(prisma, this);
+    this.characterCache = new Cache<Character>(this.CHARACTER_CACHE_TTL);
+    this.statsCache = new Cache<CharacterStats>(this.STATS_CACHE_TTL);
+    this.balanceCache = new Cache<{ coins: number; bank: number }>(this.BALANCE_CACHE_TTL);
+
+    // Set up periodic cache cleanup
+    setInterval(() => {
+      this.characterCache.cleanup();
+      this.statsCache.cleanup();
+      this.balanceCache.cleanup();
+    }, 5 * 60 * 1000); // Clean up every 5 minutes
   }
 
   setBattleService(battleService: BattleService) {
     this.battleService = battleService;
+    this.battleStatesCache = battleService.getBattleStatesCache();
   }
 
   async createCharacter(dto: CreateCharacterDto): Promise<Character> {
     try {
-      const { discordId, name, mentor } = dto;
-
-      const existingUser = await this.prisma.user.findUnique({
-        where: { discordId },
-        include: { character: true },
-      });
-
-      if (existingUser?.character) {
-        throw new Error('Character already exists');
-      }
-
-      // Validate mentor type
-      this.validateMentor(mentor);
+      // Validate mentor
+      this.validateMentor(dto.mentor);
 
       // Initialize empty status effects and buffs
       const initialStatusEffects: StatusEffects = { effects: [] };
       const initialActiveBuffs: ActiveBuffs = { 
         buffs: [{
           type: 'ALL',
-          value: 15, // Base stat boost
-          duration: 7 * 24 * 60 * 60, // 7 days in seconds
-          expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000), // 7 days from now
+          value: 15,
+          duration: 7 * 24 * 60 * 60,
+          expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
           source: 'newbie_bonus'
         }]
       };
 
-      // Calculate base stats with newbie bonus
-      let attack = CONFIG.STARTER_STATS.ATTACK + 15; // Increased base attack
-      let defense = CONFIG.STARTER_STATS.DEFENSE + 20; // Increased base defense
-      let health = CONFIG.STARTER_STATS.HEALTH + 50; // Increased base health
-      let speed = CONFIG.STARTER_STATS.SPEED + 10; // Increased base speed
-      
-      switch(mentor) {
-        case 'YB': // Luffy
-          attack = Math.floor(attack * 1.15); // +15% Attack
-          defense = Math.floor(defense * 0.9); // -10% Defense
-          health = Math.floor(health * 1.1); // +10% Health
-          speed = Math.floor(speed * 1.2); // +20% Speed
-          break;
-        case 'Tierison': // Zoro
-          attack = Math.floor(attack * 1.1); // +10% Attack
-          defense = Math.floor(defense * 1.1); // +10% Defense
-          speed = Math.floor(speed * 1.1); // +10% Speed
-          break;
-        case 'LYuka': // Usopp
-          attack = Math.floor(attack * 0.9); // -10% Attack
-          defense = Math.floor(defense * 1.2); // +20% Defense
-          health = Math.floor(health * 1.05); // +5% Health
-          speed = Math.floor(speed * 1.15); // +15% Speed
-          break;
-        case 'GarryAng': // Sanji
-          attack = Math.floor(attack * 1.05); // +5% Attack
-          defense = Math.floor(defense * 1.15); // +15% Defense
-          health = Math.floor(health * 1.1); // +10% Health
-          speed = Math.floor(speed * 1.3); // +30% Speed
-          break;
-      }
-
-      // Create character in transaction with starter items
+      // Create or get user and character in a transaction
       const result = await this.prisma.$transaction(async (tx) => {
-        // Create user if not exists
-        const user = await tx.user.upsert({
-          where: { discordId },
-          update: {},
-          create: { discordId }
+        // First, check if user already has a character
+        const existingUser = await tx.user.findUnique({
+          where: { discordId: dto.discordId },
+          include: { character: true }
         });
+
+        if (existingUser?.character) {
+          throw new Error('❌ Kamu sudah memiliki karakter!');
+        }
+
+        // Create or update user
+        const user = await tx.user.upsert({
+          where: { discordId: dto.discordId },
+          create: { discordId: dto.discordId },
+          update: {}
+        });
+
+        // Generate initial stats based on mentor
+        const initialStats = CharacterFactory.createInitialStats(dto.mentor);
 
         // Create character
         const character = await tx.character.create({
           data: {
-            name,
-            mentor,
-            level: 1,
-            experience: 0,
-            health,
-            maxHealth: health,
-            attack,
-            defense,
-            speed,
-            currentIsland: 'starter_island' as LocationId,
+            name: dto.name,
+            mentor: dto.mentor,
+            userId: user.id,
+            attack: initialStats.attack,
+            defense: initialStats.defense,
+            health: initialStats.health,
+            maxHealth: initialStats.health,
+            speed: initialStats.speed,
+            currentIsland: 'starter_island',
             statusEffects: JSON.stringify(initialStatusEffects),
             activeBuffs: JSON.stringify(initialActiveBuffs),
-            combo: 0,
-            questPoints: 0,
-            explorationPoints: 0,
-            luffyProgress: 0,
-            zoroProgress: 0,
-            usoppProgress: 0,
-            sanjiProgress: 0,
-            dailyHealCount: 0,
-            userId: user.id,
-            coins: 1000, // Starting coins for new players
-            bank: 500 // Starting bank balance for new players
+            coins: 1000,  // Starting coins
+            bank: 500    // Starting bank balance
           }
         });
 
-        // Add starter items to inventory
+        // Add starter items
         const starterItems = [
           { 
             itemId: 'wooden_sword',
@@ -186,7 +311,7 @@ export class CharacterService extends BaseService implements ICharacterService {
             }),
             level: 1,
             upgrades: 0
-          },
+          }
         ];
 
         // Verify items exist before creating inventory
@@ -199,15 +324,8 @@ export class CharacterService extends BaseService implements ICharacterService {
         });
 
         const existingItemIds = new Set(existingItems.map(item => item.id));
-        const missingItems = starterItems.filter(item => !existingItemIds.has(item.itemId));
 
-        if (missingItems.length > 0) {
-          console.warn('Some starter items are missing:', {
-            missingItems: missingItems.map(item => item.itemId)
-          });
-        }
-
-        // Only add items that exist in the database
+        // Add existing items to inventory
         for (const item of starterItems) {
           if (existingItemIds.has(item.itemId)) {
             await tx.inventory.create({
@@ -222,27 +340,68 @@ export class CharacterService extends BaseService implements ICharacterService {
         return character;
       });
 
-      return result;
+      // Clear all caches after character creation
+      this.characterCache.clear();
+      this.statsCache.clear();
+      this.balanceCache.clear();
+
+      // Verify character was created successfully
+      const verifyCharacter = await this.prisma.character.findUnique({
+        where: { id: result.id }
+      });
+
+      if (!verifyCharacter) {
+        throw new Error('Failed to create character');
+      }
+
+      return verifyCharacter;
     } catch (error) {
-      return this.handleError(error, 'CreateCharacter');
+      this.logger.error('Error in createCharacter:', error);
+      throw error;
     }
   }
 
   async getCharacterByDiscordId(discordId: string) {
     try {
+      // Check cache first
+      const cacheKey = `discord_${discordId}`;
+      const cachedCharacter = this.characterCache.get(cacheKey);
+      if (cachedCharacter) {
+        // Verify cached character still exists in DB
+        const dbCharacter = await this.prisma.character.findUnique({
+          where: { id: cachedCharacter.id }
+        });
+        
+        if (!dbCharacter) {
+          this.characterCache.delete(cacheKey);
+          return null;
+        }
+        
+        return cachedCharacter;
+      }
+
       const user = await this.prisma.user.findUnique({
         where: { discordId },
         include: { character: true }
       });
 
+      if (user?.character) {
+        this.characterCache.set(cacheKey, user.character);
+      }
+
       return user?.character || null;
     } catch (error) {
-      return this.handleError(error, 'GetCharacterByDiscordId');
+      this.logger.error('Error getting character:', error);
+      return null;
     }
   }
 
   async getCharacterStats(characterId: string): Promise<CharacterStats> {
     try {
+      // Check cache first
+      const cachedStats = this.statsCache.get(characterId);
+      if (cachedStats) return cachedStats;
+
       const character = await this.prisma.character.findUnique({
         where: { id: characterId }
       });
@@ -251,40 +410,12 @@ export class CharacterService extends BaseService implements ICharacterService {
         throw new Error('Character not found');
       }
 
-      return {
-        level: character.level,
-        experience: Number(character.experience),
-        health: character.health,
-        maxHealth: character.maxHealth,
-        attack: character.attack,
-        defense: character.defense,
-        speed: character.speed,
-        mentor: character.mentor as MentorType,
-        statusEffects: character.statusEffects ? JSON.parse(character.statusEffects) : { effects: [] },
-        activeBuffs: character.activeBuffs ? JSON.parse(character.activeBuffs) : { buffs: [] },
-        lastHealTime: character.lastHealTime || undefined,
-        lastDailyReset: character.lastDailyReset || undefined,
-        coins: Number(character.coins),
-        bank: Number(character.bank),
-        totalGambled: Number(character.totalGambled),
-        totalWon: Number(character.totalWon),
-        lastGambleTime: character.lastGambleTime || undefined,
-        wins: character.wins,
-        losses: character.losses,
-        huntStreak: character.huntStreak,
-        highestHuntStreak: character.highestHuntStreak,
-        winStreak: character.winStreak,
-        highestStreak: character.highestStreak,
-        location: character.currentIsland as LocationId,
-        luffyProgress: character.luffyProgress,
-        zoroProgress: character.zoroProgress,
-        usoppProgress: character.usoppProgress,
-        sanjiProgress: character.sanjiProgress,
-        combo: character.combo,
-        questPoints: character.questPoints,
-        explorationPoints: character.explorationPoints,
-        dailyHealCount: character.dailyHealCount
-      };
+      const stats = CharacterFactory.toCharacterStats(character);
+
+      // Cache the stats
+      this.statsCache.set(characterId, stats);
+
+      return stats;
     } catch (error) {
       return this.handleError(error, 'GetCharacterStats');
     }
@@ -366,6 +497,9 @@ export class CharacterService extends BaseService implements ICharacterService {
         data: { health: newHealth }
       });
 
+      // Invalidate stats cache since health changed
+      this.statsCache.delete(characterId);
+
       return newHealth;
     } catch (error) {
       return this.handleError(error, 'Heal');
@@ -384,16 +518,21 @@ export class CharacterService extends BaseService implements ICharacterService {
       speed: number;
     }
   }> {
-      const character = await this.prisma.character.findUnique({
+    const character = await this.prisma.character.findUnique({
       where: { id: characterId },
-      select: { level: true, experience: true }
-      });
+      select: {
+        id: true,
+        level: true,
+        experience: true,
+        user: true
+      }
+    });
 
     if (!character) throw new Error('Character not found');
 
     let { level, experience } = character;
     let newExp = BigInt(experience) + BigInt(amount);
-      let levelsGained = 0;
+    let levelsGained = 0;
     let currentLevel = level;
 
     // Calculate levels gained - removed level cap
@@ -401,16 +540,16 @@ export class CharacterService extends BaseService implements ICharacterService {
       const expNeeded = this.calculateExpNeeded(currentLevel);
       newExp = BigInt(Number(newExp) - expNeeded);
       currentLevel++;
-        levelsGained++;
-      }
+      levelsGained++;
+    }
 
-      // Calculate stat gains if leveled up
+    // Calculate stat gains if leveled up
     const statsGained = levelsGained > 0 ? this.calculateStatGains(level, levelsGained) : undefined;
 
     // Update character with new stats
-        await this.prisma.character.update({
-          where: { id: characterId },
-          data: {
+    await this.prisma.character.update({
+      where: { id: characterId },
+      data: {
         level: currentLevel,
         experience: Number(newExp),
         ...(statsGained && {
@@ -422,13 +561,19 @@ export class CharacterService extends BaseService implements ICharacterService {
       }
     });
 
-      return {
-        leveledUp: levelsGained > 0,
+    // Invalidate caches since stats changed
+    this.statsCache.delete(characterId);
+    if (character.user?.discordId) {
+      this.characterCache.delete(`discord_${character.user.discordId}`);
+    }
+
+    return {
+      leveledUp: levelsGained > 0,
       newLevel: levelsGained > 0 ? currentLevel : undefined,
-        newExp: Number(newExp),
-        levelsGained: levelsGained > 0 ? levelsGained : undefined,
+      newExp: Number(newExp),
+      levelsGained: levelsGained > 0 ? levelsGained : undefined,
       statsGained
-      };
+    };
   }
 
   async healWithSanji(characterId: string): Promise<{
@@ -663,6 +808,10 @@ export class CharacterService extends BaseService implements ICharacterService {
 
   async resetCharacter(discordId: string): Promise<void> {
     try {
+      // Clear all caches first
+      const cacheKey = `discord_${discordId}`;
+      this.characterCache.delete(cacheKey);
+      
       // Get user and character
       const user = await this.prisma.user.findUnique({
         where: { discordId },
@@ -672,6 +821,11 @@ export class CharacterService extends BaseService implements ICharacterService {
       if (!user || !user.character) {
         throw new Error('Karakter tidak ditemukan');
       }
+
+      // Clear all related caches
+      this.statsCache.delete(user.character.id);
+      this.balanceCache.delete(user.character.id);
+      this.battleStatesCache?.delete(user.character.id);
 
       // Delete all related data in a transaction
       await this.prisma.$transaction(async (tx) => {
@@ -715,8 +869,15 @@ export class CharacterService extends BaseService implements ICharacterService {
           where: { id: user.id }
         });
       });
+
+      // Clear all caches again after successful deletion
+      this.characterCache.clear();
+      this.statsCache.clear();
+      this.balanceCache.clear();
+      if (this.battleStatesCache) this.battleStatesCache.clear();
     } catch (error) {
-      return this.handleError(error, 'ResetCharacter');
+      this.logger.error('Error in resetCharacter:', error);
+      throw error;
     }
   }
 
@@ -727,19 +888,23 @@ export class CharacterService extends BaseService implements ICharacterService {
   }
 
   async addCoins(characterId: string, amount: number, type: TransactionType, description: string) {
-    // Single transaction for better performance
     await this.prisma.character.update({
-        where: { id: characterId },
-        data: { coins: { increment: amount } }
-      });
+      where: { id: characterId },
+      data: { coins: { increment: amount } }
+    });
+    // Invalidate balance cache
+    this.balanceCache.delete(characterId);
+    this.statsCache.delete(characterId);
   }
 
   async removeCoins(characterId: string, amount: number, type: TransactionType, description: string) {
-    // Single transaction for better performance
     await this.prisma.character.update({
-        where: { id: characterId },
-        data: { coins: { decrement: amount } }
-      });
+      where: { id: characterId },
+      data: { coins: { decrement: amount } }
+    });
+    // Invalidate balance cache
+    this.balanceCache.delete(characterId);
+    this.statsCache.delete(characterId);
   }
 
   async transferCoins(senderId: string, receiverId: string, amount: number) {
@@ -871,6 +1036,10 @@ export class CharacterService extends BaseService implements ICharacterService {
 
   async getBalance(characterId: string): Promise<{ coins: number; bank: number }> {
     try {
+      // Check cache first
+      const cachedBalance = this.balanceCache.get(characterId);
+      if (cachedBalance) return cachedBalance;
+
       const character = await this.prisma.character.findUnique({
         where: { id: characterId }
       });
@@ -879,10 +1048,15 @@ export class CharacterService extends BaseService implements ICharacterService {
         throw new Error('Character not found');
       }
 
-      return {
+      const balance = {
         coins: Number(character.coins),
         bank: Number(character.bank)
       };
+
+      // Cache the balance
+      this.balanceCache.set(characterId, balance);
+
+      return balance;
     } catch (error) {
       return this.handleError(error, 'GetBalance');
     }
@@ -1239,11 +1413,11 @@ export class CharacterService extends BaseService implements ICharacterService {
 
   // Utility method to handle command errors
   private async handleCommandError(error: unknown, source: Message | ChatInputCommandInteraction, context: string): Promise<unknown> {
-    console.error(`Error in ${context}:`, error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return source instanceof Message 
-      ? source.reply(`❌ Error: ${errorMessage}`)
-      : source.reply(createEphemeralReply({ content: `❌ Error: ${errorMessage}` }));
+    return ErrorUtils.handleError({
+      context,
+      error,
+      source
+    });
   }
 
   // Utility method to get user ID from source
@@ -1253,15 +1427,43 @@ export class CharacterService extends BaseService implements ICharacterService {
 
   // Utility method to validate character
   private async validateCharacter(userId: string, source: Message | ChatInputCommandInteraction): Promise<Character | null> {
-    const character = await this.getCharacterByDiscordId(userId);
-    if (!character) {
-      const message = '❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.';
-      await (source instanceof Message 
-        ? source.reply(message)
-        : source.reply(createEphemeralReply({ content: message })));
+    try {
+      // Clear cache first to ensure fresh data
+      const cacheKey = `discord_${userId}`;
+      this.characterCache.delete(cacheKey);
+      
+      // Get character with fresh data
+      const character = await this.getCharacterByDiscordId(userId);
+      
+      if (!character) {
+        await ErrorUtils.handleCharacterNotFound(source);
+        return null;
+      }
+
+      // Validate character exists in database
+      const dbCharacter = await this.prisma.character.findUnique({
+        where: { id: character.id }
+      });
+
+      if (!dbCharacter) {
+        // Clear all caches if character exists in cache but not in DB
+        this.characterCache.clear();
+        this.statsCache.clear();
+        this.balanceCache.clear();
+        await ErrorUtils.handleCharacterNotFound(source);
+        return null;
+      }
+
+      return dbCharacter;
+    } catch (error) {
+      this.logger.error('Error validating character:', error);
+      await ErrorUtils.handleError({
+        context: 'CHARACTER',
+        error: 'Failed to validate character',
+        source
+      });
       return null;
     }
-    return character;
   }
 
   // Utility method to send embed response
@@ -1294,10 +1496,15 @@ export class CharacterService extends BaseService implements ICharacterService {
   async handleBalance(source: Message | ChatInputCommandInteraction): Promise<unknown> {
     try {
       const userId = this.getUserId(source);
-      const embed = await this.createBalanceEmbed(userId);
+      const character = await this.validateCharacter(userId, source);
+      if (!character) return;
+
+      const balance = await this.getBalance(character.id);
+      const history = await this.getTransactionHistory(character.id, 5);
+      const embed = EmbedFactory.buildBalanceEmbed(balance.coins, balance.bank, history);
       return this.sendEmbedResponse(source, embed);
     } catch (error) {
-      return this.handleCommandError(error, source, 'handleBalance');
+      return ErrorUtils.handleTransactionError(source, error);
     }
   }
 
@@ -1310,10 +1517,7 @@ export class CharacterService extends BaseService implements ICharacterService {
         const remainingTime = getRemainingCooldown(userId, 'daily');
         const hours = Math.floor(remainingTime / 3600);
         const minutes = Math.floor((remainingTime % 3600) / 60);
-        const message = `⏰ Daily reward sedang cooldown!\nTunggu ${hours}h ${minutes}m lagi.`;
-        return source instanceof Message 
-          ? source.reply(message)
-          : source.reply(createEphemeralReply({ content: message }));
+        return ErrorUtils.handleCooldown(source, `${hours}h ${minutes}m`);
       }
 
       const character = await this.validateCharacter(userId, source);
@@ -1326,15 +1530,7 @@ export class CharacterService extends BaseService implements ICharacterService {
       await this.addExperience(character.id, exp);
       await this.addCoins(character.id, coins, 'DAILY', 'Daily reward');
       
-      const embed = new EmbedBuilder()
-        .setTitle('🎁 Daily Rewards')
-        .setColor('#00ff00')
-        .setDescription('Kamu telah mengklaim hadiah harian!')
-        .addFields(
-          { name: '✨ Experience', value: `+${exp} EXP`, inline: true },
-          { name: '💰 Coins', value: `+${coins} coins`, inline: true }
-        );
-
+      const embed = EmbedFactory.buildDailyRewardEmbed(exp, coins);
       setCooldown(userId, 'daily');
       return this.sendEmbedResponse(source, embed);
     } catch (error) {
@@ -1354,51 +1550,22 @@ export class CharacterService extends BaseService implements ICharacterService {
       }
 
       // Process the battle
-      const result = await this.battleService.processBattle(character.id, character.level);
-
-      // Create battle result embed
-      const embed = new EmbedBuilder()
-        .setColor(result.won ? '#00ff00' : '#ff0000')
-        .setTitle(`⚔️ Battle Result: ${character.name}`)
-        .setDescription(result.battleLog.join('\n'))
-        .setFooter({ text: result.won ? '🎉 Victory!' : '💀 Defeat...' });
+      const response = await this.battleService.processBattle(character.id, character.level);
 
       // Send the response with ephemeral: false to make it visible to everyone
       if (source instanceof Message) {
-        return source.reply({ embeds: [embed] });
+        return source.reply({ embeds: [response.embed] });
       } else {
-        return source.reply({ embeds: [embed], ephemeral: false });
+        return source.reply({ embeds: [response.embed], ephemeral: false });
       }
     } catch (error) {
-      return this.handleCommandError(error, source, 'Hunt');
+      return ErrorUtils.handleCombatError(source, error);
     }
   }
 
   async handleHelp(source: Message | ChatInputCommandInteraction): Promise<unknown> {
     try {
-      const embed = new EmbedBuilder()
-        .setTitle('📚 Game Commands Help')
-        .setColor('#0099ff')
-        .setDescription('Here are all the available commands:')
-        .addFields(
-          { name: '🎮 Basic Commands', value: 
-            '`/start` - Create your character\n' +
-            '`/profile` - View your character stats\n' +
-            '`/balance` - Check your coins and bank balance\n' +
-            '`/daily` - Claim daily rewards'
-          },
-          { name: '⚔️ Battle Commands', value:
-            '`/hunt` - Hunt monsters for exp and coins\n' +
-            '`/heal` - Heal your character\n' +
-            '`/duel` - Challenge other players'
-          },
-          { name: '💰 Economy Commands', value:
-            '`/deposit` - Deposit coins to bank\n' +
-            '`/withdraw` - Withdraw coins from bank\n' +
-            '`/transfer` - Transfer coins to other players'
-          }
-        );
-
+      const embed = EmbedFactory.buildHelpEmbed();
       return this.sendEmbedResponse(source, embed);
     } catch (error) {
       return this.handleCommandError(error, source, 'handleHelp');
@@ -1684,6 +1851,214 @@ export class CharacterService extends BaseService implements ICharacterService {
       return messageToCollectFrom;
     } catch (error) {
       return this.handleCommandError(error, source, 'handleLeaderboard');
+    }
+  }
+
+  async addItems(characterId: string, itemId: string, quantity: number): Promise<void> {
+    try {
+      // Check if item exists in inventory
+      const existingItem = await this.prisma.inventory.findUnique({
+        where: {
+          characterId_itemId: {
+            characterId,
+            itemId
+          }
+        }
+      });
+
+      if (existingItem) {
+        // Update existing item quantity
+        await this.prisma.inventory.update({
+          where: {
+            characterId_itemId: {
+              characterId,
+              itemId
+            }
+          },
+          data: {
+            quantity: { increment: quantity }
+          }
+        });
+      } else {
+        // Create new inventory entry
+        await this.prisma.inventory.create({
+          data: {
+            characterId,
+            itemId,
+            quantity,
+            isEquipped: false
+          }
+        });
+      }
+    } catch (error) {
+      this.logger.error('Error adding items:', error);
+      throw error;
+    }
+  }
+
+  async handleStart(source: Message | ChatInputCommandInteraction): Promise<unknown> {
+    try {
+      const userId = source instanceof Message ? source.author.id : source.user.id;
+      
+      // Check if character already exists
+      const existingCharacter = await this.getCharacterByDiscordId(userId);
+      if (existingCharacter) {
+        return source.reply({
+          content: source instanceof Message ? 
+            '❌ Kamu sudah memiliki karakter! Gunakan `a p` untuk melihat karaktermu.' :
+            '❌ Kamu sudah memiliki karakter! Gunakan `/profile` untuk melihat karaktermu.',
+          ephemeral: source instanceof ChatInputCommandInteraction
+        });
+      }
+
+      // For message commands, show instructions
+      if (source instanceof Message) {
+        // Create help embed
+        const embed = new EmbedBuilder()
+          .setTitle('🎮 Buat Karakter Baru')
+          .setDescription('Untuk membuat karakter baru, gunakan command:\n`a start <nama> <mentor>`\n\nContoh:\n`a start AmangLy YB`\n\nPilih mentor yang sesuai dengan gaya bermainmu:')
+          .addFields(
+            { 
+              name: '🏴‍☠️ YB (Luffy)',
+              value: '+15% Attack, -10% Defense, +10% Health, +20% Speed\nCocok untuk pemain agresif yang suka menyerang.',
+              inline: true
+            },
+            {
+              name: '⚔️ Tierison (Zoro)',
+              value: '+10% Attack, +10% Defense, +10% Speed\nSeimbang untuk semua situasi.',
+              inline: true
+            },
+            {
+              name: '🎯 LYuka (Usopp)',
+              value: '-10% Attack, +20% Defense, +5% Health, +15% Speed\nCocok untuk pemain yang suka bertahan.',
+              inline: true
+            },
+            {
+              name: '🔥 GarryAng (Sanji)',
+              value: '+5% Attack, +15% Defense, +10% Health, +30% Speed\nCocok untuk pemain yang suka combo dan dodge.',
+              inline: true
+            }
+          )
+          .setColor('#00ff00')
+          .setFooter({ text: 'Gunakan format: a start <nama> <mentor>' });
+
+        return source.reply({ embeds: [embed] });
+      }
+
+      // For slash commands, show modal
+      const modal = new ModalBuilder()
+        .setCustomId('character_creation')
+        .setTitle('Create Your Character');
+
+      // Add name input
+      const nameInput = new TextInputBuilder()
+        .setCustomId('character_name')
+        .setLabel('Pilih nama karaktermu')
+        .setStyle(TextInputStyle.Short)
+        .setMinLength(3)
+        .setMaxLength(20)
+        .setPlaceholder('Masukkan nama untuk karaktermu')
+        .setRequired(true);
+
+      // Add mentor selection
+      const mentorInput = new TextInputBuilder()
+        .setCustomId('mentor')
+        .setLabel('Pilih mentormu')
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder('YB, Tierison, LYuka, atau GarryAng')
+        .setRequired(true);
+
+      // Add mentor descriptions
+      const mentorDescriptions = new TextInputBuilder()
+        .setCustomId('mentor_info')
+        .setLabel('Info Mentor')
+        .setStyle(TextInputStyle.Paragraph)
+        .setValue(
+          'YB: +15% Attack, -10% Defense, +10% Health, +20% Speed\n' +
+          'Tierison: +10% Attack, +10% Defense, +10% Speed\n' +
+          'LYuka: -10% Attack, +20% Defense, +5% Health, +15% Speed\n' +
+          'GarryAng: +5% Attack, +15% Defense, +10% Health, +30% Speed'
+        )
+        .setRequired(false);
+
+      // Add components to modal
+      const nameActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(nameInput);
+      const mentorActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(mentorInput);
+      const mentorInfoActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(mentorDescriptions);
+
+      modal.addComponents(nameActionRow, mentorActionRow, mentorInfoActionRow);
+
+      // Show modal
+      await source.showModal(modal);
+
+      // Wait for modal submission
+      const filter = (i: ModalSubmitInteraction) => i.customId === 'character_creation';
+      const submission = await source.awaitModalSubmit({ filter, time: 120000 });
+
+      if (!submission) {
+        return source.followUp({
+          content: '❌ Pembuatan karakter timeout. Silakan coba lagi.',
+          ephemeral: true
+        });
+      }
+
+      // Get values from submission
+      const name = submission.fields.getTextInputValue('character_name');
+      const mentor = submission.fields.getTextInputValue('mentor').toUpperCase();
+
+      // Validate mentor
+      if (!['YB', 'TIERISON', 'LYUKA', 'GARRYANG'].includes(mentor)) {
+        return submission.reply({
+          content: '❌ Mentor tidak valid! Pilih dari: YB, Tierison, LYuka, atau GarryAng',
+          ephemeral: true
+        });
+      }
+
+      // Create character
+      const character = await this.createCharacter({
+        name,
+        mentor: mentor as MentorType,
+        discordId: userId
+      });
+
+      // Create welcome embed
+      const embed = new EmbedBuilder()
+        .setTitle('🎉 Selamat Datang di A4A Clan!')
+        .setDescription(`Karaktermu berhasil dibuat!\n\nNama: ${character.name}\nMentor: ${mentor}`)
+        .setColor('#00ff00')
+        .addFields(
+          { 
+            name: '📊 Stats', 
+            value: [
+              `⚔️ Attack: ${character.attack}`,
+              `🛡️ Defense: ${character.defense}`,
+              `❤️ Health: ${character.health}`,
+              `💨 Speed: ${character.speed}`
+            ].join('\n'),
+            inline: true 
+          },
+          { 
+            name: '💰 Balance', 
+            value: [
+              `Coins: ${character.coins}`,
+              `Bank: ${character.bank}`
+            ].join('\n'),
+            inline: true 
+          },
+          { 
+            name: '📜 Langkah Selanjutnya', 
+            value: [
+              '• Gunakan `a h` untuk berburu dan mendapatkan exp',
+              '• Cek profilmu dengan `a p`',
+              '• Beli equipment di `a s`',
+              '• Lihat inventory dengan `a i`'
+            ].join('\n')
+          }
+        );
+
+      return submission.reply({ embeds: [embed], ephemeral: false });
+    } catch (error) {
+      return this.handleCommandError(error, source, 'handleStart');
     }
   }
 }

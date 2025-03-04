@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { BaseService } from './BaseService';
 import { EmbedBuilder, Message, MessageFlags, ChatInputCommandInteraction } from 'discord.js';
 import { GameItem, ITEMS } from '../config/gameData';
+import { Cache } from '../utils/Cache';
 
 interface EquipmentSlot {
   equippedWeapon: string | null;
@@ -29,9 +30,29 @@ interface EquippedItem {
   effect: EquipmentEffect;
 }
 
+interface CachedEquipment {
+  weapon?: EquippedItem;
+  armor?: EquippedItem;
+  accessory?: EquippedItem;
+  lastUpdated: number;
+}
+
 export class EquipmentService extends BaseService {
+  private equipmentCache: Cache<CachedEquipment>;
+  private readonly EQUIPMENT_CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+
   constructor(prisma: PrismaClient) {
     super(prisma);
+    this.equipmentCache = new Cache<CachedEquipment>(this.EQUIPMENT_CACHE_TTL);
+
+    // Set up periodic cache cleanup
+    setInterval(() => {
+      this.equipmentCache.cleanup();
+    }, 5 * 60 * 1000); // Clean up every 5 minutes
+  }
+
+  private getEquipmentCacheKey(characterId: string): string {
+    return `equipment_${characterId}`;
   }
 
   private ensureStringifiedStats(stats: any): string | null {
@@ -192,6 +213,9 @@ export class EquipmentService extends BaseService {
         }
       });
 
+      // Invalidate equipment cache
+      this.equipmentCache.delete(this.getEquipmentCacheKey(characterId));
+
       // Create success embed
       const embed = new EmbedBuilder()
         .setTitle('⚔️ Equipment Changed!')
@@ -319,6 +343,10 @@ export class EquipmentService extends BaseService {
             });
           }
         });
+
+        // Invalidate equipment cache
+        this.equipmentCache.delete(this.getEquipmentCacheKey(characterId));
+
       } catch (txError) {
         this.logger.error('Transaction error in unequipItem:', txError);
         return {
@@ -371,6 +399,17 @@ export class EquipmentService extends BaseService {
     armor?: EquippedItem;
     accessory?: EquippedItem;
   }> {
+    // Check cache first
+    const cacheKey = this.getEquipmentCacheKey(characterId);
+    const cachedEquipment = this.equipmentCache.get(cacheKey);
+    if (cachedEquipment) {
+      return {
+        weapon: cachedEquipment.weapon,
+        armor: cachedEquipment.armor,
+        accessory: cachedEquipment.accessory
+      };
+    }
+
     const equipped = await this.prisma.inventory.findMany({
       where: {
         characterId,
@@ -392,6 +431,14 @@ export class EquipmentService extends BaseService {
         effect: JSON.parse(item.item.effect)
       };
     }
+
+    // Cache the equipment
+    this.equipmentCache.set(cacheKey, {
+      weapon: result.weapon,
+      armor: result.armor,
+      accessory: result.accessory,
+      lastUpdated: Date.now()
+    });
 
     return result as {
       weapon?: EquippedItem;
