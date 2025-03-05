@@ -62,7 +62,7 @@ export interface EffectData {
 
 export type ItemType = 'WEAPON' | 'ARMOR' | 'ACCESSORY' | 'CONSUMABLE' | 'MATERIAL';
 
-export type Rarity = 'COMMON' | 'UNCOMMON' | 'RARE' | 'EPIC' | 'LEGENDARY';
+export type Rarity = 'COMMON' | 'UNCOMMON' | 'RARE' | 'EPIC' | 'LEGENDARY' | 'MYTHICAL' | 'DIVINE' | 'TRANSCENDENT' | 'CELESTIAL' | 'PRIMORDIAL' | 'ULTIMATE';
 
 export interface GameItem {
   id?: string;

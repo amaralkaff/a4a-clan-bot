@@ -29,31 +29,15 @@ async function deployCommands() {
       logger.warn('Failed to remove old commands:', error);
     }
 
-    // Then register new commands
-    try {
-      logger.info(`Deploying commands to guild: ${CONFIG.GUILD_ID}`);
-      const guildData = await rest.put(
-        Routes.applicationGuildCommands(CONFIG.CLIENT_ID, CONFIG.GUILD_ID),
-        { 
-          body: commandsToRegister,
-        }
-      );
-      logger.info(`Successfully reloaded ${(guildData as any[]).length} guild (/) commands.`);
-    } catch (error: any) {
-      if (error?.code === 50001) {
-        logger.warn('Failed to register guild commands, trying global commands...');
-        const globalData = await rest.put(
-          Routes.applicationCommands(CONFIG.CLIENT_ID),
-          { body: commandsToRegister }
-        );
-        logger.info(`Successfully registered ${(globalData as any[]).length} global commands.`);
-      } else {
-        throw error;
-      }
-    }
+    // Register commands globally
+    const globalData = await rest.put(
+      Routes.applicationCommands(CONFIG.CLIENT_ID),
+      { body: commandsToRegister }
+    );
+    logger.info(`Successfully registered ${(globalData as any[]).length} global commands.`);
 
     // Generate proper invite URL with required scopes and permissions
-    const inviteUrl = `https://discord.com/api/oauth2/authorize?client_id=${CONFIG.CLIENT_ID}&permissions=2147485760&scope=bot%20applications.commands`;
+    const inviteUrl = `https://discord.com/api/oauth2/authorize?client_id=${CONFIG.CLIENT_ID}&permissions=8589934591&scope=bot%20applications.commands`;
 
     logger.info('\nSetup Instructions:');
     logger.info('1. Use this URL to invite the bot:');

@@ -6,7 +6,6 @@ import { InventoryService } from './InventoryService';
 import { Cache } from '../utils/Cache';
 import { createEphemeralReply } from '../utils/helpers';
 import { 
-  GameItem, 
   ITEMS, 
   RARITY_COLORS, 
   ITEM_TYPE_EMOJIS,
@@ -17,7 +16,8 @@ import {
   Effect,
   EffectType,
   Stats,
-  EffectData
+  EffectData,
+  GameItem
 } from '../types/game';
 import {
   ItemStats,
@@ -181,14 +181,7 @@ function validateRarity(rarity: string): Rarity {
 
 interface ShopCategory {
   type: ItemType;
-  items: Array<{
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-    rarity: string;
-    effect: any;
-  }>;
+  items: GameItem[];
 }
 
 export class ShopService extends BaseService {
@@ -215,6 +208,12 @@ export class ShopService extends BaseService {
     this.dbItemsCache = new Cache<CachedDbItems>(this.DB_ITEMS_CACHE_TTL);
     this.dataCache = DataCache.getInstance();
     this.shopCache = new Cache<Record<string, GameItem>>(this.SHOP_ITEMS_CACHE_TTL);
+
+    // Invalidate all caches on initialization
+    this.dataCache.invalidateAllCaches();
+    this.shopItemsCache.clear();
+    this.dbItemsCache.clear();
+    this.shopCache.clear();
 
     // Set up periodic cache cleanup
     setInterval(() => {
@@ -347,63 +346,213 @@ export class ShopService extends BaseService {
     }
   }
 
+  private filterItems(items: GameItem[], filter: string, rarity: string): GameItem[] {
+    return items.filter(item => {
+      const typeMatch = filter === 'all' || item.type.toLowerCase() === filter;
+      const rarityMatch = rarity === 'all' || item.rarity.toLowerCase() === rarity;
+      return typeMatch && rarityMatch;
+    });
+  }
+
   async handleShop(source: Message | ChatInputCommandInteraction): Promise<void> {
     try {
       const userId = source instanceof Message ? source.author.id : source.user.id;
       const character = await this.characterService.getCharacterByDiscordId(userId);
       
       if (!character) {
-        throw new Error('❌ Kamu harus membuat karakter terlebih dahulu dengan `a start`');
+        throw CharacterError.notFound(userId);
       }
 
       const balance = await this.characterService.getBalance(character.id);
       const categories = await this.getShopCategories();
 
-      await PaginationManager.paginate(source, {
-        items: categories,
-        itemsPerPage: this.ITEMS_PER_PAGE,
-        embedBuilder: async (categories, currentPage, totalPages) => {
-          const embed = new EmbedBuilder()
-            .setTitle('🛍️ A4A CLAN Shop')
-            .setDescription(`💰 Uangmu: ${balance.coins} coins\nGunakan \`a buy <item>\` untuk membeli item.`)
-            .setColor('#ffd700');
+      if (!categories || categories.length === 0) {
+        throw new ShopError(
+          '❌ Tidak ada item yang tersedia di shop saat ini.',
+          'NO_ITEMS_AVAILABLE'
+        );
+      }
 
-          categories.forEach(category => {
-            const itemList = category.items
-              .map(item => {
-                const effectDesc = this.formatEffectDescription(item.effect);
-                let text = `${ITEM_TYPE_EMOJIS[category.type]} ${item.name}\n`;
-                text += `💰 ${item.price.toLocaleString()} coins\n`;
-                text += `📝 ${item.description}\n`;
-                if (effectDesc) text += `${effectDesc}\n`;
-                return text;
-              })
-              .join('\n');
+      // Create filter buttons for item types and rarities
+      const typeRow = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          new ButtonBuilder()
+            .setCustomId('filter_all')
+            .setLabel('All')
+            .setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder()
+            .setCustomId('filter_weapon')
+            .setLabel('Weapons')
+            .setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder()
+            .setCustomId('filter_armor')
+            .setLabel('Armor')
+            .setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder()
+            .setCustomId('filter_accessory')
+            .setLabel('Accessories')
+            .setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder()
+            .setCustomId('filter_consumable')
+            .setLabel('Consumables')
+            .setStyle(ButtonStyle.Secondary)
+        );
 
+      const rarityRow = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          new ButtonBuilder()
+            .setCustomId('rarity_all')
+            .setLabel('All')
+            .setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder()
+            .setCustomId('rarity_common')
+            .setLabel('Common')
+            .setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder()
+            .setCustomId('rarity_uncommon')
+            .setLabel('Uncommon')
+            .setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder()
+            .setCustomId('rarity_rare')
+            .setLabel('Rare')
+            .setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder()
+            .setCustomId('rarity_epic')
+            .setLabel('Epic')
+            .setStyle(ButtonStyle.Secondary)
+        );
+
+      const navigationRow = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          new ButtonBuilder()
+            .setCustomId('prev_page')
+            .setLabel('◀️')
+            .setStyle(ButtonStyle.Primary),
+          new ButtonBuilder()
+            .setCustomId('next_page')
+            .setLabel('▶️')
+            .setStyle(ButtonStyle.Primary)
+        );
+
+      const embed = new EmbedBuilder()
+        .setTitle('🛍️ A4A CLAN Shop')
+        .setDescription(`💰 Uangmu: ${balance.coins.toLocaleString()} coins\nGunakan \`a buy <nama_item> [jumlah]\` untuk membeli item.\n\nFilter: All | Rarity: All | Page: 1`)
+        .setColor('#ffd700');
+
+      // Show items for each category
+      for (const category of categories) {
+        if (category.items?.length > 0) {
+          const itemList = category.items
+            .slice(0, ITEMS_PER_PAGE)
+            .map(item => this.formatItemDisplay(item))
+            .join('\n\n');
+
+          if (itemList) {
             embed.addFields({
-              name: `${ITEM_TYPE_EMOJIS[category.type]} ${category.type}`,
-              value: itemList || 'Tidak ada item',
+              name: `${ITEM_TYPE_EMOJIS[category.type]} ${category.type} (${category.items.length} items)`,
+              value: itemList.slice(0, 1024),
               inline: false
             });
-          });
-
-          if (totalPages > 1) {
-            embed.setFooter({ text: `Halaman ${currentPage}/${totalPages} • Gunakan a buy <item> untuk membeli` });
           }
+        }
+      }
 
-          return embed;
-        },
-        ephemeral: source instanceof ChatInputCommandInteraction
+      const reply = await source.reply({ 
+        embeds: [embed], 
+        components: [typeRow, rarityRow, navigationRow],
+        ephemeral: source instanceof ChatInputCommandInteraction 
       });
+
+      // Create collector for button interactions
+      const collector = reply.createMessageComponentCollector({ 
+        componentType: ComponentType.Button,
+        time: 300000 // 5 minutes
+      });
+
+      let currentPage = 1;
+      let currentFilter = 'all';
+      let currentRarity = 'all';
+
+      collector.on('collect', async (interaction) => {
+        const [action, value] = interaction.customId.split('_');
+        
+        if (action === 'filter') {
+          currentFilter = value;
+          currentPage = 1;
+        } else if (action === 'rarity') {
+          currentRarity = value;
+          currentPage = 1;
+        } else if (action === 'prev') {
+          currentPage = Math.max(1, currentPage - 1);
+        } else if (action === 'next') {
+          currentPage++;
+        }
+
+        // Filter and paginate items
+        const filteredCategories = categories.map(category => ({
+          ...category,
+          items: this.filterItems(category.items, currentFilter, currentRarity)
+        })).filter(category => category.items.length > 0);
+
+        const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+        const newEmbed = new EmbedBuilder()
+          .setTitle('🛍️ A4A CLAN Shop')
+          .setDescription(`💰 Uangmu: ${balance.coins.toLocaleString()} coins\nGunakan \`a buy <nama_item> [jumlah]\` untuk membeli item.\n\nFilter: ${currentFilter.toUpperCase()} | Rarity: ${currentRarity.toUpperCase()} | Page: ${currentPage}`)
+          .setColor('#ffd700');
+
+        for (const category of filteredCategories) {
+          const pageItems = category.items.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+          if (pageItems.length > 0) {
+            const itemList = pageItems
+              .map(item => this.formatItemDisplay(item))
+              .join('\n\n');
+
+            newEmbed.addFields({
+              name: `${ITEM_TYPE_EMOJIS[category.type]} ${category.type} (${category.items.length} items)`,
+              value: itemList.slice(0, 1024),
+              inline: false
+            });
+          }
+        }
+
+        await interaction.update({ 
+          embeds: [newEmbed],
+          components: [typeRow, rarityRow, navigationRow]
+        });
+      });
+
+      collector.on('end', () => {
+        // Remove buttons after timeout
+        if (reply instanceof Message && reply.editable) {
+          reply.edit({ components: [] }).catch(console.error);
+        }
+      });
+
     } catch (error) {
       await ErrorHandler.handle(error, source);
     }
   }
 
+  private formatItemDisplay(item: GameItem): string {
+    const effectDesc = this.formatEffectDescription(item.effect);
+    const price = typeof item.price === 'string' ? parseInt(item.price, 10) : 
+                 typeof item.price === 'number' ? item.price : 0;
+              
+    return [
+      `${ITEM_TYPE_EMOJIS[item.type]} ${item.name} (${item.rarity})`,
+      `💰 ${price.toLocaleString()} coins`,
+      `📝 ${item.description}`,
+      effectDesc ? effectDesc : ''
+    ].filter(Boolean).join('\n');
+  }
+
   private async processPurchase(characterId: string, itemId: string, quantity: number, item: GameItem): Promise<BuyResult> {
     try {
       // Calculate total cost
-      const totalCost = item.price * quantity;
+      const itemPrice = typeof item.price === 'string' ? parseInt(item.price, 10) :
+                       typeof item.price === 'number' ? item.price : 0;
+      
+      const totalCost = itemPrice * quantity;
 
       // Get character's current balance
       const balance = await this.characterService.getBalance(characterId);
@@ -412,7 +561,7 @@ export class ShopService extends BaseService {
       if (balance.coins < totalCost) {
         return {
           success: false,
-          message: `❌ Uang tidak cukup! Kamu butuh ${totalCost} coins untuk membeli ${quantity}x ${item.name}.`
+          message: `❌ Uang tidak cukup! Kamu butuh ${totalCost.toLocaleString()} coins untuk membeli ${quantity}x ${item.name}.`
         };
       }
 
@@ -602,13 +751,14 @@ export class ShopService extends BaseService {
       }
 
       categories[item.type].items.push({
-        id,
-        name: item.name,
-        description: item.description,
-        price: item.price,
-        rarity: item.rarity,
-        effect: item.effect
+        ...item,
+        id
       });
+    });
+
+    // Log item counts per category
+    Object.entries(categories).forEach(([type, category]) => {
+      console.log(`Shop category ${type} has ${category.items.length} items`);
     });
 
     // Sort categories by type
@@ -640,7 +790,10 @@ export class ShopService extends BaseService {
       }
 
       // Check if player has enough coins
-      const totalCost = item.price * quantity;
+      const itemPrice = typeof item.price === 'string' ? parseInt(item.price, 10) :
+                       typeof item.price === 'number' ? item.price : 0;
+      
+      const totalCost = itemPrice * quantity;
       const balance = await this.characterService.getBalance(character.id);
       if (balance.coins < totalCost) {
         throw ShopError.insufficientFunds(item.name, quantity, totalCost, balance.coins);
@@ -678,7 +831,7 @@ export class ShopService extends BaseService {
       // Create success embed
       const embed = new EmbedBuilder()
         .setTitle('✅ Purchase Successful!')
-        .setDescription(`Berhasil membeli ${quantity}x ${item.name} seharga ${totalCost} coins!`)
+        .setDescription(`Berhasil membeli ${quantity}x ${item.name} seharga ${totalCost.toLocaleString()} coins!`)
         .setColor('#00ff00');
 
       // Add effect info if applicable

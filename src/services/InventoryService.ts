@@ -385,38 +385,30 @@ export class InventoryService extends BaseService {
         return typeOrder.indexOf(a.type) - typeOrder.indexOf(b.type);
       });
 
-      await PaginationManager.paginate(source, {
-        items: itemGroups,
-        itemsPerPage: 2, // Show 2 item types per page
-        embedBuilder: async (groups, currentPage, totalPages) => {
-          const embed = new EmbedBuilder()
-            .setTitle(`📦 Inventory ${character.name}`)
-            .setColor('#0099ff');
+      const embed = new EmbedBuilder()
+        .setTitle(`📦 Inventory ${character.name}`)
+        .setColor('#0099ff');
 
-          groups.forEach(group => {
-            const itemList = group.items
-              .map(item => {
-                let text = `${item.name} (x${item.quantity})`;
-                if (item.isEquipped) text += ' [Equipped]';
-                text += `\n${item.description}`;
-                if (item.value) text += `\n💰 Sell value: ${Math.floor(item.value * 0.7)} coins`;
-                return text;
-              })
-              .join('\n\n');
+      itemGroups.forEach(group => {
+        const itemList = group.items
+          .map(item => {
+            let text = `${item.name} (x${item.quantity})`;
+            if (item.isEquipped) text += ' [Equipped]';
+            text += `\n${item.description}`;
+            if (item.value) text += `\n💰 Sell value: ${Math.floor(item.value * 0.7)} coins`;
+            return text;
+          })
+          .join('\n\n');
 
-            embed.addFields([{
-              name: `${this.getItemTypeEmoji(group.type)} ${group.type}`,
-              value: itemList || 'Kosong'
-            }]);
-          });
+        embed.addFields([{
+          name: `${this.getItemTypeEmoji(group.type)} ${group.type}`,
+          value: itemList || 'Kosong'
+        }]);
+      });
 
-          if (totalPages > 1) {
-            embed.setFooter({ text: `Page ${currentPage}/${totalPages}` });
-          }
-
-          return embed;
-        },
-        ephemeral: source instanceof ChatInputCommandInteraction
+      await sendResponse(source, { 
+        embeds: [embed], 
+        ephemeral: source instanceof ChatInputCommandInteraction 
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Terjadi kesalahan';
@@ -439,6 +431,26 @@ export class InventoryService extends BaseService {
       // Parse itemId and quantity
       const [baseItemId, quantityStr] = itemId.split(' ');
       const quantity = quantityStr ? parseInt(quantityStr) : 1;
+
+      // Get item details first
+      const item = await this.prisma.item.findUnique({
+        where: { id: baseItemId }
+      });
+
+      if (!item) {
+        return sendResponse(source, {
+          content: '❌ Item tidak ditemukan',
+          ephemeral: source instanceof ChatInputCommandInteraction
+        });
+      }
+
+      // Check if item is equipment
+      if (item.type === 'WEAPON' || item.type === 'ARMOR' || item.type === 'ACCESSORY') {
+        return sendResponse(source, {
+          content: `❌ Untuk menggunakan ${item.type}, gunakan command \`a equip ${item.name}\``,
+          ephemeral: source instanceof ChatInputCommandInteraction
+        });
+      }
 
       logger.debug('Handling use item request:', {
         userId,

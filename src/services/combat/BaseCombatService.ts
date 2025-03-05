@@ -172,6 +172,11 @@ export abstract class BaseCombatService extends BaseService {
     try {
       let finalDamage = damage;
 
+      // Skip database check for monster IDs (they start with monster_ or are predefined monster IDs)
+      if (character.id.startsWith('monster_') || ['bandit_weak', 'sea_beast_small'].includes(character.id)) {
+        return finalDamage;
+      }
+
       // Verify character exists before applying effects
       const dbCharacter = await this.prisma.character.findUnique({
         where: { id: character.id },

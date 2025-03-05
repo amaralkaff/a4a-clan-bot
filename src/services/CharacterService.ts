@@ -21,6 +21,7 @@ import { BattleService } from './combat/BattleService';
 import { InventoryService } from './InventoryService';
 import { Cache } from '../utils/Cache';
 import { BattleState } from '@/types/combat';
+import { ICharacterCommands, InteractionHandler } from '@/types/commands';
 
 // Add back the BuffType interface at the top with other interfaces
 interface BuffType {
@@ -40,8 +41,6 @@ interface BuffType {
   };
   expiresAt: number;
 }
-
-export type InteractionHandler = (source: Message | ChatInputCommandInteraction) => Promise<unknown>;
 
 export interface ICharacterService {
   handleProfile: InteractionHandler;
@@ -197,7 +196,7 @@ export class ProgressionUtils {
   }
 }
 
-export class CharacterService extends BaseService implements ICharacterService {
+export class CharacterService extends BaseService implements ICharacterCommands {
   private battleService: BattleService | null = null;
   private inventoryService: InventoryService | null = null;
   private characterCache: Cache<Character>;
@@ -226,6 +225,78 @@ export class CharacterService extends BaseService implements ICharacterService {
   setBattleService(battleService: BattleService) {
     this.battleService = battleService;
     this.battleStatesCache = battleService.getBattleStatesCache();
+  }
+
+  invalidateStatsCache(characterId: string) {
+    this.statsCache.delete(characterId);
+  }
+
+  async invalidateAllCaches(characterId: string) {
+    this.statsCache.delete(characterId);
+    this.balanceCache.delete(characterId);
+    const character = await this.prisma.character.findUnique({
+      where: { id: characterId },
+      select: { user: true }
+    });
+    
+    if (character?.user?.discordId) {
+      this.characterCache.delete(`discord_${character.user.discordId}`);
+    }
+  }
+
+  calculateExpNeeded(level: number): number {
+    // Exponential scaling for experience requirements
+    // Base exp starts higher and scales much harder
+    const baseExp = 1000; // Increased base exp requirement
+    const expScaling = 1.15; // Exponential scaling factor (15% increase per level)
+    const powerScaling = 1.1; // Additional power scaling for higher levels
+    
+    // Calculate exp needed with multiple scaling factors
+    let expNeeded = baseExp * Math.pow(expScaling, level);
+    
+    // Additional scaling for higher levels
+    if (level > 50) {
+      expNeeded *= Math.pow(powerScaling, level - 50);
+    }
+    if (level > 100) {
+      expNeeded *= Math.pow(1.2, level - 100); // 20% extra scaling after level 100
+    }
+    if (level > 200) {
+      expNeeded *= Math.pow(1.3, level - 200); // 30% extra scaling after level 200
+    }
+    if (level > 500) {
+      expNeeded *= Math.pow(1.5, level - 500); // 50% extra scaling after level 500
+    }
+
+    return Math.floor(expNeeded);
+  }
+
+  calculateStatGains(currentLevel: number, levelsGained: number): {
+    attack: number;
+    defense: number;
+    maxHealth: number;
+    speed: number;
+  } {
+    // Enhanced stat gains that scale with level
+    const baseGain = 2;
+    let multiplier = 1;
+
+    // Increased multiplier based on level ranges
+    if (currentLevel > 50) multiplier *= 1.2;
+    if (currentLevel > 100) multiplier *= 1.3;
+    if (currentLevel > 200) multiplier *= 1.4;
+    if (currentLevel > 500) multiplier *= 1.5;
+
+    // Calculate final gains with level scaling
+    const levelScaling = Math.pow(1.02, currentLevel); // 2% increase per level
+    const finalGain = Math.floor(baseGain * multiplier * levelScaling);
+
+    return {
+      attack: finalGain * levelsGained,
+      defense: finalGain * levelsGained,
+      maxHealth: finalGain * 5 * levelsGained, // Health scales 5x more
+      speed: Math.floor(finalGain * 0.5 * levelsGained) // Speed scales 0.5x
+    };
   }
 
   async createCharacter(dto: CreateCharacterDto): Promise<Character> {
@@ -363,29 +434,15 @@ export class CharacterService extends BaseService implements ICharacterService {
 
   async getCharacterByDiscordId(discordId: string) {
     try {
-      // Check cache first
-      const cacheKey = `discord_${discordId}`;
-      const cachedCharacter = this.characterCache.get(cacheKey);
-      if (cachedCharacter) {
-        // Verify cached character still exists in DB
-        const dbCharacter = await this.prisma.character.findUnique({
-          where: { id: cachedCharacter.id }
-        });
-        
-        if (!dbCharacter) {
-          this.characterCache.delete(cacheKey);
-          return null;
-        }
-        
-        return cachedCharacter;
-      }
-
+      // Always fetch fresh data from database for profiles
       const user = await this.prisma.user.findUnique({
         where: { discordId },
         include: { character: true }
       });
 
       if (user?.character) {
+        // Update cache with fresh data
+        const cacheKey = `discord_${discordId}`;
         this.characterCache.set(cacheKey, user.character);
       }
 
@@ -419,61 +476,6 @@ export class CharacterService extends BaseService implements ICharacterService {
     } catch (error) {
       return this.handleError(error, 'GetCharacterStats');
     }
-  }
-
-  private calculateExpNeeded(level: number): number {
-    // Exponential scaling for experience requirements
-    // Base exp starts higher and scales much harder
-    const baseExp = 1000; // Increased base exp requirement
-    const expScaling = 1.15; // Exponential scaling factor (15% increase per level)
-    const powerScaling = 1.1; // Additional power scaling for higher levels
-    
-    // Calculate exp needed with multiple scaling factors
-    let expNeeded = baseExp * Math.pow(expScaling, level);
-    
-    // Additional scaling for higher levels
-    if (level > 50) {
-      expNeeded *= Math.pow(powerScaling, level - 50);
-    }
-    if (level > 100) {
-      expNeeded *= Math.pow(1.2, level - 100); // 20% extra scaling after level 100
-    }
-    if (level > 200) {
-      expNeeded *= Math.pow(1.3, level - 200); // 30% extra scaling after level 200
-    }
-    if (level > 500) {
-      expNeeded *= Math.pow(1.5, level - 500); // 50% extra scaling after level 500
-    }
-
-    return Math.floor(expNeeded);
-  }
-
-  private calculateStatGains(currentLevel: number, levelsGained: number): {
-    attack: number;
-    defense: number;
-    maxHealth: number;
-    speed: number;
-  } {
-    // Enhanced stat gains that scale with level
-    const baseGain = 2;
-    let multiplier = 1;
-
-    // Increased multiplier based on level ranges
-    if (currentLevel > 50) multiplier *= 1.2;
-    if (currentLevel > 100) multiplier *= 1.3;
-    if (currentLevel > 200) multiplier *= 1.4;
-    if (currentLevel > 500) multiplier *= 1.5;
-
-    // Calculate final gains with level scaling
-    const levelScaling = Math.pow(1.02, currentLevel); // 2% increase per level
-    const finalGain = Math.floor(baseGain * multiplier * levelScaling);
-
-    return {
-      attack: finalGain * levelsGained,
-      defense: finalGain * levelsGained,
-      maxHealth: finalGain * 5 * levelsGained, // Health scales 5x more
-      speed: Math.floor(finalGain * 0.5 * levelsGained) // Speed scales 0.5x
-    };
   }
 
   private calculateMaxHealth(level: number): number {
@@ -1092,13 +1094,22 @@ export class CharacterService extends BaseService implements ICharacterService {
   }
 
   private async createProfileEmbed(userId: string) {
+    // Force invalidate caches before fetching profile data
+    const cacheKey = `discord_${userId}`;
+    this.characterCache.delete(cacheKey);
+
     const character = await this.getCharacterByDiscordId(userId);
     
     if (!character) {
       throw new Error('❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.');
     }
 
+    // Force invalidate stats cache
+    this.statsCache.delete(character.id);
     const stats = await this.getCharacterStats(character.id);
+
+    // Force invalidate balance cache
+    this.balanceCache.delete(character.id);
     const balance = await this.getBalance(character.id);
 
     // Get equipped items

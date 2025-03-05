@@ -513,12 +513,10 @@ export class EquipmentService extends BaseService {
         const itemName = inv.item.name.toLowerCase().replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
         const itemId = inv.itemId.toLowerCase();
         const cleanSearchName = searchName.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
-        const searchWithUnderscore = cleanSearchName.replace(/\s+/g, '_');
         
-        return itemName === cleanSearchName || 
-               itemId === searchWithUnderscore || 
-               itemName.includes(cleanSearchName) || 
-               cleanSearchName.includes(itemName);
+        // Split search name into words and check if all words are present in item name
+        const searchWords = cleanSearchName.split(/\s+/);
+        return searchWords.every(word => itemName.includes(word)) || itemId === cleanSearchName;
       });
 
       if (!inventoryItem) {

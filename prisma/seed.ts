@@ -53,6 +53,7 @@ function validateAndConvertEffect(effect: any): Effect {
     
     return { type: 'EQUIP' as EffectType, stats: {} };
   } catch (error) {
+    console.error('Error validating effect:', error);
     return { type: 'EQUIP' as EffectType, stats: {} };
   }
 }
@@ -69,50 +70,106 @@ function validateRarity(rarity: string): Rarity {
   return validRarities.includes(upperRarity) ? upperRarity : 'COMMON';
 }
 
+// Helper function to scale down prices
+function scalePrice(price: number): number {
+  // For prices above 1B, scale 1:1000
+  if (price >= 1000000000) { // 1 Billion+
+    return Math.floor(price / 1000);
+  }
+  // For prices 1M - 1B, scale 1:100
+  else if (price >= 1000000) { // 1 Million+
+    return Math.floor(price / 100);
+  }
+  return price;
+}
+
 // Type assertion and validation for imported JSON data
 const weaponData = Object.entries(weaponDataJson).reduce((acc, [key, item]) => {
-  acc[key] = {
-    ...item,
-    type: 'WEAPON' as ItemType,
-    effect: validateAndConvertEffect(item.effect),
-    rarity: validateRarity(item.rarity)
-  };
+  try {
+    const rawPrice = typeof item.price === 'string' ? parseInt(item.price, 10) :
+                     typeof item.price === 'number' ? item.price : 0;
+    
+    acc[key] = {
+      ...item,
+      type: 'WEAPON' as ItemType,
+      effect: validateAndConvertEffect(item.effect),
+      rarity: validateRarity(item.rarity),
+      price: scalePrice(rawPrice),
+      stackLimit: item.stackLimit || 1,
+      maxDurability: item.maxDurability || undefined,
+      maxLevel: item.maxLevel || undefined
+    };
+  } catch (error) {
+    console.error(`Error processing weapon ${key}:`, error);
+  }
   return acc;
 }, {} as Record<string, GameItem>);
 
 const armorData = Object.entries(armorDataJson).reduce((acc, [key, item]) => {
-  acc[key] = {
-    ...item,
-    type: 'ARMOR' as ItemType,
-    effect: validateAndConvertEffect(item.effect),
-    rarity: validateRarity(item.rarity)
-  };
+  try {
+    const rawPrice = typeof item.price === 'string' ? parseInt(item.price, 10) :
+                     typeof item.price === 'number' ? item.price : 0;
+    
+    acc[key] = {
+      ...item,
+      type: 'ARMOR' as ItemType,
+      effect: validateAndConvertEffect(item.effect),
+      rarity: validateRarity(item.rarity),
+      price: scalePrice(rawPrice),
+      stackLimit: item.stackLimit || 1,
+      maxDurability: item.maxDurability || undefined,
+      maxLevel: item.maxLevel || undefined
+    };
+  } catch (error) {
+    console.error(`Error processing armor ${key}:`, error);
+  }
   return acc;
 }, {} as Record<string, GameItem>);
 
 const accessoryData = Object.entries(accessoryDataJson).reduce((acc, [key, item]) => {
-  acc[key] = {
-    ...item,
-    type: 'ACCESSORY' as ItemType,
-    effect: validateAndConvertEffect(item.effect),
-    rarity: validateRarity(item.rarity)
-  };
+  try {
+    const rawPrice = typeof item.price === 'string' ? parseInt(item.price, 10) :
+                     typeof item.price === 'number' ? item.price : 0;
+    
+    acc[key] = {
+      ...item,
+      type: 'ACCESSORY' as ItemType,
+      effect: validateAndConvertEffect(item.effect),
+      rarity: validateRarity(item.rarity),
+      price: scalePrice(rawPrice),
+      stackLimit: item.stackLimit || 1,
+      maxDurability: item.maxDurability || undefined,
+      maxLevel: item.maxLevel || undefined
+    };
+  } catch (error) {
+    console.error(`Error processing accessory ${key}:`, error);
+  }
   return acc;
 }, {} as Record<string, GameItem>);
 
 const consumableData = Object.entries(consumableDataJson).reduce((acc, [key, item]) => {
-  acc[key] = {
-    ...item,
-    type: 'CONSUMABLE' as ItemType,
-    effect: validateAndConvertEffect(item.effect),
-    rarity: validateRarity(item.rarity)
-  };
+  try {
+    const rawPrice = typeof item.price === 'string' ? parseInt(item.price, 10) :
+                     typeof item.price === 'number' ? item.price : 0;
+    
+    acc[key] = {
+      ...item,
+      type: 'CONSUMABLE' as ItemType,
+      effect: validateAndConvertEffect(item.effect),
+      rarity: validateRarity(item.rarity),
+      price: scalePrice(rawPrice),
+      stackLimit: item.stackLimit || 99,
+      maxDurability: undefined,
+      maxLevel: undefined
+    };
+  } catch (error) {
+    console.error(`Error processing consumable ${key}:`, error);
+  }
   return acc;
 }, {} as Record<string, GameItem>);
 
 // Combine all item data with proper type checking
 const ALL_ITEMS: Record<string, GameItem> = {
-  ...ITEMS,
   ...weaponData,
   ...armorData,
   ...accessoryData,
@@ -120,22 +177,29 @@ const ALL_ITEMS: Record<string, GameItem> = {
 };
 
 function convertGameItemToDbItem(id: string, item: GameItem) {
-  const effect = validateAndConvertEffect(item.effect);
-  
-  return {
-    id,
-    name: item.name,
-    description: item.description,
-    type: item.type,
-    value: item.price,
-    effect: JSON.stringify(effect),
-    baseStats: JSON.stringify(item.baseStats || {}),
-    upgradeStats: JSON.stringify(item.upgradeStats || {}),
-    maxDurability: item.maxDurability || null,
-    stackLimit: item.stackLimit,
-    rarity: item.rarity,
-    maxLevel: item.maxLevel || null
-  };
+  try {
+    const effect = validateAndConvertEffect(item.effect);
+    const maxDurability = typeof item.maxDurability === 'number' ? item.maxDurability : null;
+    const maxLevel = typeof item.maxLevel === 'number' ? item.maxLevel : null;
+    
+    return {
+      id,
+      name: item.name,
+      description: item.description,
+      type: item.type,
+      value: scalePrice(item.price),
+      effect: JSON.stringify(effect),
+      baseStats: JSON.stringify(item.baseStats || {}),
+      upgradeStats: JSON.stringify(item.upgradeStats || {}),
+      maxDurability,
+      stackLimit: item.stackLimit,
+      rarity: validateRarity(item.rarity),
+      maxLevel
+    };
+  } catch (error) {
+    console.error(`Error converting item ${id} to DB format:`, error);
+    throw error;
+  }
 }
 
 function convertMonsterToDbMonster(id: string, monster: JsonMonster) {

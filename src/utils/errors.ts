@@ -25,7 +25,7 @@ export class CharacterError extends GameError {
 
   static notFound(discordId: string): CharacterError {
     return new CharacterError(
-      '❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.',
+      '❌ Kamu belum memiliki karakter! Gunakan `a start` untuk membuat karakter.',
       'CHARACTER_NOT_FOUND',
       { discordId }
     );
@@ -33,7 +33,7 @@ export class CharacterError extends GameError {
 
   static alreadyExists(discordId: string): CharacterError {
     return new CharacterError(
-      '❌ Kamu sudah memiliki karakter!',
+      '❌ Kamu sudah memiliki karakter! Gunakan `a profile` untuk melihat karaktermu.',
       'CHARACTER_ALREADY_EXISTS',
       { discordId }
     );
@@ -182,7 +182,7 @@ export class CooldownError extends GameError {
 
 // Error handler class
 export class ErrorHandler {
-  static async handle(error: unknown, source: Message | ChatInputCommandInteraction): Promise<void> {
+  static async handle(error: any, source: Message | ChatInputCommandInteraction) {
     // Log the error
     if (error instanceof GameError) {
       logger.warn(`${error.context} Error:`, {
@@ -192,37 +192,32 @@ export class ErrorHandler {
       });
     } else {
       logger.error('Unexpected Error:', error);
+      logger.error('Stack:', error.stack);
     }
 
-    // Create error message
-    let errorMessage: string;
-    let errorEmbed = true;
-
-    if (error instanceof GameError) {
-      errorMessage = error.message;
-    } else if (error instanceof Error) {
-      errorMessage = '❌ Terjadi kesalahan. Silakan coba lagi.';
-      logger.error('Unexpected Error:', error);
-    } else {
-      errorMessage = '❌ Terjadi kesalahan yang tidak diketahui.';
-      logger.error('Unknown Error:', error);
+    // Get the error message
+    let errorMessage = error instanceof Error ? error.message : '❌ Terjadi kesalahan yang tidak diketahui';
+    
+    // If it's a character creation message, don't treat it as an error in logs
+    if (errorMessage.includes('a start') || errorMessage.includes('karakter')) {
+      logger.info('User needs to create character:', errorMessage);
     }
 
-    // Send error response
     try {
+      // Send error message to user
       if (source instanceof Message) {
-        if (errorEmbed) {
-          await source.reply({ embeds: [EmbedFactory.buildErrorEmbed(errorMessage)] });
-        } else {
-          await source.reply(errorMessage);
-        }
+        await source.reply({ 
+          content: errorMessage,
+          allowedMentions: { repliedUser: true }
+        });
       } else {
         if (source.deferred) {
-          await source.editReply({ embeds: [EmbedFactory.buildErrorEmbed(errorMessage)] });
-        } else if (source.replied) {
-          await source.followUp({ embeds: [EmbedFactory.buildErrorEmbed(errorMessage)], ephemeral: true });
+          await source.editReply({ content: errorMessage });
         } else {
-          await source.reply({ embeds: [EmbedFactory.buildErrorEmbed(errorMessage)], ephemeral: true });
+          await source.reply({ 
+            content: errorMessage, 
+            ephemeral: true 
+          });
         }
       }
     } catch (sendError) {

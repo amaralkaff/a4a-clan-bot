@@ -1,27 +1,31 @@
 import { EmbedBuilder, Message, ChatInputCommandInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle, ButtonInteraction } from 'discord.js';
 import { BaseService } from './BaseService';
 import { PrismaClient } from '@prisma/client';
-import { PaginationManager } from '@/utils/pagination';
 import { ErrorHandler } from '@/utils/errors';
 import { CharacterService } from './CharacterService';
+import { sendResponse } from '@/utils/helpers';
 
-const COMMAND_DESCRIPTIONS: Record<string, string> = {
-  'start': 'Buat karakter baru dan mulai petualanganmu',
-  'hunt': 'Berburu monster untuk exp dan coins',
-  'inventory': 'Lihat dan kelola inventorimu',
-  'profile': 'Lihat profil dan statistik karaktermu',
-  'balance': 'Cek jumlah coins yang kamu miliki',
-  'duel': 'Tantang player lain untuk bertarung',
-  'train': 'Latihan untuk mendapatkan exp',
-  'shop': 'Kunjungi toko untuk membeli item',
-  'buy': 'Beli item dari toko',
-  'sell': 'Jual item ke toko',
-  'use': 'Gunakan item dari inventori',
-  'map': 'Lihat peta dan lokasi yang tersedia',
-  'travel': 'Pindah ke lokasi lain',
-  'quest': 'Lihat dan ambil quest',
-  'daily': 'Klaim hadiah harian',
-  'leaderboard': 'Lihat peringkat pemain'
+const COMMAND_DESCRIPTIONS = {
+  'start': 'Buat karakter baru (`/start` atau `a start`)',
+  'profile': 'Lihat profil karaktermu (`/profile` atau `a p`)',
+  'balance': 'Cek uangmu (`/balance` atau `a b`)',
+  'inventory': 'Lihat inventorymu (`/inventory` atau `a i`)',
+  'hunt': 'Berburu monster untuk exp dan coins (`/hunt` atau `a h`)',
+  'duel': 'Tantang player lain untuk duel (`/duel` atau `a d`)',
+  'train': 'Latihan dengan mentormu (`/train` atau `a t`)',
+  'shop': 'Kunjungi toko untuk membeli item (`/shop` atau `a sh`)',
+  'buy': 'Beli item dari toko (`/buy` atau `a buy`)',
+  'sell': 'Jual item ke toko (`/sell` atau `a s`)',
+  'use': 'Gunakan item dari inventory (`/use` atau `a u`)',
+  'equip': 'Equip equipment dari inventory (`/equip` atau `a e`)',
+  'unequip': 'Unequip equipment yang dipakai (`/unequip` atau `a ue`)',
+  'map': 'Lihat peta dunia (`/map` atau `a m`)',
+  'travel': 'Pergi ke lokasi lain (`/travel` atau `a tr`)',
+  'quest': 'Lihat dan ambil quest (`/quest` atau `a q`)',
+  'daily': 'Ambil hadiah harian (`/daily` atau `a daily`)',
+  'help': 'Tampilkan bantuan (`/help` atau `a help`)',
+  'leaderboard': 'Lihat peringkat (`/leaderboard` atau `a l`)',
+  'gamble': 'Coba keberuntunganmu (`/gamble` atau `a g`)'
 };
 
 export interface HelpTopic {
@@ -42,23 +46,23 @@ export class HelpService extends BaseService {
       fields: [
         {
           name: '1️⃣ Buat Karakter',
-          value: COMMAND_DESCRIPTIONS['start'] || 'Gunakan `/start` untuk membuat karakter baru. Pilih mentor yang sesuai dengan gaya bermainmu!'
+          value: 'Gunakan `/start` atau `a start <nama> <mentor>` untuk membuat karakter baru. Pilih mentor yang sesuai dengan gaya bermainmu!'
         },
         {
           name: '2️⃣ Berburu Monster',
-          value: COMMAND_DESCRIPTIONS['hunt'] || 'Gunakan `/hunt` atau `a h` untuk berburu monster dan mendapatkan exp & coins.'
+          value: 'Gunakan `/hunt` atau `a h` untuk berburu monster dan mendapatkan exp & coins.'
         },
         {
           name: '3️⃣ Kelola Inventori',
-          value: COMMAND_DESCRIPTIONS['inventory'] || 'Cek inventorimu dengan `/inventory` atau `a i`. Gunakan item dengan `/use [item]`.'
+          value: 'Cek inventorimu dengan `/inventory` atau `a i`. Gunakan item dengan `/use [item]` atau `a u [item]`.'
         },
         {
           name: '4️⃣ Tingkatkan Karakter',
-          value: 'Naik level untuk meningkatkan stats. Beli equipment di `/shop` untuk tambahan stats.'
+          value: 'Naik level untuk meningkatkan stats. Beli equipment di `/shop` atau `a sh` untuk tambahan stats.'
         },
         {
           name: '5️⃣ Jelajahi Dunia',
-          value: COMMAND_DESCRIPTIONS['map'] || 'Kunjungi lokasi baru dengan `/map` dan selesaikan quest untuk rewards!'
+          value: 'Kunjungi lokasi baru dengan `/map` atau `a m` dan selesaikan quest untuk rewards!'
         }
       ]
     },
@@ -68,11 +72,11 @@ export class HelpService extends BaseService {
       fields: [
         {
           name: '🎯 Berburu Monster',
-          value: COMMAND_DESCRIPTIONS['hunt'] || 'Gunakan `/hunt` untuk melawan monster. Level monster menyesuaikan levelmu.'
+          value: 'Gunakan `/hunt` atau `a h` untuk melawan monster. Level monster menyesuaikan levelmu.'
         },
         {
           name: '🤺 Duel PvP',
-          value: COMMAND_DESCRIPTIONS['duel'] || 'Tantang player lain dengan `/duel @player`. Pemenang dapat exp dan coins!'
+          value: 'Tantang player lain dengan `/duel @player` atau `a d @player`. Pemenang dapat exp dan coins!'
         },
         {
           name: '💪 Stats Pertarungan',
@@ -84,7 +88,7 @@ export class HelpService extends BaseService {
         },
         {
           name: '💊 Healing',
-          value: 'Gunakan item healing saat HP rendah. Beberapa item memberi buff tambahan.'
+          value: 'Gunakan item healing saat HP rendah dengan `/use [item]` atau `a u [item]`. Beberapa item memberi buff tambahan.'
         }
       ]
     },
@@ -95,42 +99,45 @@ export class HelpService extends BaseService {
         {
           name: '📊 Stats & Profile',
           value: [
-            `\`/profile\` - ${COMMAND_DESCRIPTIONS['profile']}`,
-            `\`/balance\` - ${COMMAND_DESCRIPTIONS['balance']}`,
-            `\`/inventory\` - ${COMMAND_DESCRIPTIONS['inventory']}`
+            '`/profile` atau `a p` - Lihat profil',
+            '`/balance` atau `a b` - Cek coins',
+            '`/inventory` atau `a i` - Lihat inventori'
           ].join('\n')
         },
         {
           name: '⚔️ Battle',
           value: [
-            `\`/hunt\` - ${COMMAND_DESCRIPTIONS['hunt']}`,
-            `\`/duel\` - ${COMMAND_DESCRIPTIONS['duel']}`,
-            `\`/train\` - ${COMMAND_DESCRIPTIONS['train']}`
+            '`/hunt` atau `a h` - Berburu monster',
+            '`/duel` atau `a d` - Duel PvP',
+            '`/train` atau `a t` - Latihan'
           ].join('\n')
         },
         {
           name: '🏪 Shop & Items',
           value: [
-            `\`/shop\` - ${COMMAND_DESCRIPTIONS['shop']}`,
-            `\`/buy\` - ${COMMAND_DESCRIPTIONS['buy']}`,
-            `\`/sell\` - ${COMMAND_DESCRIPTIONS['sell']}`,
-            `\`/use\` - ${COMMAND_DESCRIPTIONS['use']}`
+            '`/shop` atau `a sh` - Buka toko',
+            '`/buy` atau `a buy` - Beli item',
+            '`/sell` atau `a s` - Jual item',
+            '`/use` atau `a u` - Pakai item',
+            '`/equip` atau `a e` - Equip equipment',
+            '`/unequip` atau `a ue` - Unequip equipment'
           ].join('\n')
         },
         {
           name: '🗺️ Exploration',
           value: [
-            `\`/map\` - ${COMMAND_DESCRIPTIONS['map']}`,
-            `\`/travel\` - ${COMMAND_DESCRIPTIONS['travel'] || 'Pindah lokasi'}`,
-            `\`/quest\` - ${COMMAND_DESCRIPTIONS['quest'] || 'Lihat quest'}`
+            '`/map` atau `a m` - Lihat peta',
+            '`/travel` atau `a tr` - Pindah lokasi',
+            '`/quest` atau `a q` - Lihat quest'
           ].join('\n')
         },
         {
           name: '🎲 Misc',
           value: [
-            `\`/daily\` - ${COMMAND_DESCRIPTIONS['daily']}`,
-            `\`/help\` - Lihat panduan`,
-            `\`/leaderboard\` - ${COMMAND_DESCRIPTIONS['leaderboard']}`
+            '`/daily` atau `a daily` - Hadiah harian',
+            '`/help` atau `a help` - Panduan',
+            '`/leaderboard` atau `a l` - Peringkat',
+            '`/gamble` atau `a g` - Gambling'
           ].join('\n')
         }
       ]
@@ -144,35 +151,24 @@ export class HelpService extends BaseService {
     this.characterService = new CharacterService(prisma);
   }
 
-  async handleHelp(
-    source: Message | ChatInputCommandInteraction,
-    topic: string = 'getting_started'
-  ): Promise<void> {
+  async handleHelp(source: Message | ChatInputCommandInteraction, topic: string = 'commands'): Promise<void> {
     try {
       const helpTopic = this.topics[topic];
       if (!helpTopic) {
         throw new Error('Topic not found');
       }
 
-      await PaginationManager.paginate(source, {
-        items: helpTopic.fields,
-        itemsPerPage: 5,
-        embedBuilder: async (fields, currentPage, totalPages) => {
-          const embed = new EmbedBuilder()
-            .setTitle(helpTopic.title)
-            .setDescription(helpTopic.description)
-            .setColor('#00ff00');
+      const embed = new EmbedBuilder()
+        .setTitle(helpTopic.title)
+        .setDescription(helpTopic.description)
+        .setColor('#00ff00');
 
-          fields.forEach(field => {
-            embed.addFields(field);
-          });
+      helpTopic.fields.forEach(field => {
+        embed.addFields(field);
+      });
 
-          if (totalPages > 1) {
-            embed.setFooter({ text: `Page ${currentPage}/${totalPages}` });
-          }
-
-          return embed;
-        },
+      await sendResponse(source, { 
+        embeds: [embed],
         ephemeral: source instanceof ChatInputCommandInteraction
       });
     } catch (error) {

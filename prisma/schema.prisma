@@ -119,7 +119,7 @@ model Item {
   name          String
   description   String
   type          String
-  value         BigInt      @default(0)
+  value         Int        @default(0)
   effect        String      @default("{}")
   maxDurability Int?
   stackLimit    Int         @default(999)

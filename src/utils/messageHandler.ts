@@ -18,10 +18,12 @@ const COMMAND_ALIASES: Record<string, string> = {
   't': 'train',
   
   // Shop & Items
-  's': 'shop',
+  'sh': 'shop',
   'buy': 'buy',
-  'sell': 'sell',
+  's': 'sell',
   'u': 'use',
+  'e': 'equip',
+  'ue': 'unequip',
   
   // Map & Exploration
   'm': 'map',
@@ -142,7 +144,7 @@ export async function handleMessageCommand(message: Message, services: ServiceCo
                 value: [
                   '• Gunakan `a h` untuk berburu dan mendapatkan exp',
                   '• Cek profilmu dengan `a p`',
-                  '• Beli equipment di `a s`',
+                  '• Beli equipment di `a sh`',
                   '• Lihat inventory dengan `a i`'
                 ].join('\n')
               }
@@ -192,7 +194,7 @@ export async function handleMessageCommand(message: Message, services: ServiceCo
 
       // Shop & Items
       case 'shop':
-      case 's':
+      case 'sh':
         await services.shop.handleShop(message);
         break;
 
@@ -219,6 +221,24 @@ export async function handleMessageCommand(message: Message, services: ServiceCo
           return;
         }
         await services.inventory.handleUseItem(message, args.join(' '));
+        break;
+
+      case 'equip':
+      case 'e':
+        if (args.length === 0) {
+          await message.reply('❌ Sebutkan item yang ingin diequip! Contoh: `a equip wooden sword`');
+          return;
+        }
+        await services.equipment.handleEquipCommand(message, args);
+        break;
+
+      case 'unequip':
+      case 'ue':
+        if (args.length === 0) {
+          await message.reply('❌ Sebutkan slot yang ingin diunequip! Contoh: `a unequip weapon`');
+          return;
+        }
+        await services.equipment.handleUnequipCommand(message, args);
         break;
 
       // Map & Exploration

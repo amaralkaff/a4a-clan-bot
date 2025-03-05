@@ -103,6 +103,10 @@ export class BattleService extends BaseCombatService {
       let playerHealth = player.health;
       let monsterHealth = enemy.health;
       let turn = 1;
+      
+      // Track total damage
+      let totalPlayerDamage = 0;
+      let totalMonsterDamage = 0;
 
       // Battle loop
       while (playerHealth > 0 && monsterHealth > 0 && turn <= 50) { // Add max turns limit
@@ -116,13 +120,27 @@ export class BattleService extends BaseCombatService {
 
         playerHealth = roundResult.newFirstHealth;
         monsterHealth = roundResult.newSecondHealth;
-        battleLog.push(...roundResult.roundLog);
+        
+        // Calculate damage dealt this round
+        totalPlayerDamage += Math.max(0, enemy.health - monsterHealth);
+        totalMonsterDamage += Math.max(0, player.health - playerHealth);
 
         turn++;
       }
 
       const won = playerHealth > 0;
       
+      // Create battle summary
+      const playerHealthBar = this.createHealthBar(playerHealth, player.health);
+      const monsterHealthBar = this.createHealthBar(monsterHealth, enemy.health);
+      
+      battleLog.push(`⚔️ Battle Summary:`);
+      battleLog.push(`${player.name}'s HP: ${playerHealthBar} (${playerHealth}/${player.health})`);
+      battleLog.push(`${enemy.name}'s HP: ${monsterHealthBar} (${monsterHealth}/${enemy.health})`);
+      battleLog.push(`Total Damage Dealt: ${totalPlayerDamage}`);
+      battleLog.push(`Total Damage Taken: ${totalMonsterDamage}`);
+      battleLog.push(won ? `✨ Victory! You defeated ${enemy.name}!` : `💀 Defeat! ${enemy.name} was too strong!`);
+
       // Verify character still exists before updating
       const characterCheck = await this.prisma.character.findUnique({
         where: { id: characterId },
@@ -137,20 +155,88 @@ export class BattleService extends BaseCombatService {
       await this.prisma.$transaction(async (tx) => {
         const txCharacter = await tx.character.findUnique({
           where: { id: characterId },
-          select: { id: true }
+          select: { 
+            id: true,
+            huntStreak: true,
+            highestHuntStreak: true,
+            mentor: true,
+            experience: true,
+            level: true
+          }
         });
 
         if (!txCharacter) {
           throw new CharacterError('❌ Karakter tidak ditemukan saat update!', 'CHARACTER_NOT_FOUND');
         }
 
+        // Calculate new hunt streak and highest streak
+        const newHuntStreak = won ? (txCharacter.huntStreak || 0) + 1 : 0;
+        const newHighestStreak = Math.max(newHuntStreak, txCharacter.highestHuntStreak || 0);
+
+        // Calculate experience gain if won
+        let expUpdate = {};
+        if (won) {
+          let newExp = BigInt(txCharacter.experience) + BigInt(monster.exp);
+          let levelsGained = 0;
+          let currentLevel = txCharacter.level;
+
+          // Calculate levels gained
+          while (Number(newExp) >= this.characterService.calculateExpNeeded(currentLevel)) {
+            const expNeeded = this.characterService.calculateExpNeeded(currentLevel);
+            newExp = BigInt(Number(newExp) - expNeeded);
+            currentLevel++;
+            levelsGained++;
+          }
+
+          // Calculate stat gains if leveled up
+          const statsGained = levelsGained > 0 ? this.characterService.calculateStatGains(txCharacter.level, levelsGained) : undefined;
+
+          expUpdate = {
+            experience: Number(newExp),
+            level: currentLevel,
+            ...(statsGained && {
+              attack: { increment: statsGained.attack },
+              defense: { increment: statsGained.defense },
+              maxHealth: { increment: statsGained.maxHealth },
+              speed: { increment: statsGained.speed }
+            })
+          };
+        }
+
+        // Update character stats
         await tx.character.update({
           where: { id: characterId },
           data: {
             health: Math.max(0, playerHealth),
-            huntStreak: won ? { increment: 1 } : 0
+            huntStreak: newHuntStreak,
+            highestHuntStreak: newHighestStreak,
+            coins: won ? { increment: monster.coins } : undefined,
+            ...expUpdate
           }
         });
+
+        // Update mentor progress if character has a mentor
+        if (won && txCharacter.mentor) {
+          const progressGain = 1;
+          const progressField = {
+            'YB': 'luffyProgress',
+            'Tierison': 'zoroProgress',
+            'LYuka': 'usoppProgress',
+            'GarryAng': 'sanjiProgress'
+          }[txCharacter.mentor];
+
+          if (progressField) {
+            await tx.character.update({
+              where: { id: characterId },
+              data: {
+                [progressField]: { increment: progressGain }
+              }
+            });
+          }
+        }
+
+        // Invalidate all caches after the transaction
+        await this.characterService.invalidateAllCaches(characterId);
       });
 
       const result: CombatResult = {
@@ -241,5 +327,13 @@ export class BattleService extends BaseCombatService {
       battleLog,
       finalHealth: Math.max(0, player2Health)
     };
+  }
+
+  private createHealthBar(current: number, max: number): string {
+    const barLength = 10;
+    const currentHealth = Math.max(0, current); // Ensure health is not negative
+    const filledBars = Math.min(barLength, Math.max(0, Math.round((currentHealth / max) * barLength)));
+    const emptyBars = barLength - filledBars;
+    return '█'.repeat(filledBars) + '░'.repeat(emptyBars);
   }
 } 

@@ -9,18 +9,23 @@ import monsterDataJson from '../config/monsterData.json';
 
 // Helper function to convert raw item data to GameItem
 function convertToGameItem(data: any): GameItem {
+  // Ensure price is a valid number
+  const price = typeof data.price === 'string' ? parseInt(data.price, 10) :
+                typeof data.price === 'number' ? data.price :
+                typeof data.value === 'number' ? data.value : 0;
+
   return {
     name: data.name,
     type: data.type as ItemType,
     description: data.description,
-    price: data.price,
-    effect: data.effect,
-    baseStats: data.baseStats,
-    upgradeStats: data.upgradeStats,
-    maxLevel: data.maxLevel,
-    rarity: data.rarity as Rarity,
-    stackLimit: data.stackLimit,
-    maxDurability: data.maxDurability
+    price: price,
+    effect: data.effect || {},
+    baseStats: data.baseStats || {},
+    upgradeStats: data.upgradeStats || {},
+    maxLevel: data.maxLevel || null,
+    rarity: data.rarity as Rarity || 'COMMON',
+    stackLimit: data.stackLimit || 999,
+    maxDurability: data.maxDurability || null
   };
 }
 
@@ -89,11 +94,14 @@ export class DataCache {
         weaponDataJson,
         armorDataJson,
         accessoryDataJson,
-        consumableDataJson,
-        gameDataJson.ITEMS || {}
-      ].forEach(source => {
-        Object.entries(source).forEach(([id, item]) => {
-          allItems[id] = convertToGameItem(item);
+        consumableDataJson
+      ].forEach((source) => {
+        Object.entries(source).forEach(([id, itemData]) => {
+          try {
+            allItems[id] = convertToGameItem(itemData);
+          } catch (error) {
+            console.error(`Error converting item ${id}:`, error);
+          }
         });
       });
 
