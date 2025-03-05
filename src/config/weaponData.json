@@ -1,9 +1,233 @@
 {
+  "wooden_sword": {
+    "name": "🗡️ Wooden Sword",
+    "type": "WEAPON",
+    "description": "Pedang kayu sederhana untuk pemula",
+    "price": 100,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 15,
+        "defense": 5,
+        "speed": 10
+      }
+    },
+    "baseStats": {
+      "attack": 15,
+      "defense": 5,
+      "speed": 10
+    },
+    "upgradeStats": {
+      "attack": 3,
+      "defense": 1,
+      "speed": 2
+    },
+    "maxLevel": 10,
+    "rarity": "COMMON",
+    "stackLimit": 1,
+    "maxDurability": 100
+  },
+  "bronze_dagger": {
+    "name": "🔪 Bronze Dagger",
+    "type": "WEAPON",
+    "description": "Belati perunggu yang ringan dan cepat",
+    "price": 200,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 20,
+        "defense": 8,
+        "speed": 15
+      }
+    },
+    "baseStats": {
+      "attack": 20,
+      "defense": 8,
+      "speed": 15
+    },
+    "upgradeStats": {
+      "attack": 4,
+      "defense": 2,
+      "speed": 3
+    },
+    "maxLevel": 10,
+    "rarity": "COMMON",
+    "stackLimit": 1,
+    "maxDurability": 150
+  },
+  "iron_sword": {
+    "name": "⚔️ Iron Sword",
+    "type": "WEAPON",
+    "description": "Pedang besi yang kokoh dan tajam",
+    "price": 500,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 35,
+        "defense": 15,
+        "speed": 12
+      }
+    },
+    "baseStats": {
+      "attack": 35,
+      "defense": 15,
+      "speed": 12
+    },
+    "upgradeStats": {
+      "attack": 7,
+      "defense": 3,
+      "speed": 3
+    },
+    "maxLevel": 15,
+    "rarity": "UNCOMMON",
+    "stackLimit": 1,
+    "maxDurability": 300
+  },
+  "steel_blade": {
+    "name": "🗡️ Steel Blade",
+    "type": "WEAPON",
+    "description": "Pedang baja yang kuat dan tahan lama",
+    "price": 1000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 50,
+        "defense": 20,
+        "speed": 15
+      }
+    },
+    "baseStats": {
+      "attack": 50,
+      "defense": 20,
+      "speed": 15
+    },
+    "upgradeStats": {
+      "attack": 10,
+      "defense": 4,
+      "speed": 3
+    },
+    "maxLevel": 15,
+    "rarity": "UNCOMMON",
+    "stackLimit": 1,
+    "maxDurability": 500
+  },
+  "mithril_sword": {
+    "name": "💠 Mithril Sword",
+    "type": "WEAPON",
+    "description": "Pedang mithril yang memancarkan kekuatan magis",
+    "price": 2500,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 80,
+        "defense": 30,
+        "speed": 25
+      }
+    },
+    "baseStats": {
+      "attack": 80,
+      "defense": 30,
+      "speed": 25
+    },
+    "upgradeStats": {
+      "attack": 16,
+      "defense": 6,
+      "speed": 5
+    },
+    "maxLevel": 20,
+    "rarity": "RARE",
+    "stackLimit": 1,
+    "maxDurability": 1000
+  },
+  "adamantite_blade": {
+    "name": "💎 Adamantite Blade",
+    "type": "WEAPON",
+    "description": "Pedang adamantite yang sangat tajam dan kuat",
+    "price": 5000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 100,
+        "defense": 40,
+        "speed": 30
+      }
+    },
+    "baseStats": {
+      "attack": 100,
+      "defense": 40,
+      "speed": 30
+    },
+    "upgradeStats": {
+      "attack": 20,
+      "defense": 8,
+      "speed": 6
+    },
+    "maxLevel": 20,
+    "rarity": "RARE",
+    "stackLimit": 1,
+    "maxDurability": 1500
+  },
+  "dragon_fang_sword": {
+    "name": "🐉 Dragon Fang Sword",
+    "type": "WEAPON",
+    "description": "Pedang yang ditempa dari taring naga",
+    "price": 10000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 150,
+        "defense": 60,
+        "speed": 40
+      }
+    },
+    "baseStats": {
+      "attack": 150,
+      "defense": 60,
+      "speed": 40
+    },
+    "upgradeStats": {
+      "attack": 30,
+      "defense": 12,
+      "speed": 8
+    },
+    "maxLevel": 25,
+    "rarity": "EPIC",
+    "stackLimit": 1,
+    "maxDurability": 2000
+  },
+  "phoenix_blade": {
+    "name": "🔥 Phoenix Blade",
+    "type": "WEAPON",
+    "description": "Pedang yang ditempa dengan api phoenix",
+    "price": 20000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 180,
+        "defense": 70,
+        "speed": 50
+      }
+    },
+    "baseStats": {
+      "attack": 180,
+      "defense": 70,
+      "speed": 50
+    },
+    "upgradeStats": {
+      "attack": 36,
+      "defense": 14,
+      "speed": 10
+    },
+    "maxLevel": 25,
+    "rarity": "EPIC",
+    "stackLimit": 1,
+    "maxDurability": 3000
+  },
   "divine_conqueror": {
     "name": "⚜️ Divine Conqueror",
     "type": "WEAPON",
     "description": "🌟 Pedang legendaris yang ditempa oleh para dewa",
-    "price": 1500000,
+    "price": 15000,
     "effect": {
       "type": "EQUIP",
       "stats": {

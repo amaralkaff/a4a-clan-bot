@@ -6,6 +6,7 @@ import armorDataJson from '../config/armorData.json';
 import accessoryDataJson from '../config/accessoryData.json';
 import consumableDataJson from '../config/consumableData.json';
 import monsterDataJson from '../config/monsterData.json';
+import { logger } from '../utils/logger';
 
 // Helper function to convert raw item data to GameItem
 function convertToGameItem(data: any): GameItem {
@@ -63,7 +64,12 @@ export class DataCache {
     this.materialCache = new Cache<Record<string, MaterialData>>(this.CACHE_TTL);
 
     // Set up periodic cache cleanup
-    setInterval(() => this.cleanupCaches(), this.CACHE_TTL);
+    setInterval(() => {
+      this.questCache.cleanup();
+      this.itemCache.cleanup();
+      this.weaponUpgradeCache.cleanup();
+      this.materialCache.cleanup();
+    }, 5 * 60 * 1000); // Clean up every 5 minutes
   }
 
   public static getInstance(): DataCache {
@@ -71,14 +77,6 @@ export class DataCache {
       DataCache.instance = new DataCache();
     }
     return DataCache.instance;
-  }
-
-  private cleanupCaches(): void {
-    this.itemCache.cleanup();
-    this.monsterCache.cleanup();
-    this.questCache.cleanup();
-    this.weaponUpgradeCache.cleanup();
-    this.materialCache.cleanup();
   }
 
   public getItems(): Record<string, GameItem> {
@@ -139,12 +137,46 @@ export class DataCache {
       const rawQuests = gameDataJson.QUESTS || {};
       const convertedQuests: Record<string, Quest> = {};
       
+      // Log the raw quest data for debugging
+      logger.debug('Loading quests from gameData:', {
+        rawQuestCount: Object.keys(rawQuests).length,
+        rawQuestIds: Object.keys(rawQuests)
+      });
+      
       Object.entries(rawQuests).forEach(([id, quest]: [string, any]) => {
+        // Ensure all required fields are present
+        if (!quest.name || !quest.description || !quest.type || !quest.objectives || !quest.rewards) {
+          logger.warn(`Skipping invalid quest ${id}:`, quest);
+          return;
+        }
+        
+        // Normalize objective keys
+        const normalizedObjectives = Object.fromEntries(
+          Object.entries(quest.objectives).map(([key, value]) => [
+            key.toLowerCase().replace(/\s+/g, '_'),
+            value
+          ])
+        );
+        
         convertedQuests[id] = {
           ...quest,
           id,
-          isDaily: quest.isDaily || false
+          type: quest.type || 'COMBAT',
+          requiredLevel: quest.requiredLevel || 1,
+          isDaily: quest.isDaily || false,
+          objectives: normalizedObjectives,
+          rewards: {
+            exp: quest.rewards.exp || 0,
+            coins: quest.rewards.coins || 0,
+            items: quest.rewards.items || []
+          }
         };
+      });
+
+      // Log the converted quest data
+      logger.debug('Converted quests:', {
+        convertedQuestCount: Object.keys(convertedQuests).length,
+        convertedQuestIds: Object.keys(convertedQuests)
       });
 
       quests = convertedQuests;

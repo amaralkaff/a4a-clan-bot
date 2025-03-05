@@ -104,16 +104,28 @@ export class PaginationManager {
     });
 
     collector.on('collect', async (interaction: ButtonInteraction) => {
-      // Update current page
-      if (interaction.customId === 'prev') {
-        currentPage--;
-      } else {
-        currentPage++;
-      }
+      try {
+        // Update current page
+        if (interaction.customId === 'prev') {
+          currentPage--;
+        } else {
+          currentPage++;
+        }
 
-      // Update message
-      const { embed, components } = await updateEmbed(currentPage);
-      await interaction.update({ embeds: [embed], components });
+        // Update message
+        const { embed, components } = await updateEmbed(currentPage);
+        await interaction.update({ embeds: [embed], components });
+      } catch (error) {
+        console.error('Error handling pagination:', error);
+        try {
+          await interaction.update({ 
+            content: '❌ An error occurred while updating the page.',
+            components: []
+          });
+        } catch (replyError) {
+          console.error('Error sending error message:', replyError);
+        }
+      }
     });
 
     collector.on('end', () => {

@@ -18,12 +18,16 @@ export interface BattleResponse {
 export class BattleService extends BaseCombatService {
   private monsterCache: Cache<CachedMonster>;
   private readonly MONSTER_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-  private readonly dataCache: DataCache;
+  protected readonly dataCache: DataCache;
 
-  constructor(prisma: PrismaClient, characterService?: CharacterService) {
-    super(prisma, characterService);
+  constructor(
+    prisma: PrismaClient,
+    characterService: CharacterService,
+    dataCache: DataCache
+  ) {
+    super(prisma, characterService, dataCache);
     this.monsterCache = new Cache<CachedMonster>(this.MONSTER_CACHE_TTL);
-    this.dataCache = DataCache.getInstance();
+    this.dataCache = dataCache;
 
     // Set up periodic cache cleanup
     setInterval(() => {
@@ -37,6 +41,42 @@ export class BattleService extends BaseCombatService {
 
   private getMonsterCacheKey(level: number, huntStreak: number): string {
     return `monster_${level}_${huntStreak}`;
+  }
+
+  private calculateStreakBonuses(huntStreak: number): {
+    expMultiplier: number;
+    coinsMultiplier: number;
+    dropChanceBonus: number;
+    statBonus: number;
+  } {
+    // Base multipliers start at 1.0 (no bonus)
+    const baseExpMultiplier = 1.0;
+    const baseCoinsMultiplier = 1.0;
+    const baseDropChanceBonus = 0.0;
+    const baseStatBonus = 0.0;
+
+    // Calculate streak-based bonuses
+    // Every 5 streak gives bigger bonuses
+    const streakTier = Math.floor(huntStreak / 5);
+    
+    // Exp bonus: +10% per tier, max 100% bonus
+    const expBonus = Math.min(streakTier * 0.1, 1.0);
+    
+    // Coins bonus: +15% per tier, max 150% bonus
+    const coinsBonus = Math.min(streakTier * 0.15, 1.5);
+    
+    // Drop chance: +2% per tier, max 20% bonus
+    const dropBonus = Math.min(streakTier * 0.02, 0.2);
+    
+    // Combat stat bonus: +3% per tier, max 30% bonus
+    const statsBonus = Math.min(streakTier * 0.03, 0.3);
+
+    return {
+      expMultiplier: baseExpMultiplier + expBonus,
+      coinsMultiplier: baseCoinsMultiplier + coinsBonus,
+      dropChanceBonus: baseDropChanceBonus + dropBonus,
+      statBonus: baseStatBonus + statsBonus
+    };
   }
 
   private getRandomMonster(level: number, huntStreak: number = 0): CachedMonster {
@@ -93,8 +133,16 @@ export class BattleService extends BaseCombatService {
       // Get random monster
       const monster = this.getRandomMonster(enemyLevel, character.huntStreak || 0);
 
-      // Convert character to CombatParticipant
+      // Calculate streak bonuses
+      const streakBonuses = this.calculateStreakBonuses(character.huntStreak || 0);
+
+      // Convert character to CombatParticipant with streak stat bonuses
       const player = CombatantFactory.fromCharacter(character);
+      if (streakBonuses.statBonus > 0) {
+        player.attack = Math.floor(player.attack * (1 + streakBonuses.statBonus));
+        player.defense = Math.floor(player.defense * (1 + streakBonuses.statBonus));
+        player.speed = Math.floor((player.speed || 10) * (1 + streakBonuses.statBonus));
+      }
 
       // Convert monster to CombatParticipant
       const enemy = MonsterFactory.toCombatParticipant(monster);
@@ -108,8 +156,15 @@ export class BattleService extends BaseCombatService {
       let totalPlayerDamage = 0;
       let totalMonsterDamage = 0;
 
+      // Add battle start message with clean formatting
+      battleLog.push(
+        `${'```ansi'}\n` +
+        `⚔️ \u001b[1;36m${player.name}\u001b[0m Lv.${player.level} vs \u001b[1;31m${enemy.name}\u001b[0m Lv.${enemy.level}\n` +
+        `${'```'}`
+      );
+
       // Battle loop
-      while (playerHealth > 0 && monsterHealth > 0 && turn <= 50) { // Add max turns limit
+      while (playerHealth > 0 && monsterHealth > 0 && turn <= 50) {
         const roundResult = await this.processCombatRound(
           { first: player, second: enemy },
           { firstState: battleState, secondState: battleState },
@@ -122,24 +177,45 @@ export class BattleService extends BaseCombatService {
         monsterHealth = roundResult.newSecondHealth;
         
         // Calculate damage dealt this round
-        totalPlayerDamage += Math.max(0, enemy.health - monsterHealth);
-        totalMonsterDamage += Math.max(0, player.health - playerHealth);
+        const playerDamageThisRound = Math.max(0, enemy.health - monsterHealth);
+        const monsterDamageThisRound = Math.max(0, player.health - playerHealth);
+        totalPlayerDamage += playerDamageThisRound;
+        totalMonsterDamage += monsterDamageThisRound;
+
+        // Add simplified round summary
+        battleLog.push(
+          `${'```'}\n` +
+          `${player.name}: ${Math.max(0, playerHealth)}/${player.maxHealth}\n` +
+          `${enemy.name}: ${Math.max(0, monsterHealth)}/${enemy.maxHealth}\n` +
+          `${'```'}`
+        );
 
         turn++;
       }
 
       const won = playerHealth > 0;
-      
-      // Create battle summary
-      const playerHealthBar = this.createHealthBar(playerHealth, player.health);
-      const monsterHealthBar = this.createHealthBar(monsterHealth, enemy.health);
-      
-      battleLog.push(`⚔️ Battle Summary:`);
-      battleLog.push(`${player.name}'s HP: ${playerHealthBar} (${playerHealth}/${player.health})`);
-      battleLog.push(`${enemy.name}'s HP: ${monsterHealthBar} (${monsterHealth}/${enemy.health})`);
-      battleLog.push(`Total Damage Dealt: ${totalPlayerDamage}`);
-      battleLog.push(`Total Damage Taken: ${totalMonsterDamage}`);
-      battleLog.push(won ? `✨ Victory! You defeated ${enemy.name}!` : `💀 Defeat! ${enemy.name} was too strong!`);
+
+      // Add battle end message
+      battleLog.push(
+        `${'```ansi'}\n` +
+        `${won ? '🎉 ' : '💀 '}\u001b[1;${won ? '32' : '31'}m${won ? 'VICTORY' : 'DEFEAT'}\u001b[0m\n` +
+        `DMG Dealt: ${totalPlayerDamage} | DMG Taken: ${totalMonsterDamage}\n` +
+        `${'```'}`
+      );
+
+      // If won, add rewards summary
+      if (won) {
+        const expGain = Math.floor(monster.exp * streakBonuses.expMultiplier);
+        const coinsGain = Math.floor(monster.coins * streakBonuses.coinsMultiplier);
+        const newStreak = (character.huntStreak || 0) + 1;
+
+        battleLog.push(
+          `${'```ansi'}\n` +
+          `\u001b[1;33m✨ ${expGain} EXP\u001b[0m | \u001b[1;33m💰 ${coinsGain} Coins\u001b[0m\n` +
+          `🔥 Streak: ${newStreak}\n` +
+          `${'```'}`
+        );
+      }
 
       // Verify character still exists before updating
       const characterCheck = await this.prisma.character.findUnique({
@@ -151,7 +227,7 @@ export class BattleService extends BaseCombatService {
         throw new CharacterError('❌ Karakter tidak ditemukan! Mungkin karakter telah dihapus.', 'CHARACTER_NOT_FOUND');
       }
 
-      // Update character stats in transaction
+      // Update character stats in transaction with increased timeout
       await this.prisma.$transaction(async (tx) => {
         const txCharacter = await tx.character.findUnique({
           where: { id: characterId },
@@ -176,7 +252,9 @@ export class BattleService extends BaseCombatService {
         // Calculate experience gain if won
         let expUpdate = {};
         if (won) {
-          let newExp = BigInt(txCharacter.experience) + BigInt(monster.exp);
+          // Apply streak exp bonus
+          const bonusExp = Math.floor(monster.exp * streakBonuses.expMultiplier);
+          let newExp = BigInt(txCharacter.experience) + BigInt(bonusExp);
           let levelsGained = 0;
           let currentLevel = txCharacter.level;
 
@@ -203,6 +281,9 @@ export class BattleService extends BaseCombatService {
           };
         }
 
+        // Apply streak coin bonus
+        const bonusCoins = won ? Math.floor(monster.coins * streakBonuses.coinsMultiplier) : 0;
+
         // Update character stats
         await tx.character.update({
           where: { id: characterId },
@@ -210,14 +291,16 @@ export class BattleService extends BaseCombatService {
             health: Math.max(0, playerHealth),
             huntStreak: newHuntStreak,
             highestHuntStreak: newHighestStreak,
-            coins: won ? { increment: monster.coins } : undefined,
+            coins: won ? { increment: bonusCoins } : undefined,
             ...expUpdate
           }
         });
 
         // Update mentor progress if character has a mentor
         if (won && txCharacter.mentor) {
-          const progressGain = 1;
+          // Increase mentor progress based on streak
+          const baseProgressGain = 1;
+          const bonusProgress = Math.floor(baseProgressGain * streakBonuses.expMultiplier);
           const progressField = {
             'YB': 'luffyProgress',
             'Tierison': 'zoroProgress',
@@ -229,26 +312,34 @@ export class BattleService extends BaseCombatService {
             await tx.character.update({
               where: { id: characterId },
               data: {
-                [progressField]: { increment: progressGain }
+                [progressField]: { increment: bonusProgress }
               }
             });
           }
         }
-
-        // Invalidate all caches after the transaction
-        await this.characterService.invalidateAllCaches(characterId);
+      }, {
+        timeout: 10000 // Increase timeout to 10 seconds
       });
+
+      // Invalidate caches after all updates
+      await this.characterService.invalidateAllCaches(characterId);
 
       const result: CombatResult = {
         won,
         battleLog,
         finalHealth: Math.max(0, playerHealth),
-        exp: won ? monster.exp : 0,
-        coins: won ? monster.coins : 0,
+        exp: won ? Math.floor(monster.exp * streakBonuses.expMultiplier) : 0,
+        coins: won ? Math.floor(monster.coins * streakBonuses.coinsMultiplier) : 0,
         monster: {
           name: monster.name,
           level: monster.level
-        }
+        },
+        streakInfo: won ? {
+          streak: (character.huntStreak || 0) + 1,
+          expBonus: `${Math.floor((streakBonuses.expMultiplier - 1) * 100)}%`,
+          coinsBonus: `${Math.floor((streakBonuses.coinsMultiplier - 1) * 100)}%`,
+          dropBonus: `${Math.floor(streakBonuses.dropChanceBonus * 100)}%`
+        } : undefined
       };
 
       const response: BattleResponse = {

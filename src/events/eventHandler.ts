@@ -5,6 +5,7 @@ import { loadCommands } from '@/utils/commandLoader';
 import { CommandHandler } from '@/types/commands';
 import { handleMessageCommand } from '../utils/messageHandler';
 import { ErrorUtils } from '@/utils/errorUtils';
+import { ErrorHandler } from '@/utils/errors';
 
 interface Quest {
   id: string;
@@ -19,45 +20,55 @@ export async function setupEventHandlers(client: Client, services: ServiceContai
   // Load commands
   const commands = await loadCommands(client);
 
-  // Handle slash commands
+  // Handle slash commands and button interactions
   client.on(Events.InteractionCreate, async (interaction: Interaction) => {
     try {
-      if (!interaction.isChatInputCommand()) return;
+      if (interaction.isChatInputCommand()) {
+        logger.info(`Received command: ${interaction.commandName} from ${interaction.user.tag}`);
 
-      logger.info(`Received command: ${interaction.commandName} from ${interaction.user.tag}`);
+        const command = commands.get(interaction.commandName);
 
-      const command = commands.get(interaction.commandName);
-
-      if (!command) {
-        logger.warn(`No command matching ${interaction.commandName} was found.`);
-        await interaction.reply({ 
-          content: '❌ Command tidak ditemukan. Gunakan `/help` untuk melihat daftar command.',
-          ephemeral: true 
-        });
-        return;
-      }
-
-      try {
-        logger.info(`Executing command: ${interaction.commandName} by ${interaction.user.tag}`);
-        await command.execute(interaction, services);
-      } catch (error) {
-        logger.error(`Error executing command ${interaction.commandName}:`, error);
-        
-        // Handle different error states
-        if (!interaction.replied && !interaction.deferred) {
-          await interaction.reply({
-            content: '❌ Terjadi kesalahan saat menjalankan command.',
-            ephemeral: true
+        if (!command) {
+          logger.warn(`No command matching ${interaction.commandName} was found.`);
+          await interaction.reply({ 
+            content: '❌ Command tidak ditemukan. Gunakan `/help` untuk melihat daftar command.',
+            ephemeral: true 
           });
-        } else if (interaction.deferred) {
-          await interaction.editReply({
-            content: '❌ Terjadi kesalahan saat menjalankan command.'
-          });
-        } else {
-          await interaction.followUp({
-            content: '❌ Terjadi kesalahan saat menjalankan command.',
-            ephemeral: true
-          });
+          return;
+        }
+
+        try {
+          logger.info(`Executing command: ${interaction.commandName} by ${interaction.user.tag}`);
+          await command.execute(interaction, services);
+        } catch (error) {
+          logger.error(`Error executing command ${interaction.commandName}:`, error);
+          
+          // Handle different error states
+          if (!interaction.replied && !interaction.deferred) {
+            await interaction.reply({
+              content: '❌ Terjadi kesalahan saat menjalankan command.',
+              ephemeral: true
+            });
+          } else if (interaction.deferred) {
+            await interaction.editReply({
+              content: '❌ Terjadi kesalahan saat menjalankan command.'
+            });
+          } else {
+            await interaction.followUp({
+              content: '❌ Terjadi kesalahan saat menjalankan command.',
+              ephemeral: true
+            });
+          }
+        }
+      } else if (interaction.isButton()) {
+        // Handle quiz button interactions
+        if (interaction.customId.startsWith('quiz_answer_')) {
+          try {
+            await services.quiz.processAnswer(interaction, interaction.customId.split('_')[2]);
+          } catch (error) {
+            logger.error('Error handling quiz answer:', error);
+            await ErrorHandler.handle(error, interaction);
+          }
         }
       }
     } catch (error) {

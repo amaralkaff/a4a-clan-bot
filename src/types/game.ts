@@ -62,7 +62,19 @@ export interface EffectData {
 
 export type ItemType = 'WEAPON' | 'ARMOR' | 'ACCESSORY' | 'CONSUMABLE' | 'MATERIAL';
 
-export type Rarity = 'COMMON' | 'UNCOMMON' | 'RARE' | 'EPIC' | 'LEGENDARY' | 'MYTHICAL' | 'DIVINE' | 'TRANSCENDENT' | 'CELESTIAL' | 'PRIMORDIAL' | 'ULTIMATE';
+export type Rarity = 
+  | 'COMMON' 
+  | 'UNCOMMON' 
+  | 'RARE' 
+  | 'EPIC' 
+  | 'LEGENDARY' 
+  | 'MYTHICAL' 
+  | 'DIVINE' 
+  | 'TRANSCENDENT' 
+  | 'CELESTIAL' 
+  | 'PRIMORDIAL' 
+  | 'ULTIMATE'
+  | 'COSMIC';
 
 export interface GameItem {
   id?: string;
@@ -377,28 +389,24 @@ export interface QuestReward {
 }
 
 export interface Quest {
-  id?: string;
+  id: string;
+  templateId?: string;
   name: string;
   description: string;
   type: QuestType;
   requiredLevel: number;
+  objectives: { [key: string]: number };
   rewards: {
     exp: number;
     coins: number;
-    items: string[];
+    items?: string[];
   };
-  objectives: {
-    [key: string]: number;
-  };
-  progress?: { [key: string]: number };
-  characterId?: string;
-  templateId?: string;
+  isDaily?: boolean;
+  location?: string;
   status?: QuestStatus;
   startedAt?: Date;
   completedAt?: Date;
-  expiresAt?: Date;
-  mentor?: string;
-  isDaily: boolean;
+  characterId?: string;
   updatedAt?: Date;
 }
 

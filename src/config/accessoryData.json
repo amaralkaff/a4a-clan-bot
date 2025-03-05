@@ -1,9 +1,233 @@
 {
+  "wooden_necklace": {
+    "name": "📿 Wooden Necklace",
+    "type": "ACCESSORY",
+    "description": "Kalung kayu sederhana yang memberikan sedikit kekuatan",
+    "price": 100,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 10,
+        "defense": 10,
+        "speed": 5
+      }
+    },
+    "baseStats": {
+      "attack": 10,
+      "defense": 10,
+      "speed": 5
+    },
+    "upgradeStats": {
+      "attack": 2,
+      "defense": 2,
+      "speed": 1
+    },
+    "maxLevel": 10,
+    "rarity": "COMMON",
+    "stackLimit": 1,
+    "maxDurability": 100
+  },
+  "copper_ring": {
+    "name": "💍 Copper Ring",
+    "type": "ACCESSORY",
+    "description": "Cincin tembaga yang memberikan perlindungan dasar",
+    "price": 200,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 15,
+        "defense": 15,
+        "speed": 8
+      }
+    },
+    "baseStats": {
+      "attack": 15,
+      "defense": 15,
+      "speed": 8
+    },
+    "upgradeStats": {
+      "attack": 3,
+      "defense": 3,
+      "speed": 2
+    },
+    "maxLevel": 10,
+    "rarity": "COMMON",
+    "stackLimit": 1,
+    "maxDurability": 150
+  },
+  "iron_bracelet": {
+    "name": "⚔️ Iron Bracelet",
+    "type": "ACCESSORY",
+    "description": "Gelang besi yang meningkatkan kekuatan tempur",
+    "price": 500,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 25,
+        "defense": 25,
+        "speed": 12
+      }
+    },
+    "baseStats": {
+      "attack": 25,
+      "defense": 25,
+      "speed": 12
+    },
+    "upgradeStats": {
+      "attack": 5,
+      "defense": 5,
+      "speed": 3
+    },
+    "maxLevel": 15,
+    "rarity": "UNCOMMON",
+    "stackLimit": 1,
+    "maxDurability": 300
+  },
+  "silver_amulet": {
+    "name": "🔮 Silver Amulet",
+    "type": "ACCESSORY",
+    "description": "Jimat perak yang memancarkan energi mistis",
+    "price": 1000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 40,
+        "defense": 40,
+        "speed": 20
+      }
+    },
+    "baseStats": {
+      "attack": 40,
+      "defense": 40,
+      "speed": 20
+    },
+    "upgradeStats": {
+      "attack": 8,
+      "defense": 8,
+      "speed": 4
+    },
+    "maxLevel": 15,
+    "rarity": "UNCOMMON",
+    "stackLimit": 1,
+    "maxDurability": 500
+  },
+  "golden_pendant": {
+    "name": "🎭 Golden Pendant",
+    "type": "ACCESSORY",
+    "description": "Liontin emas yang menyimpan kekuatan tersembunyi",
+    "price": 2500,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 80,
+        "defense": 80,
+        "speed": 40
+      }
+    },
+    "baseStats": {
+      "attack": 80,
+      "defense": 80,
+      "speed": 40
+    },
+    "upgradeStats": {
+      "attack": 16,
+      "defense": 16,
+      "speed": 8
+    },
+    "maxLevel": 20,
+    "rarity": "RARE",
+    "stackLimit": 1,
+    "maxDurability": 1000
+  },
+  "platinum_crown": {
+    "name": "👑 Platinum Crown",
+    "type": "ACCESSORY",
+    "description": "Mahkota platinum yang memancarkan keagungan",
+    "price": 5000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 120,
+        "defense": 120,
+        "speed": 60
+      }
+    },
+    "baseStats": {
+      "attack": 120,
+      "defense": 120,
+      "speed": 60
+    },
+    "upgradeStats": {
+      "attack": 24,
+      "defense": 24,
+      "speed": 12
+    },
+    "maxLevel": 20,
+    "rarity": "RARE",
+    "stackLimit": 1,
+    "maxDurability": 1500
+  },
+  "crystal_talisman": {
+    "name": "💎 Crystal Talisman",
+    "type": "ACCESSORY",
+    "description": "Jimat kristal yang menyimpan kekuatan elemental",
+    "price": 10000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 200,
+        "defense": 200,
+        "speed": 100
+      }
+    },
+    "baseStats": {
+      "attack": 200,
+      "defense": 200,
+      "speed": 100
+    },
+    "upgradeStats": {
+      "attack": 40,
+      "defense": 40,
+      "speed": 20
+    },
+    "maxLevel": 25,
+    "rarity": "EPIC",
+    "stackLimit": 1,
+    "maxDurability": 2000
+  },
+  "dragon_scale_necklace": {
+    "name": "🐉 Dragon Scale Necklace",
+    "type": "ACCESSORY",
+    "description": "Kalung yang terbuat dari sisik naga kuno",
+    "price": 20000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "attack": 300,
+        "defense": 300,
+        "speed": 150
+      }
+    },
+    "baseStats": {
+      "attack": 300,
+      "defense": 300,
+      "speed": 150
+    },
+    "upgradeStats": {
+      "attack": 60,
+      "defense": 60,
+      "speed": 30
+    },
+    "maxLevel": 25,
+    "rarity": "EPIC",
+    "stackLimit": 1,
+    "maxDurability": 3000
+  },
   "celestial_crown": {
     "name": "👑 Celestial Crown",
     "type": "ACCESSORY",
     "description": "🌟 Mahkota surgawi yang memancarkan kekuatan ilahi",
-    "price": 100000000,
+    "price": 1000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -23,7 +247,7 @@
       "speed": 100
     },
     "maxLevel": 100,
-    "rarity": "PRIMORDIAL",
+    "rarity": "LEGENDARY",
     "stackLimit": 1,
     "maxDurability": 10000
   },
@@ -31,7 +255,7 @@
     "name": "🌌 Void Emperor Necklace",
     "type": "ACCESSORY",
     "description": "🌟 Kalung legendaris penguasa kekosongan",
-    "price": 150000000,
+    "price": 1500000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -51,7 +275,7 @@
       "speed": 150
     },
     "maxLevel": 100,
-    "rarity": "PRIMORDIAL",
+    "rarity": "MYTHICAL",
     "stackLimit": 1,
     "maxDurability": 15000
   },
@@ -59,7 +283,7 @@
     "name": "💫 Chaos Sovereign Ring",
     "type": "ACCESSORY",
     "description": "🌟 Cincin kekacauan yang melampaui batas kekuatan",
-    "price": 200000000,
+    "price": 2000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -79,7 +303,7 @@
       "speed": 200
     },
     "maxLevel": 100,
-    "rarity": "PRIMORDIAL",
+    "rarity": "MYTHICAL",
     "stackLimit": 1,
     "maxDurability": 20000
   },
@@ -87,7 +311,7 @@
     "name": "⚜️ Eternal God Bracelet",
     "type": "ACCESSORY",
     "description": "🌟 Gelang dewa yang memberi kekuatan abadi",
-    "price": 250000000,
+    "price": 2500000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -107,7 +331,7 @@
       "speed": 250
     },
     "maxLevel": 100,
-    "rarity": "PRIMORDIAL",
+    "rarity": "DIVINE",
     "stackLimit": 1,
     "maxDurability": 25000
   },
@@ -115,7 +339,7 @@
     "name": "♾️ Infinity Origin Earring",
     "type": "ACCESSORY",
     "description": "🌟 Anting-anting dengan kekuatan tak terbatas",
-    "price": 300000000,
+    "price": 3000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -135,7 +359,7 @@
       "speed": 300
     },
     "maxLevel": 100,
-    "rarity": "PRIMORDIAL",
+    "rarity": "DIVINE",
     "stackLimit": 1,
     "maxDurability": 30000
   },
@@ -143,7 +367,7 @@
     "name": "🎭 Divine Genesis Amulet",
     "type": "ACCESSORY",
     "description": "🌟 Jimat suci dari awal penciptaan",
-    "price": 350000000,
+    "price": 3500000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -163,7 +387,7 @@
       "speed": 350
     },
     "maxLevel": 100,
-    "rarity": "PRIMORDIAL",
+    "rarity": "DIVINE",
     "stackLimit": 1,
     "maxDurability": 35000
   },
@@ -171,7 +395,7 @@
     "name": "🌟 Supreme Origin Talisman",
     "type": "ACCESSORY",
     "description": "🌟 Jimat dari asal mula kekuatan tertinggi",
-    "price": 400000000,
+    "price": 4000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -191,7 +415,7 @@
       "speed": 400
     },
     "maxLevel": 100,
-    "rarity": "PRIMORDIAL",
+    "rarity": "TRANSCENDENT",
     "stackLimit": 1,
     "maxDurability": 40000
   },
@@ -199,7 +423,7 @@
     "name": "🎆 Omnipotent God Emblem",
     "type": "ACCESSORY",
     "description": "🌟 Emblem kemahakuasaan para dewa",
-    "price": 450000000,
+    "price": 4500000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -219,7 +443,7 @@
       "speed": 450
     },
     "maxLevel": 100,
-    "rarity": "PRIMORDIAL",
+    "rarity": "TRANSCENDENT",
     "stackLimit": 1,
     "maxDurability": 45000
   },
@@ -227,7 +451,7 @@
     "name": "💫 Transcendent Soul Pendant",
     "type": "ACCESSORY",
     "description": "🌟 Liontin jiwa yang melampaui batas eksistensi",
-    "price": 475000000,
+    "price": 4750000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -247,7 +471,7 @@
       "speed": 475
     },
     "maxLevel": 100,
-    "rarity": "PRIMORDIAL",
+    "rarity": "TRANSCENDENT",
     "stackLimit": 1,
     "maxDurability": 47500
   },
@@ -255,7 +479,7 @@
     "name": "🌌 Ultimate Origin Crown",
     "type": "ACCESSORY",
     "description": "🌟 Mahkota dari asal mula segala eksistensi",
-    "price": 500000000,
+    "price": 5000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -275,7 +499,7 @@
       "speed": 500
     },
     "maxLevel": 100,
-    "rarity": "PRIMORDIAL",
+    "rarity": "CELESTIAL",
     "stackLimit": 1,
     "maxDurability": 50000
   },
@@ -283,7 +507,7 @@
     "name": "🌟 Genesis Sovereign Crown",
     "type": "ACCESSORY",
     "description": "🌌 Mahkota yang memegang kekuatan penciptaan absolut",
-    "price": 5000000000,
+    "price": 50000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -303,7 +527,7 @@
       "speed": 2000
     },
     "maxLevel": 200,
-    "rarity": "ULTIMATE",
+    "rarity": "CELESTIAL",
     "stackLimit": 1,
     "maxDurability": 500000
   },
@@ -311,7 +535,7 @@
     "name": "💫 Omniversal Destroyer Necklace",
     "type": "ACCESSORY",
     "description": "🌌 Kalung yang dapat menghancurkan seluruh omniverse",
-    "price": 4800000000,
+    "price": 48000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -331,7 +555,7 @@
       "speed": 1920
     },
     "maxLevel": 200,
-    "rarity": "ULTIMATE",
+    "rarity": "CELESTIAL",
     "stackLimit": 1,
     "maxDurability": 480000
   },
@@ -339,7 +563,7 @@
     "name": "🎭 Reality Sovereign Ring",
     "type": "ACCESSORY",
     "description": "🌌 Cincin yang mengendalikan matriks realitas",
-    "price": 4500000000,
+    "price": 45000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -359,7 +583,7 @@
       "speed": 1800
     },
     "maxLevel": 200,
-    "rarity": "ULTIMATE",
+    "rarity": "PRIMORDIAL",
     "stackLimit": 1,
     "maxDurability": 450000
   },
@@ -367,7 +591,7 @@
     "name": "♾️ Infinity Paradigm Bracelet",
     "type": "ACCESSORY",
     "description": "🌌 Gelang yang melampaui konsep ketidakterbatasan",
-    "price": 4200000000,
+    "price": 42000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -387,7 +611,7 @@
       "speed": 1680
     },
     "maxLevel": 200,
-    "rarity": "ULTIMATE",
+    "rarity": "PRIMORDIAL",
     "stackLimit": 1,
     "maxDurability": 420000
   },
@@ -395,7 +619,7 @@
     "name": "⚛️ Quantum Absolute Earring",
     "type": "ACCESSORY", 
     "description": "🌌 Anting-anting yang menguasai seluruh kemungkinan kuantum",
-    "price": 4000000000,
+    "price": 40000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -415,7 +639,7 @@
       "speed": 1600
     },
     "maxLevel": 200,
-    "rarity": "ULTIMATE",
+    "rarity": "PRIMORDIAL",
     "stackLimit": 1,
     "maxDurability": 400000
   },
@@ -423,7 +647,7 @@
     "name": "🌠 Cosmic Authority Talisman",
     "type": "ACCESSORY",
     "description": "🌌 Jimat dengan otoritas kosmik absolut",
-    "price": 3800000000,
+    "price": 38000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -451,7 +675,7 @@
     "name": "👑 Eternal Dominion Emblem",
     "type": "ACCESSORY",
     "description": "🌌 Emblem penguasa keabadian mutlak",
-    "price": 3500000000,
+    "price": 35000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -479,7 +703,7 @@
     "name": "⚫ Void Supremacy Pendant",
     "type": "ACCESSORY",
     "description": "🌌 Liontin dengan supremasi kekosongan absolut",
-    "price": 3200000000,
+    "price": 32000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -507,7 +731,7 @@
     "name": "🌀 Dimensional Apex Amulet",
     "type": "ACCESSORY",
     "description": "🌌 Jimat puncak dimensi",
-    "price": 3000000000,
+    "price": 30000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -535,7 +759,7 @@
     "name": "🌪️ Chaos Absolute Ring",
     "type": "ACCESSORY",
     "description": "🌌 Cincin kekacauan mutlak",
-    "price": 2800000000,
+    "price": 28000000,
     "effect": {
       "type": "EQUIP",
       "stats": {

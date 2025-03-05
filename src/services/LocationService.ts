@@ -138,7 +138,16 @@ export class LocationService extends BaseService {
 
     const info = this.LOCATION_INFO[locationId];
     if (!info) {
-      throw LocationError.invalidDestination(locationId);
+      // Get available locations for error message
+      const availableLocations = Object.entries(LOCATIONS)
+        .map(([id, loc]) => `${loc.name} (${id})`)
+        .join('\n');
+      
+      throw new LocationError(
+        `❌ Lokasi tidak ditemukan!\n\nLokasi yang tersedia:\n${availableLocations}`,
+        'INVALID_DESTINATION',
+        { destination: locationId }
+      );
     }
 
     this.locationCache.set(cacheKey, {
@@ -149,14 +158,16 @@ export class LocationService extends BaseService {
     return info;
   }
 
-  async travel(characterId: string, destination: LocationId): Promise<TravelResult> {
+  async travel(discordId: string, destination: LocationId): Promise<TravelResult> {
     try {
-      const character = await this.prisma.character.findUnique({
-        where: { id: characterId }
-      });
+      // Get character by Discord ID first
+      const character = await this.characterService.getCharacterByDiscordId(discordId);
 
       if (!character) {
-        throw CharacterError.notFound(characterId);
+        return {
+          success: false,
+          message: '❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.'
+        };
       }
 
       // Validate destination
@@ -177,7 +188,7 @@ export class LocationService extends BaseService {
 
       // Update character location
       await this.prisma.character.update({
-        where: { id: characterId },
+        where: { id: character.id },
         data: { 
           currentIsland: destination,
           explorationPoints: { increment: 1 }

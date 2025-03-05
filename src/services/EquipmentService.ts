@@ -110,7 +110,7 @@ export class EquipmentService extends BaseService {
         'WEAPON': 'equippedWeapon',
         'ARMOR': 'equippedArmor',
         'ACCESSORY': 'equippedAccessory'
-      }[inventoryItem.item.type];
+      }[inventoryItem.item.type] as 'equippedWeapon' | 'equippedArmor' | 'equippedAccessory';
 
       // Unequip current item in that slot if exists
       const currentEquipped = await this.prisma.inventory.findFirst({
@@ -134,33 +134,37 @@ export class EquipmentService extends BaseService {
             where: { id: currentEquipped.id },
             data: { 
               isEquipped: false,
-              slot: null,
-              stats: null  // Clear stats when unequipping
+              slot: null
             }
           });
 
           // Remove stats from current equipped item
-          const currentEffect = JSON.parse(currentEquipped.item.effect);
-          if (currentEffect.stats) {
+          if (currentEquipped.stats) {
+            const currentStats = JSON.parse(currentEquipped.stats);
             await tx.character.update({
               where: { id: characterId },
               data: {
                 attack: { 
-                  decrement: currentEffect.stats.attack || 0 
+                  decrement: currentStats.attack || 0 
                 },
                 defense: { 
-                  decrement: currentEffect.stats.defense || 0 
+                  decrement: currentStats.defense || 0 
                 },
                 speed: {
-                  decrement: currentEffect.stats.speed || 0
+                  decrement: currentStats.speed || 0
                 }
               }
             });
           }
         }
 
-        // Parse effect once and reuse
+        // Parse effect and prepare stats
         const newEffect = JSON.parse(inventoryItem.item.effect);
+        const newStats = {
+          attack: newEffect.stats?.attack || 0,
+          defense: newEffect.stats?.defense || 0,
+          speed: newEffect.stats?.speed || 0
+        };
         
         // Equip new item
         await tx.inventory.update({
@@ -168,49 +172,20 @@ export class EquipmentService extends BaseService {
           data: {
             isEquipped: true,
             slot: inventoryItem.item.type,
-            stats: this.ensureStringifiedStats(newEffect.stats)  // Store stats properly
+            stats: JSON.stringify(newStats)
           }
         });
 
-        // Update character equipment slot
-        switch (inventoryItem.item.type) {
-          case 'WEAPON':
-            await tx.character.update({
-              where: { id: characterId },
-              data: { equippedWeapon: itemId }
-            });
-            break;
-          case 'ARMOR':
-            await tx.character.update({
-              where: { id: characterId },
-              data: { equippedArmor: itemId }
-            });
-            break;
-          case 'ACCESSORY':
-            await tx.character.update({
-              where: { id: characterId },
-              data: { equippedAccessory: itemId }
-            });
-            break;
-        }
-
-        // Add stats from new item
-        if (newEffect.stats) {
-          await tx.character.update({
-            where: { id: characterId },
-            data: {
-              attack: { 
-                increment: newEffect.stats.attack || 0 
-              },
-              defense: { 
-                increment: newEffect.stats.defense || 0 
-              },
-              speed: {
-                increment: newEffect.stats.speed || 0
-              }
-            }
-          });
-        }
+        // Update character equipment slot and stats
+        await tx.character.update({
+          where: { id: characterId },
+          data: {
+            [slot]: itemId,
+            attack: { increment: newStats.attack },
+            defense: { increment: newStats.defense },
+            speed: { increment: newStats.speed }
+          }
+        });
       });
 
       // Invalidate equipment cache

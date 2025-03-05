@@ -737,34 +737,47 @@ export class InventoryService extends BaseService {
 
   async addItems(characterId: string, itemId: string, quantity: number): Promise<void> {
     try {
-      const item = await this.prisma.item.findUnique({
-        where: { id: itemId }
-      });
+      // Execute everything in a single transaction with increased timeout
+      await this.prisma.$transaction(async (tx) => {
+        // Get item info first
+        const item = await tx.item.findUnique({
+          where: { id: itemId }
+        });
 
-      if (!item) {
-        throw new Error('Item not found');
-      }
-
-      await this.prisma.inventory.upsert({
-        where: {
-          characterId_itemId: {
-            characterId,
-            itemId
-          }
-        },
-        create: {
-          characterId,
-          itemId,
-          quantity,
-          durability: item.type === 'WEAPON' || item.type === 'ARMOR' ? 100 : null,
-          maxDurability: item.maxDurability || null,
-          effect: item.effect,
-          stats: item.baseStats || '{}'
-        },
-        update: {
-          quantity: { increment: quantity }
+        if (!item) {
+          throw new Error('Item not found');
         }
+
+        // Upsert the inventory entry - this combines create and update into one operation
+        await tx.inventory.upsert({
+          where: {
+            characterId_itemId: {
+              characterId,
+              itemId
+            }
+          },
+          create: {
+            characterId,
+            itemId,
+            quantity,
+            durability: item.type === 'WEAPON' || item.type === 'ARMOR' ? 100 : null,
+            maxDurability: item.maxDurability || null,
+            effect: item.effect,
+            stats: item.baseStats || '{}',
+            isEquipped: false
+          },
+          update: {
+            quantity: {
+              increment: quantity
+            }
+          }
+        });
+      }, {
+        timeout: 10000 // Increase timeout to 10 seconds
       });
+
+      // Invalidate inventory cache
+      this.inventoryCache.delete(this.getInventoryCacheKey(characterId));
     } catch (error) {
       this.logger.error('Error in addItems:', error);
       throw error;

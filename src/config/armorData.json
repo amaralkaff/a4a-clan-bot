@@ -1,9 +1,233 @@
 {
+  "leather_armor": {
+    "name": "🥋 Leather Armor",
+    "type": "ARMOR",
+    "description": "Armor dasar yang terbuat dari kulit",
+    "price": 100,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 20,
+        "attack": 5,
+        "speed": 10
+      }
+    },
+    "baseStats": {
+      "defense": 20,
+      "attack": 5,
+      "speed": 10
+    },
+    "upgradeStats": {
+      "defense": 4,
+      "attack": 1,
+      "speed": 2
+    },
+    "maxLevel": 10,
+    "rarity": "COMMON",
+    "stackLimit": 1,
+    "maxDurability": 100
+  },
+  "chainmail_armor": {
+    "name": "⛓️ Chainmail Armor",
+    "type": "ARMOR",
+    "description": "Armor yang terbuat dari rantai besi",
+    "price": 200,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 30,
+        "attack": 8,
+        "speed": 8
+      }
+    },
+    "baseStats": {
+      "defense": 30,
+      "attack": 8,
+      "speed": 8
+    },
+    "upgradeStats": {
+      "defense": 6,
+      "attack": 2,
+      "speed": 2
+    },
+    "maxLevel": 10,
+    "rarity": "COMMON",
+    "stackLimit": 1,
+    "maxDurability": 150
+  },
+  "iron_armor": {
+    "name": "🛡️ Iron Armor",
+    "type": "ARMOR",
+    "description": "Armor yang terbuat dari besi tempa",
+    "price": 500,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 50,
+        "attack": 15,
+        "speed": 12
+      }
+    },
+    "baseStats": {
+      "defense": 50,
+      "attack": 15,
+      "speed": 12
+    },
+    "upgradeStats": {
+      "defense": 10,
+      "attack": 3,
+      "speed": 3
+    },
+    "maxLevel": 15,
+    "rarity": "UNCOMMON",
+    "stackLimit": 1,
+    "maxDurability": 300
+  },
+  "steel_armor": {
+    "name": "⚔️ Steel Armor",
+    "type": "ARMOR",
+    "description": "Armor yang terbuat dari baja berkualitas",
+    "price": 1000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 80,
+        "attack": 25,
+        "speed": 15
+      }
+    },
+    "baseStats": {
+      "defense": 80,
+      "attack": 25,
+      "speed": 15
+    },
+    "upgradeStats": {
+      "defense": 16,
+      "attack": 5,
+      "speed": 3
+    },
+    "maxLevel": 15,
+    "rarity": "UNCOMMON",
+    "stackLimit": 1,
+    "maxDurability": 500
+  },
+  "mithril_armor": {
+    "name": "💠 Mithril Armor",
+    "type": "ARMOR",
+    "description": "Armor yang terbuat dari mithril legendaris",
+    "price": 2500,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 120,
+        "attack": 40,
+        "speed": 25
+      }
+    },
+    "baseStats": {
+      "defense": 120,
+      "attack": 40,
+      "speed": 25
+    },
+    "upgradeStats": {
+      "defense": 24,
+      "attack": 8,
+      "speed": 5
+    },
+    "maxLevel": 20,
+    "rarity": "RARE",
+    "stackLimit": 1,
+    "maxDurability": 1000
+  },
+  "adamantite_armor": {
+    "name": "💎 Adamantite Armor",
+    "type": "ARMOR",
+    "description": "Armor yang terbuat dari adamantite murni",
+    "price": 5000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 160,
+        "attack": 50,
+        "speed": 30
+      }
+    },
+    "baseStats": {
+      "defense": 160,
+      "attack": 50,
+      "speed": 30
+    },
+    "upgradeStats": {
+      "defense": 32,
+      "attack": 10,
+      "speed": 6
+    },
+    "maxLevel": 20,
+    "rarity": "RARE",
+    "stackLimit": 1,
+    "maxDurability": 1500
+  },
+  "dragon_scale_armor": {
+    "name": "🐉 Dragon Scale Armor",
+    "type": "ARMOR",
+    "description": "Armor yang terbuat dari sisik naga",
+    "price": 10000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 200,
+        "attack": 80,
+        "speed": 40
+      }
+    },
+    "baseStats": {
+      "defense": 200,
+      "attack": 80,
+      "speed": 40
+    },
+    "upgradeStats": {
+      "defense": 40,
+      "attack": 16,
+      "speed": 8
+    },
+    "maxLevel": 25,
+    "rarity": "EPIC",
+    "stackLimit": 1,
+    "maxDurability": 2000
+  },
+  "phoenix_armor": {
+    "name": "🔥 Phoenix Armor",
+    "type": "ARMOR",
+    "description": "Armor yang ditempa dengan api phoenix",
+    "price": 20000,
+    "effect": {
+      "type": "EQUIP",
+      "stats": {
+        "defense": 240,
+        "attack": 100,
+        "speed": 50
+      }
+    },
+    "baseStats": {
+      "defense": 240,
+      "attack": 100,
+      "speed": 50
+    },
+    "upgradeStats": {
+      "defense": 48,
+      "attack": 20,
+      "speed": 10
+    },
+    "maxLevel": 25,
+    "rarity": "EPIC",
+    "stackLimit": 1,
+    "maxDurability": 3000
+  },
   "celestial_guardian_armor": {
     "name": "🌟 Celestial Guardian Armor",
     "type": "ARMOR",
     "description": "🌟 Armor suci yang ditempa di surga",
-    "price": 2000000,
+    "price": 20000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -31,7 +255,7 @@
     "name": "🌌 Void Emperor Armor",
     "type": "ARMOR",
     "description": "🌟 Armor yang menyerap kekuatan kegelapan void",
-    "price": 2500000,
+    "price": 25000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -59,7 +283,7 @@
     "name": "🐉 Dragon Sovereign Armor",
     "type": "ARMOR",
     "description": "🌟 Armor yang ditempa dari sisik raja naga tertinggi",
-    "price": 3000000,
+    "price": 30000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -87,7 +311,7 @@
     "name": "💥 Chaos Overlord Armor",
     "type": "ARMOR",
     "description": "🌟 Armor yang memancarkan aura kekacauan absolut",
-    "price": 3500000,
+    "price": 35000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -115,7 +339,7 @@
     "name": "✨ Astral Sovereign Armor",
     "type": "ARMOR",
     "description": "🌟 Armor yang ditempa dari inti bintang",
-    "price": 4000000,
+    "price": 40000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -143,7 +367,7 @@
     "name": "👑 Divine Emperor Armor",
     "type": "ARMOR",
     "description": "🌟 Armor suci milik kaisar para dewa",
-    "price": 4500000,
+    "price": 45000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -171,7 +395,7 @@
     "name": "🌠 Cosmic Destroyer Armor",
     "type": "ARMOR",
     "description": "🌟 Armor pemusnah yang berasal dari galaksi jauh",
-    "price": 5000000,
+    "price": 50000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -199,7 +423,7 @@
     "name": "💫 Reality Breaker Armor",
     "type": "ARMOR",
     "description": "🌟 Armor yang dapat membelah realitas",
-    "price": 6000000,
+    "price": 60000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -227,7 +451,7 @@
     "name": "🌟 Omnipotent Guardian Armor",
     "type": "ARMOR",
     "description": "🌟 Armor terkuat yang memegang kekuatan semesta",
-    "price": 10000000,
+    "price": 100000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -255,7 +479,7 @@
     "name": "🎇 Multiverse Sovereign Armor",
     "type": "ARMOR",
     "description": "🌟 Armor legendaris penguasa multiverse",
-    "price": 15000000,
+    "price": 150000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -283,7 +507,7 @@
     "name": "🌈 Eternal God Armor",
     "type": "ARMOR",
     "description": "🌟 Armor legendaris yang dipakai oleh dewa tertinggi",
-    "price": 20000000,
+    "price": 200000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -311,7 +535,7 @@
     "name": "🌀 Dimension Lord Armor",
     "type": "ARMOR",
     "description": "🌟 Armor penguasa seluruh dimensi",
-    "price": 25000000,
+    "price": 250000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -339,7 +563,7 @@
     "name": "🌋 Chaos God Armor",
     "type": "ARMOR",
     "description": "🌟 Armor dewa kekacauan absolut",
-    "price": 30000000,
+    "price": 300000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -367,7 +591,7 @@
     "name": "♾️ Infinity Sovereign Armor",
     "type": "ARMOR",
     "description": "🌟 Armor dengan kekuatan tak terbatas",
-    "price": 35000000,
+    "price": 350000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -395,7 +619,7 @@
     "name": "🎆 Creation God Armor",
     "type": "ARMOR",
     "description": "🌟 Armor dewa penciptaan semesta",
-    "price": 40000000,
+    "price": 400000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -423,7 +647,7 @@
     "name": "👼 Supreme Deity Armor",
     "type": "ARMOR",
     "description": "🌟 Armor dewa tertinggi dari segala dewa",
-    "price": 50000000,
+    "price": 500000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -451,7 +675,7 @@
     "name": "🌠 Absolute God Armor",
     "type": "ARMOR",
     "description": "🌟 Armor dengan kekuatan absolut",
-    "price": 60000000,
+    "price": 600000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -479,7 +703,7 @@
     "name": "🎇 Omniversal God Armor",
     "type": "ARMOR",
     "description": "🌟 Armor penguasa seluruh omniverse",
-    "price": 75000000,
+    "price": 750000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -507,7 +731,7 @@
     "name": "💫 Existence God Armor",
     "type": "ARMOR",
     "description": "🌟 Armor penguasa seluruh eksistensi",
-    "price": 90000000,
+    "price": 900000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -535,7 +759,7 @@
     "name": "🌌 Ultimate God Armor",
     "type": "ARMOR",
     "description": "🌟 Armor terkuat dalam segala eksistensi",
-    "price": 100000000,
+    "price": 1000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -563,7 +787,7 @@
     "name": "🌠 Primordial Sovereign Armor",
     "type": "ARMOR",
     "description": "🌟 Armor dari era primordial yang melampaui batas eksistensi",
-    "price": 150000000,
+    "price": 1500000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -591,7 +815,7 @@
     "name": "🎆 Genesis Emperor Armor",
     "type": "ARMOR",
     "description": "🌟 Armor yang lahir saat penciptaan multiverse",
-    "price": 200000000,
+    "price": 2000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -619,7 +843,7 @@
     "name": "🌌 Eternal Void Sovereign Armor",
     "type": "ARMOR",
     "description": "🌟 Armor yang muncul dari kekosongan abadi",
-    "price": 250000000,
+    "price": 2500000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -647,7 +871,7 @@
     "name": "💥 Chaos Origin Armor",
     "type": "ARMOR",
     "description": "🌟 Armor dari asal mula kekacauan",
-    "price": 300000000,
+    "price": 3000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -675,7 +899,7 @@
     "name": "♾️ Infinity Origin Armor",
     "type": "ARMOR",
     "description": "🌟 Armor dari asal mula ketidakterbatasan",
-    "price": 350000000,
+    "price": 3500000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -703,7 +927,7 @@
     "name": "👑 Supreme Origin Armor",
     "type": "ARMOR",
     "description": "🌟 Armor dari asal mula kekuatan tertinggi",
-    "price": 400000000,
+    "price": 4000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -731,7 +955,7 @@
     "name": "🌟 Absolute Origin Armor",
     "type": "ARMOR",
     "description": "🌟 Armor dari asal mula kemutlakan",
-    "price": 425000000,
+    "price": 4250000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -759,7 +983,7 @@
     "name": "🎇 Omnipotent Origin Armor",
     "type": "ARMOR",
     "description": "🌟 Armor dari asal mula kemahakuasaan",
-    "price": 450000000,
+    "price": 4500000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -787,7 +1011,7 @@
     "name": "💫 Transcendent Origin Armor",
     "type": "ARMOR",
     "description": "🌟 Armor dari asal mula transendensi",
-    "price": 475000000,
+    "price": 4750000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -815,7 +1039,7 @@
     "name": "🌌 Ultimate Origin Armor",
     "type": "ARMOR",
     "description": "🌟 Armor dari asal mula segala eksistensi",
-    "price": 500000000,
+    "price": 5000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -843,7 +1067,7 @@
     "name": "🌟 Genesis Sovereign Armor",
     "type": "ARMOR",
     "description": "🌌 Armor yang memegang kekuatan penciptaan absolut",
-    "price": 5000000000,
+    "price": 50000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -871,7 +1095,7 @@
     "name": "💫 Omniversal Destroyer Armor",
     "type": "ARMOR",
     "description": "🌌 Armor yang dapat menghancurkan seluruh omniverse",
-    "price": 4800000000,
+    "price": 48000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -899,7 +1123,7 @@
     "name": "🎭 Reality Sovereign Armor",
     "type": "ARMOR",
     "description": "🌌 Armor yang mengendalikan matriks realitas",
-    "price": 4500000000,
+    "price": 45000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -927,7 +1151,7 @@
     "name": "♾️ Infinity Paradigm Armor",
     "type": "ARMOR",
     "description": "🌌 Armor yang melampaui konsep ketidakterbatasan",
-    "price": 4200000000,
+    "price": 42000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -955,7 +1179,7 @@
     "name": "⚛️ Quantum Absolute Armor",
     "type": "ARMOR",
     "description": "🌌 Armor yang menguasai seluruh kemungkinan kuantum",
-    "price": 4000000000,
+    "price": 40000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -983,7 +1207,7 @@
     "name": "🌠 Cosmic Authority Armor",
     "type": "ARMOR",
     "description": "🌌 Armor dengan otoritas kosmik absolut",
-    "price": 3800000000,
+    "price": 38000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -1011,7 +1235,7 @@
     "name": "👑 Eternal Dominion Armor",
     "type": "ARMOR",
     "description": "🌌 Armor penguasa keabadian mutlak",
-    "price": 3500000000,
+    "price": 35000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -1039,7 +1263,7 @@
     "name": "⚫ Void Supremacy Armor",
     "type": "ARMOR",
     "description": "🌌 Armor dengan supremasi kekosongan absolut",
-    "price": 3200000000,
+    "price": 32000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -1067,7 +1291,7 @@
     "name": "🌀 Dimensional Apex Armor",
     "type": "ARMOR",
     "description": "🌌 Armor puncak dimensi",
-    "price": 3000000000,
+    "price": 30000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -1095,7 +1319,7 @@
     "name": "🌪️ Chaos Absolute Armor",
     "type": "ARMOR",
     "description": "🌌 Armor kekacauan mutlak",
-    "price": 2800000000,
+    "price": 28000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -1123,7 +1347,7 @@
     "name": "🌟 Celestial Zenith Armor",
     "type": "ARMOR",
     "description": "🌌 Armor puncak surgawi",
-    "price": 2500000000,
+    "price": 25000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -1151,7 +1375,7 @@
     "name": "✨ Astral Dominance Armor",
     "type": "ARMOR",
     "description": "🌌 Armor dominasi astral",
-    "price": 2300000000,
+    "price": 23000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -1179,7 +1403,7 @@
     "name": "🏆 Divine Ascendance Armor",
     "type": "ARMOR",
     "description": "🌌 Armor kenaikan ilahi",
-    "price": 2100000000,
+    "price": 21000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -1207,7 +1431,7 @@
     "name": "🌈 Ethereal Sovereign Armor",
     "type": "ARMOR",
     "description": "🌌 Armor kedaulatan ethereal",
-    "price": 1900000000,
+    "price": 19000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -1235,7 +1459,7 @@
     "name": "🌋 Primordial Might Armor",
     "type": "ARMOR",
     "description": "🌌 Armor kekuatan primordial",
-    "price": 1700000000,
+    "price": 17000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -1263,7 +1487,7 @@
     "name": "🎯 Transcendent Authority Armor",
     "type": "ARMOR",
     "description": "🌌 Armor otoritas transenden",
-    "price": 1500000000,
+    "price": 15000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -1291,7 +1515,7 @@
     "name": "Ω Omega Dominion Armor",
     "type": "ARMOR",
     "description": "🌌 Armor dominasi omega",
-    "price": 1300000000,
+    "price": 13000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -1319,7 +1543,7 @@
     "name": "⚛️ Quantum Sovereign Armor",
     "type": "ARMOR",
     "description": "🌌 Armor kedaulatan kuantum",
-    "price": 1100000000,
+    "price": 11000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -1347,7 +1571,7 @@
     "name": "🎭 Reality Sovereign Armor Supreme",
     "type": "ARMOR",
     "description": "🌌 Armor kedaulatan realitas tertinggi",
-    "price": 900000000,
+    "price": 9000000,
     "effect": {
       "type": "EQUIP",
       "stats": {
@@ -1375,7 +1599,7 @@
     "name": "⚫ Void Emperor Armor Absolute",
     "type": "ARMOR",
     "description": "🌌 Armor kaisar kekosongan absolut",
-    "price": 700000000,
+    "price": 7000000,
     "effect": {
       "type": "EQUIP",
       "stats": {

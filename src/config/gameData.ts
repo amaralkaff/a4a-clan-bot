@@ -1,14 +1,21 @@
 // src/config/gameData.ts
 import { LocationId } from '../types/game';
-import gameDataJson from './gameData.json';
-import weaponDataJson from './weaponData.json';
-import armorDataJson from './armorData.json';
-import accessoryDataJson from './accessoryData.json';
-import consumableDataJson from './consumableData.json';
 import monsterDataJson from './monsterData.json';
 
 export type ItemType = 'WEAPON' | 'ARMOR' | 'ACCESSORY' | 'CONSUMABLE' | 'MATERIAL';
-export type Rarity = 'COMMON' | 'UNCOMMON' | 'RARE' | 'EPIC' | 'LEGENDARY' | 'MYTHICAL' | 'DIVINE' | 'TRANSCENDENT' | 'CELESTIAL' | 'PRIMORDIAL' | 'ULTIMATE';
+export type Rarity = 
+  | 'COMMON' 
+  | 'UNCOMMON' 
+  | 'RARE' 
+  | 'EPIC' 
+  | 'LEGENDARY' 
+  | 'MYTHICAL' 
+  | 'DIVINE' 
+  | 'TRANSCENDENT' 
+  | 'CELESTIAL' 
+  | 'PRIMORDIAL' 
+  | 'ULTIMATE'
+  | 'COSMIC';
 export type EffectType = 'EQUIP' | 'HEAL' | 'BUFF' | 'HEAL_AND_BUFF';
 export type QuestType = 'COMBAT' | 'GATHER' | 'CRAFT' | 'HELP' | 'EXPLORE';
 
@@ -57,6 +64,7 @@ export interface Quest {
     [key: string]: number;
   };
   isDaily: boolean;
+  location?: string;
 }
 
 export interface WeaponUpgradeData {
@@ -158,17 +166,18 @@ export const LOCATIONS: Record<LocationId, Location> = {
 
 // Constants that should stay in TypeScript for easy access
 export const RARITY_COLORS = {
-  COMMON: '#B8B8B8',
-  UNCOMMON: '#4CAF50',
-  RARE: '#2196F3',
-  EPIC: '#9C27B0',
-  LEGENDARY: '#FFD700',
-  MYTHICAL: '#FF69B4',
-  DIVINE: '#8A2BE2',
-  TRANSCENDENT: '#FF4500',
-  CELESTIAL: '#000000',
-  PRIMORDIAL: '#000000',
-  ULTIMATE: '#FF0000'
+  COMMON: '#B8B8B8',      // Gray
+  UNCOMMON: '#4CAF50',    // Green
+  RARE: '#2196F3',       // Blue
+  EPIC: '#9C27B0',       // Purple
+  LEGENDARY: '#FFC107',   // Gold
+  MYTHICAL: '#FF5722',    // Orange
+  DIVINE: '#E91E63',      // Pink
+  TRANSCENDENT: '#00BCD4', // Cyan
+  CELESTIAL: '#FFEB3B',   // Yellow
+  PRIMORDIAL: '#F44336',  // Red
+  ULTIMATE: '#9C27B0',    // Deep Purple
+  COSMIC: '#7B1FA2'       // Deep Violet
 } as const;
 
 export const ITEM_TYPE_EMOJIS = {

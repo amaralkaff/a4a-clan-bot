@@ -1,5 +1,5 @@
 import { Message, EmbedBuilder } from 'discord.js';
-import { ServiceContainer } from '@/services';
+import { ServiceContainer } from '../services';
 import { logger } from './logger';
 import { ErrorHandler } from '@/utils/errors';
 import { LocationId } from '@/types/game';
@@ -28,7 +28,7 @@ const COMMAND_ALIASES: Record<string, string> = {
   // Map & Exploration
   'm': 'map',
   'tr': 'travel',
-  'q': 'quest',
+  'q': 'quiz',
   
   // Misc
   'daily': 'daily',
@@ -253,13 +253,17 @@ export async function handleMessageCommand(message: Message, services: ServiceCo
           await message.reply('❌ Sebutkan lokasi tujuan! Contoh: `a tr foosha`');
           return;
         }
-        const result = await services.location.travel(message.author.id, args.join('_').toLowerCase() as LocationId);
+        // Convert location name to ID format
+        const locationInput = args.join('_').toLowerCase();
+        // Remove any special characters and emojis
+        const cleanLocation = locationInput.replace(/[^\w_]/g, '');
+        const result = await services.location.travel(message.author.id, cleanLocation as LocationId);
         await message.reply(result.message);
         break;
 
-      case 'quest':
+      case 'quiz':
       case 'q':
-        await services.quest.getAvailableQuests(message);
+        await services.quiz.startQuiz(message);
         break;
 
       // Misc

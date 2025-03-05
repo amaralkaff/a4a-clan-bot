@@ -1,3 +1,5 @@
+/// <reference types="bun-types" />
+
 // prisma/seed.ts
 import { PrismaClient } from '@prisma/client';
 import { 
@@ -10,10 +12,21 @@ import {
   EffectType,
   Rarity
 } from '../src/config/gameData';
-import weaponDataJson from '../src/config/weaponData.json';
-import armorDataJson from '../src/config/armorData.json';
-import accessoryDataJson from '../src/config/accessoryData.json';
-import consumableDataJson from '../src/config/consumableData.json';
+
+interface QuizData {
+  question: string;
+  options: Record<string, string>;
+  correct: string;
+  exp: number;
+  coins: number;
+}
+
+// Import JSON files using Bun
+const weaponDataJson = await Bun.file('./src/config/weaponData.json').json() as Record<string, GameItem>;
+const armorDataJson = await Bun.file('./src/config/armorData.json').json() as Record<string, GameItem>;
+const accessoryDataJson = await Bun.file('./src/config/accessoryData.json').json() as Record<string, GameItem>;
+const consumableDataJson = await Bun.file('./src/config/consumableData.json').json() as Record<string, GameItem>;
+const quizDataJson = await Bun.file('./src/config/quizData.json').json() as Record<string, QuizData>;
 
 const prisma = new PrismaClient();
 
@@ -431,26 +444,70 @@ async function seedLocations() {
   console.log(`⚠️ Total Locations Skipped: ${skipped}`);
 }
 
-async function main() {
-  console.log('Starting database seeding...\n');
+async function seedQuizzes() {
+  console.log('\nSeeding quizzes...');
+  let processed = 0;
+  let skipped = 0;
 
-  // Seed locations first since they are referenced by characters
-  await seedLocations();
+  try {
+    const quizzes = Object.entries(quizDataJson.QUIZ_QUESTIONS);
+    const BATCH_SIZE = 10;
 
-  // Seed items
-  await seedItems();
+    for (let i = 0; i < quizzes.length; i += BATCH_SIZE) {
+      const batch = quizzes.slice(i, Math.min(i + BATCH_SIZE, quizzes.length));
 
-  // Seed monsters
-  await seedMonsters();
+      for (const [_, quiz] of batch) {
+        try {
+          await prisma.quiz.create({
+            data: {
+              question: quiz.question,
+              options: JSON.stringify(quiz.options),
+              correctAnswer: quiz.correct
+            }
+          });
+          processed++;
+        } catch (error) {
+          console.error('Error seeding quiz:', error);
+          skipped++;
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
 
-  console.log('\nDatabase seeding completed successfully! 🎉');
+    console.log('\nQuiz Seeding Summary:');
+    console.log(`✨ Total Quizzes Created: ${processed}`);
+    console.log(`⚠️ Total Quizzes Skipped: ${skipped}`);
+  } catch (error) {
+    console.error('Error during quiz seeding:', error);
+    throw error;
+  }
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
+// Use Bun.serve for better performance
+const main = async () => {
+  console.log('Starting database seeding...\n');
+
+  try {
+    // Seed locations first since they are referenced by characters
+    await seedLocations();
+
+    // Seed items
+    await seedItems();
+
+    // Seed monsters
+    await seedMonsters();
+
+    // Seed quizzes
+    await seedQuizzes();
+
+    console.log('\nDatabase seeding completed successfully! 🎉');
+  } catch (error) {
+    console.error('Error during seeding:', error);
     process.exit(1);
-  })
-  .finally(async () => {
+  } finally {
     await prisma.$disconnect();
-  });
+  }
+};
+
+// Run with Bun
+await main();

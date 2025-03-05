@@ -19,11 +19,17 @@ export interface CombatResult {
   won: boolean;
   battleLog: string[];
   finalHealth: number;
-  exp?: number;
-  coins?: number;
-  monster?: {
+  exp: number;
+  coins: number;
+  monster: {
     name: string;
     level: number;
+  };
+  streakInfo?: {
+    streak: number;
+    expBonus: string;
+    coinsBonus: string;
+    dropBonus: string;
   };
 }
 

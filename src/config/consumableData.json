@@ -229,7 +229,7 @@
     "name": "🌌 Omnipotent Elixir",
     "type": "CONSUMABLE",
     "description": "Memberikan buff tertinggi pada semua stats selama 24 jam",
-    "price": 1000000000,
+    "price": 10000000,
     "effect": {
       "type": "HEAL_AND_BUFF",
       "health": -1,
@@ -248,7 +248,7 @@
     "name": "💫 Genesis Potion",
     "type": "CONSUMABLE",
     "description": "Memberikan kekuatan penciptaan selama 12 jam",
-    "price": 800000000,
+    "price": 8000000,
     "effect": {
       "type": "HEAL_AND_BUFF",
       "health": -1,
@@ -267,7 +267,7 @@
     "name": "🎭 Reality Fragment",
     "type": "CONSUMABLE",
     "description": "Memberikan kendali atas realitas selama 6 jam",
-    "price": 600000000,
+    "price": 6000000,
     "effect": {
       "type": "HEAL_AND_BUFF",
       "health": -1,
@@ -286,7 +286,7 @@
     "name": "🌠 Cosmic Essence",
     "type": "CONSUMABLE",
     "description": "Memberikan kekuatan kosmik selama 4 jam",
-    "price": 500000000,
+    "price": 5000000,
     "effect": {
       "type": "HEAL_AND_BUFF",
       "health": -1,
@@ -305,7 +305,7 @@
     "name": "⚛️ Quantum Catalyst",
     "type": "CONSUMABLE",
     "description": "Memberikan kendali atas probabilitas selama 3 jam",
-    "price": 400000000,
+    "price": 4000000,
     "effect": {
       "type": "HEAL_AND_BUFF",
       "health": -1,
@@ -324,7 +324,7 @@
     "name": "⚫ Void Shard",
     "type": "CONSUMABLE",
     "description": "Memberikan kekuatan kekosongan selama 2 jam",
-    "price": 300000000,
+    "price": 3000000,
     "effect": {
       "type": "HEAL_AND_BUFF",
       "health": -1,
@@ -343,7 +343,7 @@
     "name": "✨ Celestial Core",
     "type": "CONSUMABLE",
     "description": "Memberikan kekuatan surgawi selama 1.5 jam",
-    "price": 200000000,
+    "price": 2000000,
     "effect": {
       "type": "HEAL_AND_BUFF",
       "health": -1,
@@ -362,7 +362,7 @@
     "name": "♾️ Eternal Crystal",
     "type": "CONSUMABLE",
     "description": "Memberikan kekuatan abadi selama 1 jam",
-    "price": 150000000,
+    "price": 1500000,
     "effect": {
       "type": "HEAL_AND_BUFF",
       "health": -1,
@@ -381,7 +381,7 @@
     "name": "🌪️ Chaos Matrix",
     "type": "CONSUMABLE",
     "description": "Memberikan kekuatan kekacauan selama 45 menit",
-    "price": 100000000,
+    "price": 1000000,
     "effect": {
       "type": "HEAL_AND_BUFF",
       "health": -1,
@@ -400,7 +400,7 @@
     "name": "👑 Divine Nexus",
     "type": "CONSUMABLE",
     "description": "Memberikan kekuatan ilahi selama 30 menit",
-    "price": 80000000,
+    "price": 800000,
     "effect": {
       "type": "HEAL_AND_BUFF",
       "health": -1,

@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { BaseService } from '../BaseService';
 import { CharacterService } from '../CharacterService';
-import { Cache } from '../../utils/Cache';
+import { Cache } from '@/utils/Cache';
 import { StatusEffect, CharacterWithEquipment, CachedMonster } from '@/types/game';
 import {
   BattleState,
@@ -11,6 +11,7 @@ import {
   CombatResult
 } from '@/types/combat';
 import { JsonMonster } from '@/config/gameData';
+import { DataCache } from '@/services/DataCache';
 
 export class MonsterFactory {
   static fromJsonMonster(jsonMonster: JsonMonster, monsterId: string, cacheKey: string): CachedMonster {
@@ -62,13 +63,19 @@ export class CombatantFactory {
 
 export abstract class BaseCombatService extends BaseService {
   protected characterService: CharacterService;
+  protected readonly dataCache: DataCache;
   protected battleStatesCache: Cache<BattleState>;
-  private readonly BATTLE_STATE_TTL = 30 * 60 * 1000; // 30 minutes
+  private readonly BATTLE_STATE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-  constructor(prisma: PrismaClient, characterService?: CharacterService) {
+  constructor(
+    prisma: PrismaClient,
+    characterService: CharacterService,
+    dataCache: DataCache
+  ) {
     super(prisma);
-    this.characterService = characterService || new CharacterService(prisma);
-    this.battleStatesCache = new Cache<BattleState>(this.BATTLE_STATE_TTL);
+    this.characterService = characterService;
+    this.dataCache = dataCache;
+    this.battleStatesCache = new Cache<BattleState>(this.BATTLE_STATE_CACHE_TTL);
 
     // Set up periodic cache cleanup
     setInterval(() => {
@@ -172,24 +179,29 @@ export abstract class BaseCombatService extends BaseService {
     try {
       let finalDamage = damage;
 
-      // Skip database check for monster IDs (they start with monster_ or are predefined monster IDs)
-      if (character.id.startsWith('monster_') || ['bandit_weak', 'sea_beast_small'].includes(character.id)) {
+      // Skip mentor effects for monsters
+      if (!character.mentor) {
         return finalDamage;
       }
 
-      // Verify character exists before applying effects
+      // Skip database check for monster IDs
+      if (character.id.startsWith('monster_') || 
+          character.id.includes('_monster') || 
+          character.id.includes('_beast') || 
+          character.id.includes('_bandit') || 
+          character.id.includes('_boss')) {
+        return finalDamage;
+      }
+
+      // For actual characters, verify they exist before applying effects
       const dbCharacter = await this.prisma.character.findUnique({
         where: { id: character.id },
-        select: { id: true, mentor: true } // Only select needed fields
+        select: { id: true, mentor: true }
       });
 
       if (!dbCharacter) {
         this.logger.error(`Character ${character.id} not found when applying mentor effects`);
         this.battleStatesCache.delete(character.id);
-        return finalDamage;
-      }
-
-      if (!character.mentor) {
         return finalDamage;
       }
 
@@ -407,18 +419,27 @@ export abstract class BaseCombatService extends BaseService {
     newDefenderHealth -= finalDamage;
     const defenderHpPercent = Math.max(0, newDefenderHealth) / defender.maxHealth;
 
-    // Log the attack
+    // Log the attack with clean formatting
     turnLog.push(
-      `${attacker.name} ${damage.isCritical ? '💥 CRITICAL! ' : ''}menyerang ${defender.name}!`,
-      `Damage: ${finalDamage}`,
-      `${defender.name} HP: ${Math.max(0, newDefenderHealth)}/${defender.maxHealth} ${this.getHpBar(defenderHpPercent)}`
+      `${'```'}\n` +
+      `${attacker.name} ➜ ${defender.name} ${damage.isCritical ? '💥 ' : ''}${finalDamage}\n` +
+      `${defender.name}: ${Math.max(0, newDefenderHealth)}/${defender.maxHealth}\n` +
+      `${'```'}`
     );
 
     // Process status effects
     if (!isMonster) {
       const statusResult = await this.processStatusEffects(attacker.id, attackerState, newAttackerHealth);
       newAttackerHealth = statusResult.health;
-      turnLog.push(...statusResult.messages);
+      
+      // Only show status effects if they exist
+      if (statusResult.messages.length > 0) {
+        turnLog.push(
+          `${'```'}\n` +
+          `${statusResult.messages.join(' ')}\n` +
+          `${'```'}`
+        );
+      }
     }
 
     return {
@@ -465,7 +486,7 @@ export abstract class BaseCombatService extends BaseService {
     newSecondHealth: number;
     roundLog: string[];
   }> {
-    const roundLog: string[] = [`⚔️ Turn ${turn}`];
+    const roundLog: string[] = [];
     let { firstHealth, secondHealth } = health;
 
     // Determine turn order based on speed

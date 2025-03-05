@@ -1,70 +1,85 @@
 // src/services/index.ts
 import { PrismaClient } from '@prisma/client';
 import { CharacterService } from './CharacterService';
-import { InventoryService } from './InventoryService';
-import { QuestService } from './QuestService';
 import { BattleService } from './combat/BattleService';
+import { InventoryService } from './InventoryService';
+import { QuizService } from './QuizService';
 import { ShopService } from './ShopService';
-import { LocationService } from './LocationService';
 import { MentorService } from './MentorService';
+import { LocationService } from './LocationService';
+import { GamblingService } from './GamblingService';
+import { DuelService } from './DuelService';
 import { WeaponService } from './WeaponService';
 import { EquipmentService } from './EquipmentService';
-import { GamblingService } from './GamblingService';
-import { DuelService } from './combat/DuelService';
 import { HelpService } from './HelpService';
 import { LeaderboardService } from './LeaderboardService';
 import { logger } from '@/utils/logger';
+import { DataCache } from './DataCache';
+import { Client } from 'discord.js';
 
 export interface ServiceContainer {
   character: CharacterService;
-  inventory: InventoryService;
-  quest: QuestService;
   battle: BattleService;
+  inventory: InventoryService;
+  quiz: QuizService;
   shop: ShopService;
-  location: LocationService;
   mentor: MentorService;
-  weapon: WeaponService;
-  equipment: EquipmentService;
+  location: LocationService;
   gambling: GamblingService;
   duel: DuelService;
+  weapon: WeaponService;
+  equipment: EquipmentService;
   help: HelpService;
   leaderboard: LeaderboardService;
-  logger: typeof logger;
 }
 
-export async function createServices(prisma: PrismaClient): Promise<ServiceContainer> {
-  // Create services in correct order (dependency injection)
-  const character = new CharacterService(prisma);
-  const battle = new BattleService(prisma, character);
-  const inventory = new InventoryService(prisma, character);
-  const quest = new QuestService(prisma, character);
-  const shop = new ShopService(prisma, character, inventory);
-  const location = new LocationService(prisma, character);
-  const mentor = new MentorService(prisma, character);
-  const weapon = new WeaponService(prisma);
-  const equipment = new EquipmentService(prisma);
-  const gambling = new GamblingService(prisma, character);
-  const duel = new DuelService(prisma, character);
-  const help = new HelpService(prisma);
-  const leaderboard = new LeaderboardService(prisma);
+export function createServices(prisma: PrismaClient, client: Client): ServiceContainer {
+  try {
+    // Initialize DataCache singleton
+    const dataCache = DataCache.getInstance();
 
-  // Set up battle service
-  character.setBattleService(battle);
+    // Initialize base services first
+    const character = new CharacterService(prisma);
+    const equipment = new EquipmentService(prisma);
+    const weapon = new WeaponService(prisma);
+    const quiz = new QuizService(prisma, character);
+    const battle = new BattleService(prisma, character, dataCache);
 
-  return {
-    character,
-    inventory,
-    quest,
-    battle,
-    shop,
-    location,
-    mentor,
-    weapon,
-    equipment,
-    gambling,
-    duel,
-    help,
-    leaderboard,
-    logger
-  };
+    // Initialize dependent services
+    const inventory = new InventoryService(prisma, character);
+    const location = new LocationService(prisma, character);
+    const shop = new ShopService(prisma, character, inventory);
+    const help = new HelpService(prisma);
+    const leaderboard = new LeaderboardService(prisma);
+    const duel = new DuelService(prisma);
+    const mentor = new MentorService(prisma, character);
+    const gambling = new GamblingService(prisma, character);
+
+    // Set up cross-service dependencies
+    character.setBattleService(battle);
+    duel.setBattleService(battle);
+    inventory.setEquipmentService(equipment);
+    shop.setEquipmentService(equipment);
+
+    logger.info('Services initialized successfully');
+
+    return {
+      character,
+      battle,
+      inventory,
+      quiz,
+      shop,
+      mentor,
+      location,
+      gambling,
+      duel,
+      weapon,
+      equipment,
+      help,
+      leaderboard
+    };
+  } catch (error) {
+    logger.error('Error creating services:', error);
+    throw error;
+  }
 }

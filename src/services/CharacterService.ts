@@ -22,25 +22,7 @@ import { InventoryService } from './InventoryService';
 import { Cache } from '../utils/Cache';
 import { BattleState } from '@/types/combat';
 import { ICharacterCommands, InteractionHandler } from '@/types/commands';
-
-// Add back the BuffType interface at the top with other interfaces
-interface BuffType {
-  type: string;
-  stats?: {
-    attack?: number;
-    defense?: number;
-    speed?: number;
-    [key: string]: number | undefined;
-  };
-  multipliers?: {
-    damage?: number;
-    defense?: number;
-    exp?: number;
-    drops?: number;
-    healing?: number;
-  };
-  expiresAt: number;
-}
+import { LOCATIONS } from '@/config/gameData';
 
 export interface ICharacterService {
   handleProfile: InteractionHandler;
@@ -299,10 +281,25 @@ export class CharacterService extends BaseService implements ICharacterCommands 
     };
   }
 
+  private validateMentor(mentor: string): asserts mentor is MentorType {
+    if (!['YB', 'TIERISON', 'LYUKA', 'GARRYANG'].includes(mentor)) {
+      throw new Error('❌ Mentor tidak valid! Pilih dari: YB, Tierison, LYuka, atau GarryAng');
+    }
+  }
+
+  private validateCharacterName(name: string): void {
+    // Allow letters, numbers, underscores, and hyphens
+    const nameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
+    if (!nameRegex.test(name)) {
+      throw new Error('❌ Nama karakter hanya boleh mengandung huruf, angka, underscore (_), dan strip (-), dengan panjang 3-20 karakter.');
+    }
+  }
+
   async createCharacter(dto: CreateCharacterDto): Promise<Character> {
     try {
-      // Validate mentor
+      // Validate mentor and name
       this.validateMentor(dto.mentor);
+      this.validateCharacterName(dto.name);
 
       // Initialize empty status effects and buffs
       const initialStatusEffects: StatusEffects = { effects: [] };
@@ -883,617 +880,7 @@ export class CharacterService extends BaseService implements ICharacterCommands 
     }
   }
 
-  private validateMentor(mentor: string): asserts mentor is MentorType {
-    if (!['YB', 'Tierison', 'LYuka', 'GarryAng'].includes(mentor)) {
-      throw new Error(`Invalid mentor type: ${mentor}`);
-    }
-  }
-
-  async addCoins(characterId: string, amount: number, type: TransactionType, description: string) {
-    await this.prisma.character.update({
-      where: { id: characterId },
-      data: { coins: { increment: amount } }
-    });
-    // Invalidate balance cache
-    this.balanceCache.delete(characterId);
-    this.statsCache.delete(characterId);
-  }
-
-  async removeCoins(characterId: string, amount: number, type: TransactionType, description: string) {
-    await this.prisma.character.update({
-      where: { id: characterId },
-      data: { coins: { decrement: amount } }
-    });
-    // Invalidate balance cache
-    this.balanceCache.delete(characterId);
-    this.statsCache.delete(characterId);
-  }
-
-  async transferCoins(senderId: string, receiverId: string, amount: number) {
-    return this.prisma.$transaction(async (prisma) => {
-      // Remove from sender
-      await prisma.character.update({
-        where: { id: senderId },
-        data: { coins: { decrement: amount } }
-      });
-
-      // Add to receiver
-      await prisma.character.update({
-        where: { id: receiverId },
-        data: { coins: { increment: amount } }
-      });
-
-      // Create transactions
-      await prisma.transaction.create({
-        data: {
-          characterId: senderId,
-          type: 'TRANSFER',
-          amount: -amount,
-          description: `Transfer to ${receiverId}`
-        }
-      });
-      await prisma.transaction.create({
-        data: {
-          characterId: receiverId,
-          type: 'TRANSFER',
-          amount: amount,
-          description: `Transfer from ${senderId}`
-        }
-      });
-    });
-  }
-
-  async depositToBank(characterId: string, amount: number): Promise<void> {
-    try {
-      const character = await this.prisma.character.findUnique({
-        where: { id: characterId }
-      });
-
-      if (!character) throw new Error('Character not found');
-      if (character.coins < amount) throw new Error('Insufficient coins');
-
-      await this.prisma.$transaction([
-        // Remove from coins
-        this.prisma.character.update({
-          where: { id: characterId },
-          data: {
-            coins: { decrement: amount },
-            bank: { increment: amount }
-          }
-        }),
-        // Create transaction record
-        this.prisma.transaction.create({
-          data: {
-            characterId,
-            type: 'BANK_DEPOSIT',
-            amount,
-            description: `Deposited ${amount} coins to bank`
-          }
-        })
-      ]);
-    } catch (error) {
-      return this.handleError(error, 'DepositToBank');
-    }
-  }
-
-  async withdrawFromBank(characterId: string, amount: number): Promise<void> {
-    try {
-      const character = await this.prisma.character.findUnique({
-        where: { id: characterId }
-      });
-
-      if (!character) throw new Error('Character not found');
-      if (character.bank < amount) throw new Error('Insufficient bank balance');
-
-      await this.prisma.$transaction([
-        // Add to coins
-        this.prisma.character.update({
-          where: { id: characterId },
-          data: {
-            coins: { increment: amount },
-            bank: { decrement: amount }
-          }
-        }),
-        // Create transaction record
-        this.prisma.transaction.create({
-          data: {
-            characterId,
-            type: 'BANK_WITHDRAW',
-            amount: -amount,
-            description: `Withdrew ${amount} coins from bank`
-          }
-        })
-      ]);
-    } catch (error) {
-      return this.handleError(error, 'WithdrawFromBank');
-    }
-  }
-
-  async updateGamblingStats(characterId: string, bet: number, won: boolean): Promise<void> {
-    try {
-      await this.prisma.character.update({
-        where: { id: characterId },
-        data: {
-          totalGambled: { increment: bet },
-          totalWon: won ? { increment: bet * 2 } : undefined,
-          lastGambleTime: new Date()
-        }
-      });
-    } catch (error) {
-      return this.handleError(error, 'UpdateGamblingStats');
-    }
-  }
-
-  async updateBattleStats(characterId: string, won: boolean): Promise<void> {
-    // Single update with minimal fields
-        await this.prisma.character.update({
-          where: { id: characterId },
-          data: {
-        wins: won ? { increment: 1 } : undefined,
-        losses: !won ? { increment: 1 } : undefined,
-        winStreak: won ? { increment: 1 } : 0
-      }
-    });
-  }
-
-  async getBalance(characterId: string): Promise<{ coins: number; bank: number }> {
-    try {
-      // Check cache first
-      const cachedBalance = this.balanceCache.get(characterId);
-      if (cachedBalance) return cachedBalance;
-
-      const character = await this.prisma.character.findUnique({
-        where: { id: characterId }
-      });
-
-      if (!character) {
-        throw new Error('Character not found');
-      }
-
-      const balance = {
-        coins: Number(character.coins),
-        bank: Number(character.bank)
-      };
-
-      // Cache the balance
-      this.balanceCache.set(characterId, balance);
-
-      return balance;
-    } catch (error) {
-      return this.handleError(error, 'GetBalance');
-    }
-  }
-
-  async getTransactionHistory(characterId: string, limit: number = 10): Promise<any[]> {
-    try {
-      return await this.prisma.transaction.findMany({
-        where: { characterId },
-        orderBy: { createdAt: 'desc' },
-        take: limit
-      });
-    } catch (error) {
-      return this.handleError(error, 'GetTransactionHistory');
-    }
-  }
-
-  private getMentorEmoji(mentorType: MentorType | undefined): string {
-    if (!mentorType) return '👨‍🏫';
-    
-    switch(mentorType) {
-      case 'YB':
-        return '🏴‍☠️';
-      case 'Tierison':
-        return '⚔️';
-      case 'LYuka':
-        return '🎯';
-      case 'GarryAng':
-        return '🔥';
-      default:
-        return '👨‍🏫';
-    }
-  }
-
-  private async createProfileEmbed(userId: string) {
-    // Force invalidate caches before fetching profile data
-    const cacheKey = `discord_${userId}`;
-    this.characterCache.delete(cacheKey);
-
-    const character = await this.getCharacterByDiscordId(userId);
-    
-    if (!character) {
-      throw new Error('❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.');
-    }
-
-    // Force invalidate stats cache
-    this.statsCache.delete(character.id);
-    const stats = await this.getCharacterStats(character.id);
-
-    // Force invalidate balance cache
-    this.balanceCache.delete(character.id);
-    const balance = await this.getBalance(character.id);
-
-    // Get equipped items
-    const inventory = await this.prisma.inventory.findMany({
-      where: {
-        characterId: character.id,
-        isEquipped: true
-      },
-      include: {
-        item: true
-      }
-    });
-
-    // Calculate total bonus stats from equipment
-    let equipmentStats = {
-      attack: 0,
-      defense: 0,
-      speed: 0
-    };
-
-    const equippedItems = inventory.map(inv => {
-      const effect = JSON.parse(inv.item.effect);
-      if (effect.stats) {
-        equipmentStats.attack += effect.stats.attack || 0;
-        equipmentStats.defense += effect.stats.defense || 0;
-        equipmentStats.speed += effect.stats.speed || 0;
-      }
-      
-      let durabilityText = '';
-      if (inv.durability !== null) {
-        const maxDurability = inv.item.maxDurability || 100;
-        durabilityText = ` [${inv.durability}/${maxDurability}]`;
-      }
-      
-      return `${inv.item.name} (${inv.item.type})${durabilityText}`;
-    });
-
-    // Parse active buffs and calculate buff stats
-    let activeBuffs: BuffType[] = [];
-    let buffStats = {
-      attack: 0,
-      defense: 0,
-      speed: 0
-    };
-
-    try {
-      const buffs = JSON.parse(character.activeBuffs);
-      if (buffs && Array.isArray(buffs.buffs)) {
-        activeBuffs = buffs.buffs.filter((buff: BuffType) => buff.expiresAt > Date.now());
-        
-        // Calculate total stats from buffs
-        activeBuffs.forEach((buff: BuffType) => {
-          if (buff.stats) {
-            buffStats.attack += buff.stats.attack || 0;
-            buffStats.defense += buff.stats.defense || 0;
-            buffStats.speed += buff.stats.speed || 0;
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Error parsing active buffs:', error);
-      activeBuffs = [];
-    }
-
-    // Calculate total stats (base + equipment + buffs)
-    const totalStats = {
-      attack: stats.attack + equipmentStats.attack + buffStats.attack,
-      defense: stats.defense + equipmentStats.defense + buffStats.defense,
-      speed: stats.speed + equipmentStats.speed + buffStats.speed
-    };
-
-    const embed = new EmbedBuilder()
-      .setTitle(`📊 ${character.name}'s Profile`)
-      .setColor('#0099ff')
-      .addFields(
-        { 
-          name: '📈 Level & Experience', 
-          value: `Level: ${stats.level}\nEXP: ${stats.experience}/${this.calculateExpNeeded(stats.level)}`,
-          inline: true 
-        },
-        {
-          name: '❤️ Health',
-          value: `${stats.health}/${stats.maxHealth} HP`,
-          inline: true
-        },
-        { 
-          name: '💰 Balance', 
-          value: `Coins: ${balance.coins}\nBank: ${balance.bank}`,
-          inline: true 
-        }
-      );
-
-    // Add combat stats with equipment and buff bonuses
-    embed.addFields({
-      name: '⚔️ Combat Stats',
-      value: [
-        `💪 Attack: ${stats.attack} (Base) + ${equipmentStats.attack} (Equipment) + ${buffStats.attack} (Buffs) = ${totalStats.attack}`,
-        `🛡️ Defense: ${stats.defense} (Base) + ${equipmentStats.defense} (Equipment) + ${buffStats.defense} (Buffs) = ${totalStats.defense}`,
-        `💨 Speed: ${stats.speed} (Base) + ${equipmentStats.speed} (Equipment) + ${buffStats.speed} (Buffs) = ${totalStats.speed}`,
-        `🎯 Wins/Losses: ${stats.wins}/${stats.losses}`,
-        `🔥 Win Streak: ${stats.winStreak} (Highest: ${stats.highestStreak})`,
-        `⚔️ Hunt Streak: ${stats.huntStreak} (Highest: ${stats.highestHuntStreak})`
-      ].join('\n'),
-      inline: false
-    });
-
-    // Add equipment section if any items equipped
-    if (equippedItems.length > 0) {
-      embed.addFields({
-        name: '🎽 Equipment',
-        value: equippedItems.join('\n'),
-        inline: true
-      });
-
-      // Add total equipment bonus
-      embed.addFields({
-        name: '🔧 Equipment Bonus',
-        value: [
-          `⚔️ Attack: +${equipmentStats.attack}`,
-          `🛡️ Defense: +${equipmentStats.defense}`,
-          `💨 Speed: +${equipmentStats.speed}`
-        ].join('\n'),
-        inline: true
-      });
-    }
-
-    // Add active buffs section if any
-    if (activeBuffs.length > 0) {
-      const buffsList = activeBuffs.map(buff => {
-        const duration = Math.ceil((buff.expiresAt - Date.now()) / 1000 / 60); // minutes
-        const buffName = this.getBuffName(buff.type);
-        const emoji = this.getBuffEmoji(buff.type);
-        
-        // Format stats and multipliers
-        const parts = [];
-        
-        // Handle base stats
-        if (buff.stats) {
-          const validStats = Object.entries(buff.stats)
-            .filter(([_, value]) => value !== undefined && value !== null && value !== 0)
-            .map(([stat, value]) => `${stat.charAt(0).toUpperCase() + stat.slice(1)}: +${value}`)
-            .join(', ');
-          if (validStats) {
-            parts.push(validStats);
-          }
-        }
-        
-        // Handle multipliers
-        if (buff.multipliers) {
-          const validMultipliers = Object.entries(buff.multipliers)
-            .filter(([_, value]) => value !== undefined && value !== null && value !== 1)
-            .map(([stat, value]) => {
-              const percent = ((value - 1) * 100).toFixed(0);
-              return `${stat.charAt(0).toUpperCase() + stat.slice(1)}: +${percent}%`;
-            })
-            .join(', ');
-          if (validMultipliers) {
-            parts.push(validMultipliers);
-          }
-        }
-        
-        const statsText = parts.length > 0 ? ` (${parts.join(' | ')})` : '';
-        return `${emoji} ${buffName}${statsText} (${duration}m)`;
-      }).join('\n');
-
-      embed.addFields({
-        name: '⚡ Active Buffs',
-        value: buffsList || 'Tidak ada buff aktif',
-        inline: false
-      });
-    }
-
-    // Add mentor info if exists
-    if (stats.mentor) {
-      embed.addFields({
-        name: '👨‍🏫 Mentor',
-        value: `${this.getMentorEmoji(stats.mentor)} ${stats.mentor}`,
-        inline: true
-      });
-    }
-
-    // Add progress section
-    embed.addFields({
-      name: '📊 Progress',
-      value: [
-        `🎯 Quest Points: ${stats.questPoints}`,
-        `🗺️ Exploration: ${stats.explorationPoints}`,
-        `${this.getMentorEmoji(stats.mentor)} Mentor Progress: ${this.getMentorProgress(stats)}`
-      ].join('\n'),
-      inline: false
-    });
-
-    return embed;
-  }
-
-  private getBuffName(type: string): string {
-    // Handle undefined or null type
-    if (!type) {
-      return 'Unknown Buff';
-    }
-
-    // Handle item-based buff types
-    if (type.includes('_')) {
-      const parts = type.split('_');
-      const itemName = parts.map(part => part.charAt(0) + part.slice(1).toLowerCase()).join(' ');
-      return itemName;
-    }
-
-    const buffNames: Record<string, string> = {
-      'ATTACK': 'Attack Boost',
-      'DEFENSE': 'Defense Boost',
-      'SPEED': 'Speed Boost',
-      'ALL': 'Full Power',
-      'HEAL': 'Regeneration',
-      'HEAL_OVER_TIME': 'Healing',
-      'BURN': 'Burning',
-      'POISON': 'Poisoned',
-      'STUN': 'Stunned',
-      'DAMAGE': 'Damage Boost',
-      'EXP': 'Experience Boost',
-      'DROPS': 'Drop Rate Boost',
-      'HEALING': 'Healing Boost',
-      'RUMBLE_BALL': 'Rumble Ball',
-      'SUPER_MEAT': 'Super Meat',
-      'CRITICAL': 'Critical Boost',
-      'COMBO': 'Combo Boost',
-      'GEAR_SECOND': 'Gear Second',
-      'TRAINING': 'Training Boost',
-      'MENTOR': 'Mentor Boost',
-      'FOOD': 'Food Boost',
-      'EXPLORATION': 'Explorer Boost',
-      'QUEST': 'Quest Boost',
-      'BATTLE': 'Battle Boost'
-    };
-
-    return buffNames[type] || 'Unknown Buff';
-  }
-
-  private getBuffEmoji(type: string): string {
-    const emojis: Record<string, string> = {
-      'ATTACK': '⚔️',
-      'DEFENSE': '🛡️',
-      'SPEED': '💨',
-      'ALL': '💫',
-      'HEAL': '❤️',
-      'HEAL_OVER_TIME': '💚',
-      'BURN': '🔥',
-      'POISON': '☠️',
-      'STUN': '⚡',
-      'DAMAGE': '🗡️',
-      'EXP': '✨',
-      'DROPS': '💎',
-      'HEALING': '💖',
-      'RUMBLE_BALL': '💊',
-      'SUPER_MEAT': '🍖',
-      'CRITICAL': '🎯',
-      'COMBO': '🔄',
-      'GEAR_SECOND': '🔧',
-      'TRAINING': '🏋️',
-      'MENTOR': '👨‍🏫',
-      'FOOD': '🍖',
-      'EXPLORATION': '🗺️',
-      'QUEST': '📚',
-      'BATTLE': '⚔️'
-    };
-    return emojis[type] || '⚡';
-  }
-
-  private getMentorProgress(stats: any): string {
-    switch(stats.mentor) {
-      case 'YB':
-        return `${stats.luffyProgress}/100`;
-      case 'Tierison':
-        return `${stats.zoroProgress}/100`;
-      case 'LYuka':
-        return `${stats.usoppProgress}/100`;
-      case 'GarryAng':
-        return `${stats.sanjiProgress}/100`;
-      default:
-        return '0/100';
-    }
-  }
-
-  private async createBalanceEmbed(userId: string) {
-    const character = await this.getCharacterByDiscordId(userId);
-    
-    if (!character) {
-      throw new Error('❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.');
-    }
-
-    const balance = await this.getBalance(character.id);
-    const history = await this.getTransactionHistory(character.id, 5);
-
-    const embed = new EmbedBuilder()
-      .setTitle('💰 Balance')
-      .setColor('#ffd700')
-      .addFields(
-        { name: 'Coins', value: `${balance.coins}`, inline: true },
-        { name: 'Bank', value: `${balance.bank}`, inline: true },
-        { name: 'Total', value: `${balance.coins + balance.bank}`, inline: true }
-      );
-
-    if (history.length > 0) {
-      const historyText = history
-        .map(t => `${t.type}: ${t.amount > 0 ? '+' : ''}${t.amount} (${t.description})`)
-        .join('\n');
-      embed.addFields({ name: 'Recent Transactions', value: historyText });
-    }
-
-    return embed;
-  }
-
-  // Utility method to handle command errors
-  private async handleCommandError(error: unknown, source: Message | ChatInputCommandInteraction, context: string): Promise<unknown> {
-    return ErrorUtils.handleError({
-      context,
-      error,
-      source
-    });
-  }
-
-  // Utility method to get user ID from source
-  private getUserId(source: Message | ChatInputCommandInteraction): string {
-    return source instanceof Message ? source.author.id : source.user.id;
-  }
-
-  // Utility method to validate character
-  private async validateCharacter(userId: string, source: Message | ChatInputCommandInteraction): Promise<Character | null> {
-    try {
-      // Clear cache first to ensure fresh data
-      const cacheKey = `discord_${userId}`;
-      this.characterCache.delete(cacheKey);
-      
-      // Get character with fresh data
-      const character = await this.getCharacterByDiscordId(userId);
-      
-      if (!character) {
-        await ErrorUtils.handleCharacterNotFound(source);
-        return null;
-      }
-
-      // Validate character exists in database
-      const dbCharacter = await this.prisma.character.findUnique({
-        where: { id: character.id }
-      });
-
-      if (!dbCharacter) {
-        // Clear all caches if character exists in cache but not in DB
-        this.characterCache.clear();
-        this.statsCache.clear();
-        this.balanceCache.clear();
-        await ErrorUtils.handleCharacterNotFound(source);
-        return null;
-      }
-
-      return dbCharacter;
-    } catch (error) {
-      this.logger.error('Error validating character:', error);
-      await ErrorUtils.handleError({
-        context: 'CHARACTER',
-        error: 'Failed to validate character',
-        source
-      });
-      return null;
-    }
-  }
-
-  // Utility method to send embed response
-  private async sendEmbedResponse(source: Message | ChatInputCommandInteraction, embed: EmbedBuilder): Promise<unknown> {
-    if (source instanceof Message) {
-      return source.reply({ embeds: [embed] });
-    } else {
-      // Handle different interaction states
-      if (source.deferred) {
-        return source.editReply({ embeds: [embed] });
-      } else if (source.replied) {
-        return source.followUp({ embeds: [embed], ephemeral: true });
-      } else {
-        return source.reply({ embeds: [embed], ephemeral: true });
-      }
-    }
-  }
-
-  // Refactored command handlers
+  // Implement interface methods
   async handleProfile(source: Message | ChatInputCommandInteraction): Promise<unknown> {
     try {
       const userId = this.getUserId(source);
@@ -1519,11 +906,27 @@ export class CharacterService extends BaseService implements ICharacterCommands 
     }
   }
 
+  async handleHunt(source: Message | ChatInputCommandInteraction): Promise<unknown> {
+    try {
+      const userId = this.getUserId(source);
+      const character = await this.validateCharacter(userId, source);
+      if (!character) return;
+
+      if (!this.battleService) {
+        throw new Error('Battle service not initialized');
+      }
+
+      const response = await this.battleService.processBattle(character.id, character.level);
+      return this.sendEmbedResponse(source, response.embed);
+    } catch (error) {
+      return ErrorUtils.handleCombatError(source, error);
+    }
+  }
+
   async handleDaily(source: Message | ChatInputCommandInteraction): Promise<unknown> {
     try {
       const userId = this.getUserId(source);
       
-      // Check cooldown
       if (!checkCooldown(userId, 'daily')) {
         const remainingTime = getRemainingCooldown(userId, 'daily');
         const hours = Math.floor(remainingTime / 3600);
@@ -1534,7 +937,6 @@ export class CharacterService extends BaseService implements ICharacterCommands 
       const character = await this.validateCharacter(userId, source);
       if (!character) return;
 
-      // Calculate and apply rewards
       const exp = 100 + Math.floor(Math.random() * 50);
       const coins = 100 + Math.floor(Math.random() * 100);
       
@@ -1546,31 +948,6 @@ export class CharacterService extends BaseService implements ICharacterCommands 
       return this.sendEmbedResponse(source, embed);
     } catch (error) {
       return this.handleCommandError(error, source, 'handleDaily');
-    }
-  }
-
-  async handleHunt(source: Message | ChatInputCommandInteraction): Promise<unknown> {
-    try {
-      const userId = this.getUserId(source);
-      const character = await this.validateCharacter(userId, source);
-      if (!character) return;
-
-      // Ensure battle service is initialized
-      if (!this.battleService) {
-        throw new Error('Battle service not initialized');
-      }
-
-      // Process the battle
-      const response = await this.battleService.processBattle(character.id, character.level);
-
-      // Send the response with ephemeral: false to make it visible to everyone
-      if (source instanceof Message) {
-        return source.reply({ embeds: [response.embed] });
-      } else {
-        return source.reply({ embeds: [response.embed], ephemeral: false });
-      }
-    } catch (error) {
-      return ErrorUtils.handleCombatError(source, error);
     }
   }
 
@@ -1597,7 +974,6 @@ export class CharacterService extends BaseService implements ICharacterCommands 
         throw new Error('Inventory service not initialized');
       }
 
-      // Implement sell logic here
           const embed = new EmbedBuilder()
         .setTitle('🏪 Market')
         .setColor('#ffd700')
@@ -1611,465 +987,489 @@ export class CharacterService extends BaseService implements ICharacterCommands 
 
   async handleLeaderboard(source: Message | ChatInputCommandInteraction, type?: string): Promise<unknown> {
     try {
-      // Get page number from options if it exists
       let currentPage = source instanceof ChatInputCommandInteraction 
         ? (source.options.getInteger('page') || 1)
         : 1;
       
-      // Default to level leaderboard if no type specified
       type = type?.toLowerCase() || 'level';
-
       const itemsPerPage = 10;
 
-      // Function to generate leaderboard embed and components
-      const generateLeaderboard = async (page: number) => {
-        const skip = (page - 1) * itemsPerPage;
-
-        let orderBy: any;
-        let title: string;
-        let valueFormatter: (value: any) => string;
-        let description: string;
-
-        switch (type) {
-          case 'level':
-            orderBy = { level: 'desc' };
-            title = '🏆 Level Leaderboard';
-            description = 'Top players by level';
-            valueFormatter = (value: number) => `Level ${value}`;
-            break;
-          case 'coins':
-          case 'money':
-            orderBy = { coins: 'desc' };
-            title = '💰 Richest Players';
-            description = 'Top players by coins';
-            valueFormatter = (value: bigint) => `${value} coins`;
-            break;
-          case 'bank':
-            orderBy = { bank: 'desc' };
-            title = '🏦 Bank Leaderboard';
-            description = 'Top players by bank balance';
-            valueFormatter = (value: bigint) => `${value} coins`;
-            break;
-          case 'streak':
-          case 'huntstreak':
-            orderBy = { huntStreak: 'desc' };
-            title = '🔥 Highest Hunt Streaks';
-            description = 'Top players by hunt streak';
-            valueFormatter = (value: number) => `${value} streak`;
-            break;
-          case 'highstreak':
-            orderBy = { highestHuntStreak: 'desc' };
-            title = '👑 All-Time Highest Streaks';
-            description = 'Top players by highest hunt streak achieved';
-            valueFormatter = (value: number) => `${value} streak`;
-            break;
-          case 'wins':
-            orderBy = { wins: 'desc' };
-            title = '⚔️ Most Wins';
-            description = 'Top players by battle wins';
-            valueFormatter = (value: number) => `${value} wins`;
-            break;
-          case 'winrate':
-            orderBy = [
-              { wins: 'desc' },
-              { losses: 'asc' }
-            ];
-            title = '🎯 Best Win Rate';
-            description = 'Top players by win/loss ratio';
-            valueFormatter = (char: any) => `${((char.wins / (char.wins + char.losses)) * 100).toFixed(1)}% (${char.wins}W/${char.losses}L)`;
-            break;
-          case 'gambled':
-            orderBy = { totalGambled: 'desc' };
-            title = '🎲 Biggest Gamblers';
-            description = 'Top players by total amount gambled';
-            valueFormatter = (value: bigint) => `${value} coins`;
-            break;
-          case 'won':
-            orderBy = { totalWon: 'desc' };
-            title = '🎰 Luckiest Players';
-            description = 'Top players by total gambling winnings';
-            valueFormatter = (value: bigint) => `${value} coins`;
-            break;
-          default:
-            return null;
-        }
-
         // Get total count for pagination
-        const totalCount = await this.prisma.character.count({
-          where: type === 'winrate' ? { wins: { gt: 0 } } : undefined
-        });
-        
+      const totalCount = await this.prisma.character.count();
         const totalPages = Math.ceil(totalCount / itemsPerPage);
 
         // Validate page number
-        if (page < 1 || page > totalPages) {
-          return null;
-        }
+      if (currentPage < 1 || currentPage > totalPages) {
+        return source.reply({
+          content: '❌ Invalid page number!',
+          ephemeral: true
+        });
+      }
+
+      const skip = (currentPage - 1) * itemsPerPage;
 
         // Get characters for current page
         const characters = await this.prisma.character.findMany({
           take: itemsPerPage,
           skip,
-          orderBy,
-          where: type === 'winrate' ? { wins: { gt: 0 } } : undefined,
+        orderBy: { level: 'desc' },
           select: {
             name: true,
             level: true,
-            coins: true,
-            bank: true,
-            huntStreak: true,
-            highestHuntStreak: true,
-            wins: true,
-            losses: true,
-            totalGambled: true,
-            totalWon: true,
-            user: {
-              select: {
-                discordId: true
-              }
-            }
+          experience: true
           }
         });
 
         if (characters.length === 0) {
-          return null;
+        return source.reply({
+          content: '❌ No characters found!',
+          ephemeral: true
+        });
         }
 
         const embed = new EmbedBuilder()
-          .setTitle(title)
+        .setTitle('🏆 Leaderboard')
           .setColor('#FFD700')
-          .setDescription(description)
-          .addFields({
-            name: `Rankings (Page ${page}/${totalPages})`,
-            value: characters.map((char, index) => {
+        .setDescription(characters.map((char, index) => {
               const position = skip + index + 1;
               const medal = position === 1 ? '🥇' : position === 2 ? '🥈' : position === 3 ? '🥉' : '🏅';
-              const value = type === 'level' ? char.level :
-                           type === 'coins' || type === 'money' ? char.coins :
-                           type === 'bank' ? char.bank :
-                           type === 'streak' || type === 'huntstreak' ? char.huntStreak :
-                           type === 'highstreak' ? char.highestHuntStreak :
-                           type === 'winrate' ? char :
-                           type === 'gambled' ? char.totalGambled :
-                           type === 'won' ? char.totalWon :
-                           char.wins;
-              return `${medal} ${position}. ${char.name} - ${valueFormatter(value)}`;
-            }).join('\n')
-          })
-          .setFooter({ text: `Page ${page}/${totalPages} • Use /leaderboard <type> <page>` })
-          .setTimestamp();
+          return `${medal} ${position}. ${char.name} - Level ${char.level} (${char.experience} EXP)`;
+        }).join('\n'))
+        .setFooter({ text: `Page ${currentPage}/${totalPages}` });
 
-        // Create navigation buttons
-        const row = new ActionRowBuilder<ButtonBuilder>()
-          .addComponents(
-            new ButtonBuilder()
-              .setCustomId(`prev_${type}`)
-              .setLabel('Previous')
-              .setStyle(ButtonStyle.Primary)
-              .setDisabled(page <= 1),
-            new ButtonBuilder()
-              .setCustomId(`next_${type}`)
-              .setLabel('Next')
-              .setStyle(ButtonStyle.Primary)
-              .setDisabled(page >= totalPages)
-          );
-
-        return { embed, components: [row], totalPages };
-      };
-
-      // Generate initial leaderboard
-      const initial = await generateLeaderboard(currentPage);
-      if (!initial) {
         return source.reply({
-          content: '❌ Invalid leaderboard type or no data found! Available types:\n' +
-                  '• level - Top players by level\n' +
-                  '• coins/money - Richest players\n' +
-                  '• bank - Highest bank balances\n' +
-                  '• streak/huntstreak - Current hunt streaks\n' +
-                  '• highstreak - All-time highest streaks\n' +
-                  '• wins - Most battle wins\n' +
-                  '• winrate - Best win/loss ratio\n' +
-                  '• gambled - Most coins gambled\n' +
-                  '• won - Most gambling winnings',
-          ephemeral: true
-        });
-      }
-
-      // Send initial message and get the message object for collector
-      let messageToCollectFrom: Message;
-      if (source instanceof Message) {
-        const reply = await source.reply({ 
-          embeds: [initial.embed], 
-          components: initial.components,
-        });
-        messageToCollectFrom = reply as Message;
-      } else {
-        const reply = await source.reply({ 
-          embeds: [initial.embed], 
-          components: initial.components, 
-          ephemeral: false, 
-        });
-        messageToCollectFrom = reply as unknown as Message;
-      }
-
-      // Create button collector
-      const collector = messageToCollectFrom.createMessageComponentCollector({ 
-        componentType: ComponentType.Button,
-        time: 300000 // 5 minutes
+        embeds: [embed],
+        ephemeral: false 
       });
-
-      collector.on('collect', async (interaction: ButtonInteraction) => {
-        // Verify the user who clicked is the one who ran the command
-        if (interaction.user.id !== (source instanceof Message ? source.author.id : source.user.id)) {
-          await interaction.reply({
-            content: '❌ Only the person who ran this command can use these buttons!',
-            ephemeral: true
-          });
-          return;
-        }
-
-        // Handle navigation
-        if (interaction.customId === `prev_${type}`) {
-          currentPage--;
-        } else if (interaction.customId === `next_${type}`) {
-          currentPage++;
-        }
-
-        // Generate new leaderboard
-        const updated = await generateLeaderboard(currentPage);
-        if (!updated) {
-          await interaction.reply({
-            content: '❌ Failed to load leaderboard page.',
-            ephemeral: true
-          });
-          return;
-        }
-
-        // Update the message
-        await interaction.update({
-          embeds: [updated.embed],
-          components: updated.components
-        });
-      });
-
-      collector.on('end', () => {
-        // Remove buttons when collector expires
-        if (messageToCollectFrom.editable) {
-          messageToCollectFrom.edit({ components: [] }).catch(() => {});
-        }
-      });
-
-      return messageToCollectFrom;
     } catch (error) {
       return this.handleCommandError(error, source, 'handleLeaderboard');
     }
   }
 
-  async addItems(characterId: string, itemId: string, quantity: number): Promise<void> {
+  async handleStart(source: Message | ChatInputCommandInteraction): Promise<unknown> {
     try {
-      // Check if item exists in inventory
-      const existingItem = await this.prisma.inventory.findUnique({
-        where: {
-          characterId_itemId: {
-            characterId,
-            itemId
-          }
-        }
+      const userId = this.getUserId(source);
+      
+      const existingCharacter = await this.getCharacterByDiscordId(userId);
+      if (existingCharacter) {
+        return source.reply({
+          content: '❌ Kamu sudah memiliki karakter! Gunakan `/profile` untuk melihat karaktermu.',
+          ephemeral: true
+        });
+      }
+
+        const embed = new EmbedBuilder()
+          .setTitle('🎮 Buat Karakter Baru')
+        .setDescription('Untuk membuat karakter baru, gunakan command:\n`a start <nama> <mentor>`')
+          .addFields(
+            { 
+              name: '🏴‍☠️ YB (Luffy)',
+            value: '+15% Attack, -10% Defense, +10% Health, +20% Speed',
+              inline: true
+            },
+            {
+              name: '⚔️ Tierison (Zoro)',
+            value: '+10% Attack, +10% Defense, +10% Speed',
+              inline: true
+            },
+            {
+              name: '🎯 LYuka (Usopp)',
+            value: '-10% Attack, +20% Defense, +5% Health, +15% Speed',
+              inline: true
+            },
+            {
+              name: '🔥 GarryAng (Sanji)',
+            value: '+5% Attack, +15% Defense, +10% Health, +30% Speed',
+              inline: true
+            }
+          )
+        .setColor('#00ff00');
+
+        return source.reply({ embeds: [embed] });
+    } catch (error) {
+      return this.handleCommandError(error, source, 'handleStart');
+    }
+  }
+
+  // Utility methods
+  private getUserId(source: Message | ChatInputCommandInteraction): string {
+    return source instanceof Message ? source.author.id : source.user.id;
+  }
+
+  private async validateCharacter(userId: string, source: Message | ChatInputCommandInteraction): Promise<Character | null> {
+    try {
+      const cacheKey = `discord_${userId}`;
+      this.characterCache.delete(cacheKey);
+      
+      const character = await this.getCharacterByDiscordId(userId);
+      
+      if (!character) {
+        await ErrorUtils.handleCharacterNotFound(source);
+        return null;
+      }
+
+      const dbCharacter = await this.prisma.character.findUnique({
+        where: { id: character.id }
       });
 
-      if (existingItem) {
-        // Update existing item quantity
-        await this.prisma.inventory.update({
+      if (!dbCharacter) {
+        this.characterCache.clear();
+        this.statsCache.clear();
+        this.balanceCache.clear();
+        await ErrorUtils.handleCharacterNotFound(source);
+        return null;
+      }
+
+      return dbCharacter;
+    } catch (error) {
+      this.logger.error('Error validating character:', error);
+      await ErrorUtils.handleError({
+        context: 'CHARACTER',
+        error: 'Failed to validate character',
+        source
+      });
+      return null;
+    }
+  }
+
+  private async sendEmbedResponse(source: Message | ChatInputCommandInteraction, embed: EmbedBuilder): Promise<unknown> {
+    if (source instanceof Message) {
+      return source.reply({ embeds: [embed] });
+    } else {
+      if (source.deferred) {
+        return source.editReply({ embeds: [embed] });
+      } else if (source.replied) {
+        return source.followUp({ embeds: [embed], ephemeral: true });
+      } else {
+        return source.reply({ embeds: [embed], ephemeral: true });
+      }
+    }
+  }
+
+  private async handleCommandError(error: unknown, source: Message | ChatInputCommandInteraction, context: string): Promise<unknown> {
+    return ErrorUtils.handleError({
+      context,
+      error,
+      source
+    });
+  }
+
+  private async createProfileEmbed(userId: string): Promise<EmbedBuilder> {
+    const cacheKey = `discord_${userId}`;
+    this.characterCache.delete(cacheKey);
+
+    const character = await this.getCharacterByDiscordId(userId);
+    
+    if (!character) {
+      throw new Error('❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.');
+    }
+
+    this.statsCache.delete(character.id);
+    const stats = await this.getCharacterStats(character.id);
+
+    this.balanceCache.delete(character.id);
+    const balance = await this.getBalance(character.id);
+
+    // Get equipped items
+    const equippedItems = await this.prisma.inventory.findMany({
+      where: {
+        characterId: character.id,
+        isEquipped: true
+      },
+      include: {
+        item: true
+      }
+    });
+
+    // Calculate equipment stats
+    let equipmentStats = {
+      attack: 0,
+      defense: 0,
+      speed: 0
+    };
+
+    for (const equipped of equippedItems) {
+      if (equipped.stats) {
+        const itemStats = JSON.parse(equipped.stats);
+        equipmentStats.attack += itemStats.attack || 0;
+        equipmentStats.defense += itemStats.defense || 0;
+        equipmentStats.speed += itemStats.speed || 0;
+      }
+    }
+
+    // Calculate total stats including equipment
+    const totalStats = {
+      attack: stats.attack + equipmentStats.attack,
+      defense: stats.defense + equipmentStats.defense,
+      speed: stats.speed + equipmentStats.speed
+    };
+
+    const embed = new EmbedBuilder()
+      .setTitle(`📊 ${character.name}'s Profile`)
+      .setColor('#0099ff')
+      .addFields(
+        { 
+          name: '📈 Level & Experience', 
+          value: `Level: ${stats.level}\nEXP: ${stats.experience.toLocaleString()}/${this.calculateExpNeeded(stats.level).toLocaleString()}`,
+          inline: true 
+        },
+        { 
+          name: '❤️ Health',
+          value: `${stats.health}/${stats.maxHealth} HP`,
+          inline: true 
+        },
+        {
+          name: '📍 Location',
+          value: LOCATIONS[stats.location].name,
+          inline: true
+        },
+        { 
+          name: '💰 Balance', 
+          value: `Coins: ${balance.coins.toLocaleString()}`,
+          inline: true 
+        },
+        {
+          name: '🎰 Equipment',
+          value: equippedItems.length > 0 ? equippedItems.map(item => {
+            const stats = item.stats ? JSON.parse(item.stats) : null;
+            const durability = item.durability !== null ? ` (${item.durability}/${item.item.maxDurability})` : '';
+            return `${item.item.type === 'WEAPON' ? '⚔️' : item.item.type === 'ARMOR' ? '🛡️' : '💍'} ${item.item.name}${durability}\n` + 
+                   (stats ? `└ Stats: ATK +${stats.attack || 0} | DEF +${stats.defense || 0} | SPD +${stats.speed || 0}` : '');
+          }).join('\n\n') : 'No equipment',
+          inline: false
+        },
+        {
+          name: '⚔️ Combat Stats',
+          value: [
+            `Attack: ${totalStats.attack} (+${equipmentStats.attack} from equipment)`,
+            `Defense: ${totalStats.defense} (+${equipmentStats.defense} from equipment)`,
+            `Speed: ${totalStats.speed} (+${equipmentStats.speed} from equipment)`
+          ].join('\n'),
+          inline: false
+        }
+      );
+
+    // Add active buffs if any exist
+    const activeBuffs = JSON.parse(character.activeBuffs || '{"buffs":[]}');
+    if (activeBuffs.buffs && activeBuffs.buffs.length > 0) {
+      const currentTime = Date.now();
+      const activeBuffsList = activeBuffs.buffs
+        .filter((buff: { expiresAt: number }) => buff.expiresAt > currentTime)
+        .map((buff: { type: string; value: number; expiresAt: number }) => {
+          const timeLeft = Math.ceil((buff.expiresAt - currentTime) / (1000 * 60)); // minutes
+          return `${buff.type}: +${buff.value}% (${timeLeft}m)`;
+        })
+        .join('\n');
+      
+      if (activeBuffsList) {
+        embed.addFields({
+          name: '✨ Active Buffs',
+          value: activeBuffsList,
+          inline: false
+        });
+      }
+    }
+
+    // Add status effects if any exist
+    const statusEffects = JSON.parse(character.statusEffects || '{"effects":[]}');
+    if (statusEffects.effects && statusEffects.effects.length > 0) {
+      const effectsList = statusEffects.effects
+        .map((effect: { type: string; value: number; duration: number }) => 
+          `${effect.type}: ${effect.value} (${effect.duration}s)`
+        )
+        .join('\n');
+      
+      if (effectsList) {
+        embed.addFields({
+          name: '🔮 Status Effects',
+          value: effectsList,
+          inline: false
+        });
+      }
+    }
+
+    // Add battle record only if there are wins or losses
+    if (stats.wins > 0 || stats.losses > 0) {
+      embed.addFields({
+        name: '🎯 Battle Record',
+        value: [
+          `Wins: ${stats.wins}`,
+          `Losses: ${stats.losses}`,
+          `Win Rate: ${Math.round((stats.wins / (stats.wins + stats.losses)) * 100)}%`,
+          `Streak: ${stats.winStreak}`
+        ].join('\n'),
+        inline: true
+      });
+    }
+
+    // Add hunt stats only if there's a streak
+    if (stats.huntStreak > 0) {
+      embed.addFields({
+        name: '🏃 Hunt Stats',
+        value: [
+          `Hunt Streak: ${stats.huntStreak}`,
+          `Quest Points: ${stats.questPoints}`
+        ].join('\n'),
+        inline: true
+      });
+    }
+
+    // Add mentor info if available
+    if (stats.mentor) {
+      const mentorProgress = [];
+      if (stats.luffyProgress > 0) mentorProgress.push(`Luffy: ${stats.luffyProgress}%`);
+      if (stats.zoroProgress > 0) mentorProgress.push(`Zoro: ${stats.zoroProgress}%`);
+      if (stats.usoppProgress > 0) mentorProgress.push(`Usopp: ${stats.usoppProgress}%`);
+      if (stats.sanjiProgress > 0) mentorProgress.push(`Sanji: ${stats.sanjiProgress}%`);
+
+      if (mentorProgress.length > 0) {
+        embed.addFields({
+          name: '👨‍🏫 Mentor Progress',
+          value: mentorProgress.join('\n'),
+          inline: false
+        });
+      }
+    }
+
+    return embed;
+  }
+
+  // Transaction and balance methods
+  async getBalance(characterId: string): Promise<{ coins: number; bank: number }> {
+    try {
+      const cachedBalance = this.balanceCache.get(characterId);
+      if (cachedBalance) return cachedBalance;
+
+      const character = await this.prisma.character.findUnique({
+        where: { id: characterId }
+      });
+
+      if (!character) {
+        throw new Error('Character not found');
+      }
+
+      const balance = {
+        coins: Number(character.coins),
+        bank: Number(character.bank)
+      };
+
+      this.balanceCache.set(characterId, balance);
+      return balance;
+    } catch (error) {
+      this.logger.error('Error in getBalance:', error);
+      throw error;
+    }
+  }
+
+  async getTransactionHistory(characterId: string, limit: number = 10): Promise<any[]> {
+    try {
+      return await this.prisma.transaction.findMany({
+        where: { characterId },
+        orderBy: { createdAt: 'desc' },
+        take: limit
+      });
+    } catch (error) {
+      this.logger.error('Error in getTransactionHistory:', error);
+      throw error;
+    }
+  }
+
+  async addCoins(characterId: string, amount: number, type: TransactionType, description: string): Promise<void> {
+    try {
+      await this.prisma.$transaction([
+        this.prisma.character.update({
+          where: { id: characterId },
+          data: { coins: { increment: amount } }
+        }),
+        this.prisma.transaction.create({
+          data: {
+            characterId,
+            type,
+            amount,
+            description
+          }
+        })
+      ]);
+
+      this.balanceCache.delete(characterId);
+      this.statsCache.delete(characterId);
+    } catch (error) {
+      this.logger.error('Error in addCoins:', error);
+      throw error;
+    }
+  }
+
+  async removeCoins(characterId: string, amount: number, type: TransactionType, description: string): Promise<void> {
+    try {
+      await this.prisma.$transaction([
+        this.prisma.character.update({
+          where: { id: characterId },
+          data: { coins: { decrement: amount } }
+        }),
+        this.prisma.transaction.create({
+          data: {
+            characterId,
+            type,
+            amount: -amount,
+            description
+          }
+        })
+      ]);
+
+      this.balanceCache.delete(characterId);
+      this.statsCache.delete(characterId);
+    } catch (error) {
+      this.logger.error('Error in removeCoins:', error);
+      throw error;
+    }
+  }
+
+  // Add items to character's inventory
+  async addItems(characterId: string, itemId: string, quantity: number): Promise<void> {
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        // Get item info first
+        const item = await tx.item.findUnique({
+          where: { id: itemId }
+        });
+
+        if (!item) {
+          throw new Error('Item not found');
+        }
+
+        // Upsert the inventory entry
+        await tx.inventory.upsert({
           where: {
             characterId_itemId: {
               characterId,
               itemId
             }
           },
-          data: {
-            quantity: { increment: quantity }
-          }
-        });
-      } else {
-        // Create new inventory entry
-        await this.prisma.inventory.create({
-          data: {
+          create: {
             characterId,
             itemId,
             quantity,
+            durability: item.type === 'WEAPON' || item.type === 'ARMOR' ? 100 : null,
+            maxDurability: item.maxDurability || null,
+            effect: item.effect,
+            stats: item.baseStats || '{}',
             isEquipped: false
+          },
+          update: {
+            quantity: {
+              increment: quantity
+            }
           }
         });
-      }
+      }, {
+        timeout: 10000 // Increase timeout to 10 seconds
+      });
+
+      // Invalidate all caches
+      await this.invalidateAllCaches(characterId);
     } catch (error) {
       this.logger.error('Error adding items:', error);
       throw error;
-    }
-  }
-
-  async handleStart(source: Message | ChatInputCommandInteraction): Promise<unknown> {
-    try {
-      const userId = source instanceof Message ? source.author.id : source.user.id;
-      
-      // Check if character already exists
-      const existingCharacter = await this.getCharacterByDiscordId(userId);
-      if (existingCharacter) {
-        return source.reply({
-          content: source instanceof Message ? 
-            '❌ Kamu sudah memiliki karakter! Gunakan `a p` untuk melihat karaktermu.' :
-            '❌ Kamu sudah memiliki karakter! Gunakan `/profile` untuk melihat karaktermu.',
-          ephemeral: source instanceof ChatInputCommandInteraction
-        });
-      }
-
-      // For message commands, show instructions
-      if (source instanceof Message) {
-        // Create help embed
-        const embed = new EmbedBuilder()
-          .setTitle('🎮 Buat Karakter Baru')
-          .setDescription('Untuk membuat karakter baru, gunakan command:\n`a start <nama> <mentor>`\n\nContoh:\n`a start AmangLy YB`\n\nPilih mentor yang sesuai dengan gaya bermainmu:')
-          .addFields(
-            { 
-              name: '🏴‍☠️ YB (Luffy)',
-              value: '+15% Attack, -10% Defense, +10% Health, +20% Speed\nCocok untuk pemain agresif yang suka menyerang.',
-              inline: true
-            },
-            {
-              name: '⚔️ Tierison (Zoro)',
-              value: '+10% Attack, +10% Defense, +10% Speed\nSeimbang untuk semua situasi.',
-              inline: true
-            },
-            {
-              name: '🎯 LYuka (Usopp)',
-              value: '-10% Attack, +20% Defense, +5% Health, +15% Speed\nCocok untuk pemain yang suka bertahan.',
-              inline: true
-            },
-            {
-              name: '🔥 GarryAng (Sanji)',
-              value: '+5% Attack, +15% Defense, +10% Health, +30% Speed\nCocok untuk pemain yang suka combo dan dodge.',
-              inline: true
-            }
-          )
-          .setColor('#00ff00')
-          .setFooter({ text: 'Gunakan format: a start <nama> <mentor>' });
-
-        return source.reply({ embeds: [embed] });
-      }
-
-      // For slash commands, show modal
-      const modal = new ModalBuilder()
-        .setCustomId('character_creation')
-        .setTitle('Create Your Character');
-
-      // Add name input
-      const nameInput = new TextInputBuilder()
-        .setCustomId('character_name')
-        .setLabel('Pilih nama karaktermu')
-        .setStyle(TextInputStyle.Short)
-        .setMinLength(3)
-        .setMaxLength(20)
-        .setPlaceholder('Masukkan nama untuk karaktermu')
-        .setRequired(true);
-
-      // Add mentor selection
-      const mentorInput = new TextInputBuilder()
-        .setCustomId('mentor')
-        .setLabel('Pilih mentormu')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('YB, Tierison, LYuka, atau GarryAng')
-        .setRequired(true);
-
-      // Add mentor descriptions
-      const mentorDescriptions = new TextInputBuilder()
-        .setCustomId('mentor_info')
-        .setLabel('Info Mentor')
-        .setStyle(TextInputStyle.Paragraph)
-        .setValue(
-          'YB: +15% Attack, -10% Defense, +10% Health, +20% Speed\n' +
-          'Tierison: +10% Attack, +10% Defense, +10% Speed\n' +
-          'LYuka: -10% Attack, +20% Defense, +5% Health, +15% Speed\n' +
-          'GarryAng: +5% Attack, +15% Defense, +10% Health, +30% Speed'
-        )
-        .setRequired(false);
-
-      // Add components to modal
-      const nameActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(nameInput);
-      const mentorActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(mentorInput);
-      const mentorInfoActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(mentorDescriptions);
-
-      modal.addComponents(nameActionRow, mentorActionRow, mentorInfoActionRow);
-
-      // Show modal
-      await source.showModal(modal);
-
-      // Wait for modal submission
-      const filter = (i: ModalSubmitInteraction) => i.customId === 'character_creation';
-      const submission = await source.awaitModalSubmit({ filter, time: 120000 });
-
-      if (!submission) {
-        return source.followUp({
-          content: '❌ Pembuatan karakter timeout. Silakan coba lagi.',
-          ephemeral: true
-        });
-      }
-
-      // Get values from submission
-      const name = submission.fields.getTextInputValue('character_name');
-      const mentor = submission.fields.getTextInputValue('mentor').toUpperCase();
-
-      // Validate mentor
-      if (!['YB', 'TIERISON', 'LYUKA', 'GARRYANG'].includes(mentor)) {
-        return submission.reply({
-          content: '❌ Mentor tidak valid! Pilih dari: YB, Tierison, LYuka, atau GarryAng',
-          ephemeral: true
-        });
-      }
-
-      // Create character
-      const character = await this.createCharacter({
-        name,
-        mentor: mentor as MentorType,
-        discordId: userId
-      });
-
-      // Create welcome embed
-      const embed = new EmbedBuilder()
-        .setTitle('🎉 Selamat Datang di A4A Clan!')
-        .setDescription(`Karaktermu berhasil dibuat!\n\nNama: ${character.name}\nMentor: ${mentor}`)
-        .setColor('#00ff00')
-        .addFields(
-          { 
-            name: '📊 Stats', 
-            value: [
-              `⚔️ Attack: ${character.attack}`,
-              `🛡️ Defense: ${character.defense}`,
-              `❤️ Health: ${character.health}`,
-              `💨 Speed: ${character.speed}`
-            ].join('\n'),
-            inline: true 
-          },
-          { 
-            name: '💰 Balance', 
-            value: [
-              `Coins: ${character.coins}`,
-              `Bank: ${character.bank}`
-            ].join('\n'),
-            inline: true 
-          },
-          { 
-            name: '📜 Langkah Selanjutnya', 
-            value: [
-              '• Gunakan `a h` untuk berburu dan mendapatkan exp',
-              '• Cek profilmu dengan `a p`',
-              '• Beli equipment di `a s`',
-              '• Lihat inventory dengan `a i`'
-            ].join('\n')
-          }
-        );
-
-      return submission.reply({ embeds: [embed], ephemeral: false });
-    } catch (error) {
-      return this.handleCommandError(error, source, 'handleStart');
     }
   }
 }

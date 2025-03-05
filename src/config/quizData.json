@@ -1,0 +1,544 @@
+{
+  "QUIZ_QUESTIONS": {
+    "q1": {
+      "question": "Siapa nama asli dari Monkey D. Luffy?",
+      "options": {
+        "a": "Monkey D. Dragon",
+        "b": "Monkey D. Garp",
+        "c": "Monkey D. Luffy",
+        "d": "Monkey D. Roger"
+      },
+      "correct": "c",
+      "exp": 100,
+      "coins": 500
+    },
+    "q2": {
+      "question": "Apa nama buah iblis yang dimakan Luffy?",
+      "options": {
+        "a": "Mera Mera no Mi",
+        "b": "Gomu Gomu no Mi",
+        "c": "Hito Hito no Mi",
+        "d": "Bara Bara no Mi"
+      },
+      "correct": "b",
+      "exp": 100,
+      "coins": 500
+    },
+    "q3": {
+      "question": "Siapa kapten dari Bajak Laut Heart?",
+      "options": {
+        "a": "Eustass Kid",
+        "b": "Trafalgar Water D. Law",
+        "c": "X Drake",
+        "d": "Jewelry Bonney"
+      },
+      "correct": "b",
+      "exp": 100,
+      "coins": 500
+    },
+    "q4": {
+      "question": "Berapa nilai bounty pertama Luffy?",
+      "options": {
+        "a": "30,000,000 Berry",
+        "b": "50,000,000 Berry",
+        "c": "100,000,000 Berry",
+        "d": "300,000,000 Berry"
+      },
+      "correct": "a",
+      "exp": 100,
+      "coins": 500
+    },
+    "q5": {
+      "question": "Siapa yang memberikan topi jerami kepada Luffy?",
+      "options": {
+        "a": "Gol D. Roger",
+        "b": "Shanks",
+        "c": "Garp",
+        "d": "Dragon"
+      },
+      "correct": "b",
+      "exp": 100,
+      "coins": 500
+    },
+    "q6": {
+      "question": "Siapa nama koki di kapal Thousand Sunny?",
+      "options": {
+        "a": "Roronoa Zoro",
+        "b": "Usopp",
+        "c": "Sanji",
+        "d": "Franky"
+      },
+      "correct": "c",
+      "exp": 100,
+      "coins": 500
+    },
+    "q7": {
+      "question": "Apa nama pedang kutukan milik Zoro?",
+      "options": {
+        "a": "Wado Ichimonji",
+        "b": "Sandai Kitetsu",
+        "c": "Enma",
+        "d": "Shusui"
+      },
+      "correct": "b",
+      "exp": 100,
+      "coins": 500
+    },
+    "q8": {
+      "question": "Siapa yang mengajarkan Haki kepada Luffy?",
+      "options": {
+        "a": "Shanks",
+        "b": "Rayleigh",
+        "c": "Ace",
+        "d": "Garp"
+      },
+      "correct": "b",
+      "exp": 100,
+      "coins": 500
+    },
+    "q9": {
+      "question": "Di mana Roger menyembunyikan One Piece?",
+      "options": {
+        "a": "Marineford",
+        "b": "Wano",
+        "c": "Laugh Tale",
+        "d": "Skypiea"
+      },
+      "correct": "c",
+      "exp": 100,
+      "coins": 500
+    },
+    "q10": {
+      "question": "Siapa yang membunuh Portgas D. Ace?",
+      "options": {
+        "a": "Blackbeard",
+        "b": "Akainu",
+        "c": "Kizaru",
+        "d": "Kaido"
+      },
+      "correct": "b",
+      "exp": 100,
+      "coins": 500
+    },
+    "q11": {
+      "question": "Apa nama asli dari Robin?",
+      "options": {
+        "a": "Nico Robin",
+        "b": "Nico Olvia",
+        "c": "Nico Bell",
+        "d": "Nico Maria"
+      },
+      "correct": "a",
+      "exp": 100,
+      "coins": 500
+    },
+    "q12": {
+      "question": "Berapa lama timeskip dalam cerita One Piece?",
+      "options": {
+        "a": "1 tahun",
+        "b": "2 tahun",
+        "c": "3 tahun",
+        "d": "4 tahun"
+      },
+      "correct": "b",
+      "exp": 100,
+      "coins": 500
+    },
+    "q13": {
+      "question": "Siapa yang membuat kapal Thousand Sunny?",
+      "options": {
+        "a": "Tom",
+        "b": "Iceburg",
+        "c": "Franky",
+        "d": "Paulie"
+      },
+      "correct": "c",
+      "exp": 100,
+      "coins": 500
+    },
+    "q14": {
+      "question": "Apa nama buah iblis yang dimakan Chopper?",
+      "options": {
+        "a": "Mera Mera no Mi",
+        "b": "Zou Zou no Mi",
+        "c": "Hito Hito no Mi",
+        "d": "Ushi Ushi no Mi"
+      },
+      "correct": "c",
+      "exp": 100,
+      "coins": 500
+    },
+    "q15": {
+      "question": "Di pulau mana Luffy bertemu Chopper?",
+      "options": {
+        "a": "Drum Island",
+        "b": "Alabasta",
+        "c": "Skypiea",
+        "d": "Water 7"
+      },
+      "correct": "a",
+      "exp": 100,
+      "coins": 500
+    },
+    "q16": {
+      "question": "Siapa yang menjadi Raja Bajak Laut sebelum era Roger?",
+      "options": {
+        "a": "Rocks D. Xebec",
+        "b": "Edward Newgate",
+        "c": "Shiki",
+        "d": "Joy Boy"
+      },
+      "correct": "a",
+      "exp": 100,
+      "coins": 500
+    },
+    "q17": {
+      "question": "Apa julukan Zoro?",
+      "options": {
+        "a": "Pirate Hunter",
+        "b": "Black Leg",
+        "c": "Straw Hat",
+        "d": "Soul King"
+      },
+      "correct": "a",
+      "exp": 100,
+      "coins": 500
+    },
+    "q18": {
+      "question": "Siapa yang menghancurkan Ohara?",
+      "options": {
+        "a": "CP9",
+        "b": "Marine",
+        "c": "Buster Call",
+        "d": "Revolutionary Army"
+      },
+      "correct": "c",
+      "exp": 100,
+      "coins": 500
+    },
+    "q19": {
+      "question": "Apa nama pedang terkuat di dunia One Piece?",
+      "options": {
+        "a": "Wado Ichimonji",
+        "b": "Yoru",
+        "c": "Ace",
+        "d": "Murakumogiri"
+      },
+      "correct": "b",
+      "exp": 100,
+      "coins": 500
+    },
+    "q20": {
+      "question": "Siapa yang memiliki julukan 'Surgeon of Death'?",
+      "options": {
+        "a": "Trafalgar Law",
+        "b": "Chopper",
+        "c": "Dr. Kureha",
+        "d": "Dr. Hogback"
+      },
+      "correct": "a",
+      "exp": 100,
+      "coins": 500
+    },
+    "q21": {
+      "question": "Apa nama kapal pertama Luffy?",
+      "options": {
+        "a": "Thousand Sunny",
+        "b": "Going Merry",
+        "c": "Oro Jackson",
+        "d": "Red Force"
+      },
+      "correct": "b",
+      "exp": 100,
+      "coins": 500
+    },
+    "q22": {
+      "question": "Di mana lokasi Markas Besar Angkatan Laut?",
+      "options": {
+        "a": "Marineford",
+        "b": "Enies Lobby",
+        "c": "Impel Down",
+        "d": "Mary Geoise"
+      },
+      "correct": "a",
+      "exp": 100,
+      "coins": 500
+    },
+    "q23": {
+      "question": "Siapa yang mengajarkan Zoro cara menggunakan pedang?",
+      "options": {
+        "a": "Mihawk",
+        "b": "Koshiro",
+        "c": "Kuina",
+        "d": "Vista"
+      },
+      "correct": "b",
+      "exp": 100,
+      "coins": 500
+    },
+    "q24": {
+      "question": "Apa nama organisasi rahasia yang dipimpin oleh Dragon?",
+      "options": {
+        "a": "CP9",
+        "b": "Baroque Works",
+        "c": "Revolutionary Army",
+        "d": "Cipher Pol"
+      },
+      "correct": "c",
+      "exp": 100,
+      "coins": 500
+    },
+    "q25": {
+      "question": "Berapa jumlah anggota Shichibukai sebelum sistem ini dihapuskan?",
+      "options": {
+        "a": "5",
+        "b": "7",
+        "c": "9",
+        "d": "11"
+      },
+      "correct": "b",
+      "exp": 100,
+      "coins": 500
+    },
+    "q26": {
+      "question": "Apa nama buah iblis yang dimakan oleh Ace?",
+      "options": {
+        "a": "Mera Mera no Mi",
+        "b": "Goro Goro no Mi",
+        "c": "Magu Magu no Mi",
+        "d": "Hie Hie no Mi"
+      },
+      "correct": "a",
+      "exp": 100,
+      "coins": 500
+    },
+    "q27": {
+      "question": "Siapa nama asli dari Sogeking?",
+      "options": {
+        "a": "Franky",
+        "b": "Usopp",
+        "c": "Brook",
+        "d": "Sanji"
+      },
+      "correct": "b",
+      "exp": 100,
+      "coins": 500
+    },
+    "q28": {
+      "question": "Berapa usia Brook saat ini?",
+      "options": {
+        "a": "50 tahun",
+        "b": "70 tahun",
+        "c": "90 tahun",
+        "d": "90+ tahun"
+      },
+      "correct": "c",
+      "exp": 100,
+      "coins": 500
+    },
+    "q29": {
+      "question": "Siapa yang memberi Luffy bekas luka di bawah matanya?",
+      "options": {
+        "a": "Ace",
+        "b": "Diri sendiri",
+        "c": "Garp",
+        "d": "Shanks"
+      },
+      "correct": "b",
+      "exp": 100,
+      "coins": 500
+    },
+    "q30": {
+      "question": "Apa nama kapal Gol D. Roger?",
+      "options": {
+        "a": "Red Force",
+        "b": "Moby Dick",
+        "c": "Oro Jackson",
+        "d": "Victoria Punk"
+      },
+      "correct": "c",
+      "exp": 100,
+      "coins": 500
+    },
+    "q31": {
+      "question": "Siapa yang memiliki julukan 'Kaisar Laut'?",
+      "options": {
+        "a": "Shanks",
+        "b": "Big Mom",
+        "c": "Kaido",
+        "d": "Whitebeard"
+      },
+      "correct": "c",
+      "exp": 100,
+      "coins": 500
+    },
+    "q32": {
+      "question": "Apa nama asli dari Sanji?",
+      "options": {
+        "a": "Vinsmoke Sanji",
+        "b": "Black Leg Sanji",
+        "c": "Mr. Prince",
+        "d": "Stealth Black"
+      },
+      "correct": "a",
+      "exp": 100,
+      "coins": 500
+    },
+    "q33": {
+      "question": "Di mana lokasi All Blue menurut legenda?",
+      "options": {
+        "a": "East Blue",
+        "b": "Grand Line",
+        "c": "New World",
+        "d": "Pertemuan 4 lautan"
+      },
+      "correct": "d",
+      "exp": 100,
+      "coins": 500
+    },
+    "q34": {
+      "question": "Siapa yang membunuh Tom?",
+      "options": {
+        "a": "CP9",
+        "b": "Spandam",
+        "c": "World Government",
+        "d": "Puffing Tom"
+      },
+      "correct": "b",
+      "exp": 100,
+      "coins": 500
+    },
+    "q35": {
+      "question": "Apa nama buah iblis yang dimakan oleh Marco?",
+      "options": {
+        "a": "Tori Tori no Mi Model: Phoenix",
+        "b": "Mushi Mushi no Mi",
+        "c": "Ryu Ryu no Mi",
+        "d": "Tori Tori no Mi"
+      },
+      "correct": "a",
+      "exp": 100,
+      "coins": 500
+    },
+    "q36": {
+      "question": "Siapa yang menjadi Navigator Bajak Laut Roger?",
+      "options": {
+        "a": "Scopper Gaban",
+        "b": "Crocus",
+        "c": "Rayleigh",
+        "d": "Kozuki Oden"
+      },
+      "correct": "d",
+      "exp": 100,
+      "coins": 500
+    },
+    "q37": {
+      "question": "Apa nama asli dari Bartholomew Kuma?",
+      "options": {
+        "a": "PX-0",
+        "b": "Tyrant",
+        "c": "Pacifista",
+        "d": "The Bible"
+      },
+      "correct": "a",
+      "exp": 100,
+      "coins": 500
+    },
+    "q38": {
+      "question": "Berapa lama Nico Robin bersembunyi dari Pemerintah Dunia?",
+      "options": {
+        "a": "10 tahun",
+        "b": "15 tahun",
+        "c": "20 tahun",
+        "d": "25 tahun"
+      },
+      "correct": "c",
+      "exp": 100,
+      "coins": 500
+    },
+    "q39": {
+      "question": "Siapa yang memiliki julukan 'God'?",
+      "options": {
+        "a": "Enel",
+        "b": "Usopp",
+        "c": "Im-sama",
+        "d": "Buggy"
+      },
+      "correct": "b",
+      "exp": 100,
+      "coins": 500
+    },
+    "q40": {
+      "question": "Apa nama asli dari Bentham?",
+      "options": {
+        "a": "Mr. 2",
+        "b": "Bon Clay",
+        "c": "Bon Kurei",
+        "d": "Mr. 2 Bon Clay"
+      },
+      "correct": "c",
+      "exp": 100,
+      "coins": 500
+    },
+    "q41": {
+      "question": "Di mana lokasi Pulau Gyojin?",
+      "options": {
+        "a": "10.000 meter di atas permukaan laut",
+        "b": "10.000 meter di bawah permukaan laut",
+        "c": "Grand Line",
+        "d": "New World"
+      },
+      "correct": "b",
+      "exp": 100,
+      "coins": 500
+    },
+    "q42": {
+      "question": "Siapa yang memiliki julukan 'Red Flag'?",
+      "options": {
+        "a": "Shanks",
+        "b": "Kid",
+        "c": "X Drake",
+        "d": "Benn Beckman"
+      },
+      "correct": "b",
+      "exp": 100,
+      "coins": 500
+    },
+    "q43": {
+      "question": "Apa nama pedang yang diberikan Kozuki Oden kepada Zoro?",
+      "options": {
+        "a": "Wado Ichimonji",
+        "b": "Sandai Kitetsu",
+        "c": "Enma",
+        "d": "Shusui"
+      },
+      "correct": "c",
+      "exp": 100,
+      "coins": 500
+    },
+    "q44": {
+      "question": "Siapa yang memiliki julukan 'Queen of Okama'?",
+      "options": {
+        "a": "Bon Clay",
+        "b": "Ivankov",
+        "c": "Inazuma",
+        "d": "Bentham"
+      },
+      "correct": "b",
+      "exp": 100,
+      "coins": 500
+    },
+    "q45": {
+      "question": "Apa nama teknik rahasia CP9?",
+      "options": {
+        "a": "Haki",
+        "b": "Rokushiki",
+        "c": "Gear",
+        "d": "Soru"
+      },
+      "correct": "b",
+      "exp": 100,
+      "coins": 500
+    }
+  }
+} 

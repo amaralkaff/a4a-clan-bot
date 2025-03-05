@@ -9,7 +9,7 @@ import { BaseCombatService, CombatantFactory } from './BaseCombatService';
 import { CombatParticipant } from '@/types/combat';
 import { EmbedFactory } from '@/utils/embedBuilder';
 import { CharacterWithEquipment } from '@/types/game';
-
+import { DataCache } from '@/services/DataCache';
 interface CachedDuel extends Duel {
   challenger: {
     name: string;
@@ -24,8 +24,8 @@ export class DuelService extends BaseCombatService {
   private readonly DUEL_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
   private battleService: BattleService | null = null;
 
-  constructor(prisma: PrismaClient, characterService?: CharacterService) {
-    super(prisma, characterService);
+  constructor(prisma: PrismaClient, characterService: CharacterService, dataCache: DataCache) {
+    super(prisma, characterService, dataCache);
     this.duelCache = new Cache<CachedDuel>(this.DUEL_CACHE_TTL);
 
     // Set up periodic cache cleanup

@@ -1,4 +1,4 @@
-import { Message, ChatInputCommandInteraction } from 'discord.js';
+import { Message, ChatInputCommandInteraction, ButtonInteraction } from 'discord.js';
 import { EmbedFactory } from './embedBuilder';
 import { logger } from './logger';
 
@@ -25,7 +25,7 @@ export class CharacterError extends GameError {
 
   static notFound(discordId: string): CharacterError {
     return new CharacterError(
-      '❌ Kamu belum memiliki karakter! Gunakan `a start` untuk membuat karakter.',
+      '❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.',
       'CHARACTER_NOT_FOUND',
       { discordId }
     );
@@ -182,46 +182,64 @@ export class CooldownError extends GameError {
 
 // Error handler class
 export class ErrorHandler {
-  static async handle(error: any, source: Message | ChatInputCommandInteraction) {
-    // Log the error
-    if (error instanceof GameError) {
-      logger.warn(`${error.context} Error:`, {
-        code: error.code,
-        message: error.message,
-        details: error.details
-      });
-    } else {
-      logger.error('Unexpected Error:', error);
-      logger.error('Stack:', error.stack);
-    }
-
-    // Get the error message
-    let errorMessage = error instanceof Error ? error.message : '❌ Terjadi kesalahan yang tidak diketahui';
-    
-    // If it's a character creation message, don't treat it as an error in logs
-    if (errorMessage.includes('a start') || errorMessage.includes('karakter')) {
-      logger.info('User needs to create character:', errorMessage);
-    }
+  static async handle(
+    error: unknown, 
+    source: Message | ChatInputCommandInteraction | ButtonInteraction
+  ): Promise<void> {
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    logger.error('Error:', error);
 
     try {
-      // Send error message to user
-      if (source instanceof Message) {
-        await source.reply({ 
-          content: errorMessage,
-          allowedMentions: { repliedUser: true }
-        });
-      } else {
+      if (source instanceof ButtonInteraction) {
+        await source.update({ content: `❌ ${errorMessage}`, components: [] });
+      } else if (source instanceof ChatInputCommandInteraction) {
         if (source.deferred) {
-          await source.editReply({ content: errorMessage });
+          await source.editReply({ content: `❌ ${errorMessage}` });
         } else {
-          await source.reply({ 
-            content: errorMessage, 
-            ephemeral: true 
-          });
+          await source.reply({ content: `❌ ${errorMessage}`, ephemeral: true });
         }
+      } else {
+        await source.reply(`❌ ${errorMessage}`);
       }
-    } catch (sendError) {
-      logger.error('Error sending error message:', sendError);
+    } catch (replyError) {
+      logger.error('Error sending error message:', replyError);
+    }
+  }
+
+  static async handleCharacterNotFound(
+    source: Message | ChatInputCommandInteraction | ButtonInteraction
+  ): Promise<void> {
+    const message = '❌ Kamu belum memiliki karakter! Gunakan `/start` untuk membuat karakter.';
+    
+    try {
+      if (source instanceof ButtonInteraction) {
+        await source.update({ content: message, components: [] });
+      } else if (source instanceof ChatInputCommandInteraction) {
+        await source.reply({ content: message, ephemeral: true });
+      } else {
+        await source.reply(message);
+      }
+    } catch (error) {
+      logger.error('Error sending character not found message:', error);
+    }
+  }
+
+  static async handleCooldown(
+    source: Message | ChatInputCommandInteraction | ButtonInteraction,
+    remainingTime: string
+  ): Promise<void> {
+    const message = `⏰ Command masih cooldown! Tunggu ${remainingTime} lagi.`;
+    
+    try {
+      if (source instanceof ButtonInteraction) {
+        await source.update({ content: message, components: [] });
+      } else if (source instanceof ChatInputCommandInteraction) {
+        await source.reply({ content: message, ephemeral: true });
+      } else {
+        await source.reply(message);
+      }
+    } catch (error) {
+      logger.error('Error sending cooldown message:', error);
     }
   }
 
