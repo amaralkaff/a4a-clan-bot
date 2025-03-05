@@ -47,6 +47,91 @@ export class QuizService extends BaseService {
     this.characterService = characterService;
   }
 
+  async processAnswer(interaction: ButtonInteraction): Promise<void> {
+    try {
+      const userId = interaction.user.id;
+      // Get the active quiz
+      const quiz = this.activeQuizzes.get(userId);
+      if (!quiz) {
+        await interaction.update({ 
+          content: '❌ No active quiz found. Use `a q` to start a new quiz.',
+          components: []
+        });
+        return;
+      }
+
+      // Get the character before deleting the quiz
+      const character = await this.characterService.getCharacterByDiscordId(userId);
+      if (!character) {
+        await interaction.update({
+          content: '❌ Character not found. Use `/start` to create one.',
+          components: []
+        });
+        return;
+      }
+
+      // Check if the answer is correct
+      const answer = interaction.customId.split('_')[2];
+      const isCorrect = answer === quiz.correctAnswer;
+      const embed = new EmbedBuilder()
+        .setColor(isCorrect ? '#00ff00' : '#ff0000')
+        .setTitle(isCorrect ? '✅ Correct!' : '❌ Incorrect!')
+        .setDescription(`The correct answer was: ${quiz.correctAnswer.toUpperCase()}`);
+
+      // Update streak and calculate rewards
+      if (isCorrect) {
+        const newStreak = (character.quizStreak || 0) + 1;
+        const multiplier = Math.min(1 + (newStreak * this.STREAK_MULTIPLIER), this.MAX_MULTIPLIER);
+        const expReward = Math.floor(this.BASE_REWARD * multiplier);
+        const coinsReward = Math.floor(this.BASE_REWARD * multiplier);
+
+        // Add rewards
+        await this.prisma.character.update({
+          where: { id: character.id },
+          data: {
+            quizStreak: newStreak,
+            experience: { increment: expReward },
+            coins: { increment: coinsReward }
+          }
+        });
+
+        embed.addFields(
+          { name: 'Streak', value: `${newStreak}`, inline: true },
+          { name: 'Multiplier', value: `${multiplier.toFixed(1)}x`, inline: true },
+          { name: 'Rewards', value: `+${expReward} EXP\n+${coinsReward} Coins`, inline: true }
+        );
+      } else {
+        await this.prisma.character.update({
+          where: { id: character.id },
+          data: { quizStreak: 0 }
+        });
+
+        embed.addFields(
+          { name: 'Streak', value: 'Reset to 0', inline: true }
+        );
+      }
+
+      // Delete the quiz after processing
+      this.activeQuizzes.delete(userId);
+
+      // Update the message with the result
+      await interaction.update({ 
+        embeds: [embed],
+        components: [] // Remove buttons after answering
+      });
+    } catch (error) {
+      logger.error('Error processing quiz answer:', error);
+      try {
+        await interaction.update({ 
+          content: '❌ An error occurred while processing your answer.',
+          components: []
+        });
+      } catch (replyError) {
+        logger.error('Error sending error message:', replyError);
+      }
+    }
+  }
+
   async startQuiz(source: Message | ChatInputCommandInteraction): Promise<void> {
     try {
       const userId = source instanceof Message ? source.author.id : source.user.id;
@@ -80,6 +165,12 @@ export class QuizService extends BaseService {
         );
       });
 
+      // Store the active quiz before sending the message
+      this.activeQuizzes.set(userId, {
+        ...quizData,
+        messageId: '' // We'll update this after sending the message
+      });
+
       // Send the quiz message
       const response = await this.reply(source, {
         embeds: [
@@ -96,7 +187,7 @@ export class QuizService extends BaseService {
         fetchReply: true
       });
 
-      // Store the active quiz
+      // Update the stored quiz with the correct message ID
       const messageId = response instanceof Message ? response.id : response.id;
       this.activeQuizzes.set(userId, {
         ...quizData,
@@ -107,92 +198,17 @@ export class QuizService extends BaseService {
       const message = response;
       const collector = message.createMessageComponentCollector({
         componentType: ComponentType.Button,
-        filter: (i: ButtonInteraction) => i.user.id === userId && i.customId.startsWith('quiz_answer_'),
+        filter: (i: ButtonInteraction) => {
+          const isValidUser = i.user.id === userId;
+          const isValidQuiz = this.activeQuizzes.has(userId);
+          const isValidButton = i.customId.startsWith('quiz_answer_');
+          return isValidUser && isValidQuiz && isValidButton;
+        },
         time: this.QUIZ_TIMEOUT
       });
 
       collector.on('collect', async (interaction: ButtonInteraction) => {
-        try {
-          // Delete the active quiz before processing to prevent race conditions
-          const quiz = this.activeQuizzes.get(interaction.user.id);
-          if (!quiz) {
-            await interaction.update({ 
-              content: '❌ No active quiz found. Use `a q` to start a new quiz.',
-              components: []
-            });
-            return;
-          }
-
-          // Delete the quiz before processing to prevent race conditions
-          this.activeQuizzes.delete(interaction.user.id);
-
-          // Get the character
-          const character = await this.characterService.getCharacterByDiscordId(interaction.user.id);
-          if (!character) {
-            await interaction.update({
-              content: '❌ Character not found. Use `/start` to create one.',
-              components: []
-            });
-            return;
-          }
-
-          // Check if the answer is correct
-          const answer = interaction.customId.split('_')[2];
-          const isCorrect = answer === quiz.correctAnswer;
-          const embed = new EmbedBuilder()
-            .setColor(isCorrect ? '#00ff00' : '#ff0000')
-            .setTitle(isCorrect ? '✅ Correct!' : '❌ Incorrect!')
-            .setDescription(`The correct answer was: ${quiz.correctAnswer.toUpperCase()}`);
-
-          // Update streak and calculate rewards
-          if (isCorrect) {
-            const newStreak = (character.quizStreak || 0) + 1;
-            const multiplier = Math.min(1 + (newStreak * this.STREAK_MULTIPLIER), this.MAX_MULTIPLIER);
-            const expReward = Math.floor(this.BASE_REWARD * multiplier);
-            const coinsReward = Math.floor(this.BASE_REWARD * multiplier);
-
-            // Add rewards
-            await this.prisma.character.update({
-              where: { id: character.id },
-              data: {
-                quizStreak: newStreak,
-                experience: { increment: expReward },
-                coins: { increment: coinsReward }
-              }
-            });
-
-            embed.addFields(
-              { name: 'Streak', value: `${newStreak}`, inline: true },
-              { name: 'Multiplier', value: `${multiplier.toFixed(1)}x`, inline: true },
-              { name: 'Rewards', value: `+${expReward} EXP\n+${coinsReward} Coins`, inline: true }
-            );
-          } else {
-            await this.prisma.character.update({
-              where: { id: character.id },
-              data: { quizStreak: 0 }
-            });
-
-            embed.addFields(
-              { name: 'Streak', value: 'Reset to 0', inline: true }
-            );
-          }
-
-          // Update the message with the result
-          await interaction.update({ 
-            embeds: [embed],
-            components: [] // Remove buttons after answering
-          });
-        } catch (error) {
-          logger.error('Error in quiz collector:', error);
-          try {
-            await interaction.update({ 
-              content: '❌ An error occurred while processing your answer.',
-              components: []
-            });
-          } catch (replyError) {
-            logger.error('Error sending error message:', replyError);
-          }
-        }
+        await this.processAnswer(interaction);
       });
 
       collector.on('end', async (collected: Collection<string, ButtonInteraction>) => {
@@ -235,10 +251,22 @@ export class QuizService extends BaseService {
 
   private async getRandomQuizQuestion(): Promise<QuizData | null> {
     try {
+      // Get total count of questions
+      const totalQuestions = await this.prisma.quiz.count();
+      
+      if (totalQuestions === 0) return null;
+      
+      // Generate random skip value
+      const skip = Math.floor(Math.random() * totalQuestions);
+      
+      // Fetch one random question
       const questions = await this.prisma.quiz.findMany({
         take: 1,
-        orderBy: {
-          createdAt: 'desc'
+        skip: skip,
+        select: {
+          question: true,
+          options: true,
+          correctAnswer: true
         }
       });
       
