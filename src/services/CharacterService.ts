@@ -301,6 +301,8 @@ export class CharacterService extends BaseService implements ICharacterCommands 
       this.validateMentor(dto.mentor);
       this.validateCharacterName(dto.name);
 
+
+
       // Initialize empty status effects and buffs
       const initialStatusEffects: StatusEffects = { effects: [] };
       const initialActiveBuffs: ActiveBuffs = { 

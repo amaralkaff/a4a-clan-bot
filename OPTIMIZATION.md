@@ -1,114 +1,190 @@
-Based on your request for optimizations beyond just moving folders, with a specific focus on eliminating duplicate code, I’ve analyzed the project structure and identified several opportunities to improve efficiency, remove redundancy, and enhance code reuse. Below is a comprehensive optimization plan tailored to your needs, focusing on deleting duplicate code and refactoring for better maintainability.
+# Implementation Plan
 
----
+## Code Analysis and Preparation
+- [ ] Step 1: Setup Development Environment and Tools
+  - **Task**: Configure linting, formatting tools, and TypeScript strictness to help identify issues
+  - **Files**:
+    - `.eslintrc.js`: Configure ESLint rules
+    - `.prettierrc`: Configure Prettier formatting
+    - `tsconfig.json`: Update TypeScript configuration for stricter type checking
+    - `package.json`: Add dev dependencies and scripts
+  - **Step Dependencies**: None
+  - **User Instructions**: Run `bun add eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin prettier eslint-config-prettier eslint-plugin-prettier --dev`
 
-# Optimization Plan
+- [ ] Step 2: Analyze Code Duplication and Redundancies
+  - **Task**: Review codebase to identify duplicate code, unused functions, and optimization opportunities
+  - **Files**: (Analysis only, no file changes)
+  - **Step Dependencies**: Step 1
+  - **User Instructions**: Run `bun x jscpd ./src` to identify code duplications
 
-## Eliminate Duplicate Code
+## Database and Model Optimization
+- [ ] Step 3: Optimize Prisma Schema and Database Queries
+  - **Task**: Review and optimize Prisma schema, add indexes where needed, and implement query optimization
+  - **Files**:
+    - `prisma/schema.prisma`: Optimize schema definitions
+    - `services/BaseService.ts`: Implement database connection pooling
+    - `services/DataCache.ts`: Enhance caching for database queries
+  - **Step Dependencies**: Step 2
+  - **User Instructions**: Run `bun x prisma migrate dev` after schema changes
 
-### 1. Consolidate `shop.ts` Files
-- **Issue**: There are two `shop.ts` files—one in `src/api/basic/shop.ts` and another in `src/api/basic/handler/shop.ts`—which likely contain overlapping logic, leading to redundancy and confusion.
-- **Action**:
-  - Review both files to identify their purpose.
-  - Merge all unique logic into a single file, deleting the duplicate.
-  - Keep the consolidated file in `src/api/handlers/shop.ts` (renamed for clarity) and delete `src/api/basic/shop.ts`.
-- **Files Affected**:
-  - Delete: `src/api/basic/shop.ts`
-  - Rename and update: `src/api/basic/handler/shop.ts` → `src/api/handlers/shop.ts`
-  - Update: `src/api/basic/handler/index.ts` to export the new `shop.ts` location.
-- **Instructions**: After merging, test the shop command to ensure all functionality (e.g., buying, selling) works as expected.
+- [ ] Step 4: Implement Advanced Caching for Database Queries
+  - **Task**: Add intelligent caching for frequently accessed data to reduce database load
+  - **Files**:
+    - `utils/Cache.ts`: Enhance caching utility
+    - `services/DataCache.ts`: Implement tiered caching strategy
+    - `services/CharacterService.ts`: Update to use improved caching
+    - `services/InventoryService.ts`: Update to use improved caching
+    - `services/LeaderboardService.ts`: Update to use improved caching
+  - **Step Dependencies**: Step 3
+  - **User Instructions**: None
 
-### 2. Merge `help.ts` and `helps.ts`
-- **Issue**: `src/api/basic/help.ts` and `src/api/start/helps.ts` have similar names and likely contain duplicated logic for generating help messages, violating DRY (Don’t Repeat Yourself) principles.
-- **Action**:
-  - Compare the contents of both files.
-  - Extract all unique help-related logic into a single utility file, deleting the redundant one.
-  - Create `src/api/utils/helpUtils.ts` with the merged logic and delete both original files.
-- **Files Affected**:
-  - Delete: `src/api/basic/help.ts`
-  - Delete: `src/api/start/helps.ts`
-  - Create: `src/api/utils/helpUtils.ts`
-  - Update: `src/api/handlers/help.ts` to import and use `helpUtils.ts`.
-- **Instructions**: Test the help command to verify that it displays correctly after the refactor.
+## Core Service Optimization
+- [ ] Step 5: Refactor Base Services
+  - **Task**: Optimize base service classes to reduce code duplication and implement shared functionality
+  - **Files**:
+    - `services/BaseService.ts`: Enhance with shared methods
+    - `services/combat/BaseCombatService.ts`: Remove redundancies with base service
+    - `services/EquipmentService.ts`: Refactor to use base service methods
+    - `services/InventoryService.ts`: Refactor to use base service methods
+  - **Step Dependencies**: Step 4
+  - **User Instructions**: None
 
-### 3. Remove Overlapping Battle Logic in `BattleService.ts` and `DuelService.ts`
-- **Issue**: `src/services/combat/BattleService.ts` and `src/services/combat/DuelService.ts` likely share common battle mechanics (e.g., damage calculation, turn handling), resulting in duplicated code.
-- **Action**:
-  - Identify shared logic by reviewing both files.
-  - Extract common functionality into a new base class or utility, eliminating duplication.
-  - Create `src/services/combat/BaseBattleService.ts` with shared logic and refactor both services to extend or use it.
-- **Files Affected**:
-  - Update: `src/services/combat/BattleService.ts` to use `BaseBattleService.ts`.
-  - Update: `src/services/combat/DuelService.ts` to use `BaseBattleService.ts`.
-  - Create: `src/services/combat/BaseBattleService.ts`.
-- **Instructions**: Test battle and duel commands to ensure mechanics (e.g., combat resolution) remain intact.
+- [ ] Step 6: Optimize Combat Services
+  - **Task**: Refactor combat-related services to remove duplication and improve efficiency
+  - **Files**:
+    - `services/combat/BaseCombatService.ts`: Optimize base combat functionality
+    - `services/combat/BattleService.ts`: Refactor using base methods
+    - `services/combat/DuelService.ts`: Refactor using base methods
+    - `types/combat.ts`: Streamline combat type definitions
+  - **Step Dependencies**: Step 5
+  - **User Instructions**: None
 
-### 4. Centralize Embed Creation Logic
-- **Issue**: Embed creation code (e.g., for Discord messages) is likely duplicated across handler files like `shop.ts`, `hunt.ts`, and `profile.ts`, leading to repetitive code.
-- **Action**:
-  - Create a centralized utility to handle embed creation, removing duplicates from individual handlers.
-  - Implement specific methods for each command’s embed needs.
-- **Files Affected**:
-  - Create: `src/utils/embedBuilder.ts` with methods like `buildShopEmbed()`, `buildHuntEmbed()`, and `buildProfileEmbed()`.
-  - Update: `src/api/handlers/shop.ts` to use `embedBuilder.buildShopEmbed()`.
-  - Update: `src/api/handlers/hunt.ts` to use `embedBuilder.buildHuntEmbed()`.
-  - Update: `src/api/handlers/profile.ts` to use `embedBuilder.buildProfileEmbed()`.
-- **Instructions**: Test shop, hunt, and profile commands to confirm embeds render correctly.
+- [ ] Step 7: Consolidate Related Services
+  - **Task**: Identify and merge services with overlapping functionality
+  - **Files**:
+    - `services/WeaponService.ts`: Refactor to merge with EquipmentService if appropriate
+    - `services/ShopService.ts`: Optimize and potentially merge overlapping functionality
+    - `services/EconomyService.ts`: Optimize transaction handling
+  - **Step Dependencies**: Step 5
+  - **User Instructions**: None
 
-## Optimize Efficiency
+## Command Handler Optimization
+- [ ] Step 8: Optimize Command Loading and Registration
+  - **Task**: Improve command loading system for better performance and easier maintenance
+  - **Files**:
+    - `utils/commandLoader.ts`: Optimize command registration
+    - `utils/deploy-commands.ts`: Enhance deployment process
+    - `utils/bot.ts`: Update command handling
+  - **Step Dependencies**: Step 5
+  - **User Instructions**: None
 
-### 5. Cache JSON Config Data
-- **Issue**: `src/config/config.ts` likely reads JSON files (e.g., `accessoryData.json`, `monsterData.json`) repeatedly, causing unnecessary file I/O and slowing startup or runtime performance.
-- **Action**:
-  - Implement caching in `config.ts` to load each JSON file once and store it in memory, eliminating redundant reads.
-- **Files Affected**:
-  - Update: `src/config/config.ts` to use a caching mechanism (e.g., a simple object or leverage `src/utils/Cache.ts` if it exists).
-- **Instructions**: Measure bot startup time before and after the change, and verify that config data (e.g., shop items, monster stats) loads correctly.
+- [ ] Step 9: Implement Command Throttling and Rate Limiting
+  - **Task**: Add or optimize rate limiting to prevent abuse and reduce resource usage
+  - **Files**:
+    - `utils/cooldown.ts`: Enhance cooldown system
+    - `events/eventHandler.ts`: Implement global rate limiting
+  - **Step Dependencies**: Step 8
+  - **User Instructions**: None
 
-### 6. Standardize Error Handling
-- **Issue**: Error messages in services like `ShopService.ts`, `GamblingService.ts`, and `BattleService.ts` may be duplicated or inconsistently formatted, complicating maintenance.
-- **Action**:
-  - Create a centralized error utility to generate consistent error messages, removing duplicates from individual files.
-- **Files Affected**:
-  - Create: `src/utils/errorUtils.ts` with functions like `formatError(message, details)`.
-  - Update: `src/services/economy/ShopService.ts` to use `errorUtils` (e.g., “You need 100 more Berries!”).
-  - Update: `src/services/economy/GamblingService.ts` to use `errorUtils`.
-  - Update: `src/services/combat/BattleService.ts` to use `errorUtils`.
-- **Instructions**: Trigger error cases (e.g., insufficient funds, invalid combat action) and check that messages are consistent and clear.
+## Utility Function Optimization
+- [ ] Step 10: Refactor and Consolidate Utility Functions
+  - **Task**: Remove duplicate utility functions and optimize existing ones
+  - **Files**:
+    - `utils/helpers.ts`: Consolidate helper functions
+    - `utils/errorUtils.ts`: Merge with errors.ts if appropriate
+    - `utils/emojiUtils.ts`: Optimize emoji handling
+    - `utils/messageHandler.ts`: Improve message processing
+  - **Step Dependencies**: Step 8
+  - **User Instructions**: None
 
-### 7. Add Pagination for Long Lists
-- **Issue**: Commands like inventory and shop may return long lists, duplicating display logic across handlers and overwhelming users with unreadable output.
-- **Action**:
-  - Implement a reusable pagination utility to handle long responses, removing redundant display code.
-- **Files Affected**:
-  - Create: `src/utils/pagination.ts` with a `paginate(items, pageSize, currentPage)` function.
-  - Update: `src/api/handlers/inventory.ts` to use `pagination.ts` for inventory lists.
-  - Update: `src/api/handlers/shop.ts` to use `pagination.ts` for shop items.
-- **Instructions**: Test inventory and shop commands with large datasets to ensure pagination works (e.g., displays 10 items per page).
+- [ ] Step 11: Optimize Embed Creation and Message Handling
+  - **Task**: Improve Discord embed creation and message handling for better performance
+  - **Files**:
+    - `utils/embedBuilder.ts`: Refactor for reusability and efficiency
+    - `utils/pagination.ts`: Optimize pagination
+    - `utils/messageHandler.ts`: Enhance message handling
+  - **Step Dependencies**: Step 10
+  - **User Instructions**: None
 
-## Simplify Exports
+## Data Structure Optimization
+- [ ] Step 12: Optimize Game Data JSON Files
+  - **Task**: Review and optimize JSON data files structure for faster loading and processing
+  - **Files**:
+    - `config/gameData.json`: Optimize structure
+    - `config/monsterData.json`: Optimize structure
+    - `config/weaponData.json`: Optimize structure
+    - `config/armorData.json`: Optimize structure
+    - `config/accessoryData.json`: Optimize structure
+    - `config/consumableData.json`: Optimize structure
+    - `config/quizData.json`: Optimize structure
+  - **Step Dependencies**: Step 2
+  - **User Instructions**: None
 
-### 8. Streamline `index.ts` Files
-- **Issue**: Multiple `index.ts` files (e.g., in `src/api/basic/handler`, `src/api/services`, `src`) may contain redundant or unnecessary exports, complicating the codebase.
-- **Action**:
-  - Review each `index.ts` file and remove duplicate or unused exports, keeping only what’s essential.
-- **Files Affected**:
-  - Update: `src/api/handlers/index.ts` to export only handler functions.
-  - Update: `src/api/services/index.ts` to export only service classes.
-  - Update: `src/index.ts` to initialize the bot without redundant code.
-- **Instructions**: Run the bot and verify that all commands and services initialize correctly.
+- [ ] Step 13: Implement Lazy Loading for Game Data
+  - **Task**: Add lazy loading for game data to reduce memory usage and startup time
+  - **Files**:
+    - `config/config.ts`: Implement lazy loading configuration
+    - `utils/bot.ts`: Update initialization process
+    - `services/DataCache.ts`: Add lazy loading support
+  - **Step Dependencies**: Step 12
+  - **User Instructions**: None
 
----
+## Discord.js Optimization
+- [ ] Step 14: Update to Latest Discord.js Practices
+  - **Task**: Ensure code follows latest Discord.js best practices and utilizes efficient methods
+  - **Files**:
+    - `utils/bot.ts`: Update Discord.js initialization
+    - `events/eventHandler.ts`: Update event handling
+    - `utils/embedBuilder.ts`: Update to latest Discord.js patterns
+  - **Step Dependencies**: Step 11
+  - **User Instructions**: Run `bun add discord.js@latest`
 
-# Summary
-This optimization plan eliminates duplicate code by:
-- Consolidating `shop.ts`, `help.ts`, and `helps.ts` into single, purpose-built files.
-- Extracting shared battle logic into a base class (`BaseBattleService.ts`).
-- Centralizing embed creation and error handling in reusable utilities (`embedBuilder.ts`, `errorUtils.ts`).
+- [ ] Step 15: Implement Discord.js Sharding (If Needed)
+  - **Task**: Add sharding support for better scalability if the bot is in many servers
+  - **Files**:
+    - `index.ts`: Add sharding manager
+    - `utils/bot.ts`: Add shard awareness
+  - **Step Dependencies**: Step 14
+  - **User Instructions**: None
 
-It also improves efficiency by:
-- Caching JSON config data to reduce file I/O.
-- Adding pagination for long responses with a shared utility (`pagination.ts`).
-- Streamlining `index.ts` files to remove redundancy.
+## Error Handling and Logging
+- [ ] Step 16: Enhance Error Handling
+  - **Task**: Implement comprehensive error handling throughout the codebase
+  - **Files**:
+    - `utils/errors.ts`: Optimize error definitions
+    - `utils/errorUtils.ts`: Enhance error handling utilities
+    - `events/eventHandler.ts`: Improve error capturing in events
+  - **Step Dependencies**: Step 14
+  - **User Instructions**: None
 
-Each step includes instructions to test functionality after changes, ensuring the bot remains operational. This approach keeps your codebase cleaner, more efficient, and easier to maintain without relying solely on folder reorganization.
+- [ ] Step 17: Optimize Logging System
+  - **Task**: Improve logging for better debugging and monitoring while reducing overhead
+  - **Files**:
+    - `utils/logger.ts`: Optimize logging utility
+    - `index.ts`: Update logger initialization
+  - **Step Dependencies**: Step 16
+  - **User Instructions**: None
+
+## Performance Testing and Final Optimization
+- [ ] Step 18: Implement Performance Monitoring
+  - **Task**: Add performance measurement tools to identify bottlenecks
+  - **Files**:
+    - `utils/performance.ts`: Create performance tracking utility
+    - `index.ts`: Add performance monitoring
+    - `utils/bot.ts`: Add command performance tracking
+  - **Step Dependencies**: Step 17
+  - **User Instructions**: None
+
+- [ ] Step 19: Final Optimization Pass
+  - **Task**: Address any remaining performance issues identified during testing
+  - **Files**: Various files based on performance testing results
+  - **Step Dependencies**: Step 18
+  - **User Instructions**: None
+
+- [ ] Step 20: Documentation Update
+  - **Task**: Update documentation to reflect optimized code and any changed functionality
+  - **Files**:
+    - `README.md`: Update documentation
+    - Code comments throughout codebase
+  - **Step Dependencies**: Step 19
+  - **User Instructions**: None
